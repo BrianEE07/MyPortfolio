@@ -3,6 +3,17 @@
 ## Summary
 This document records the first implementation pass of the approved v1.0.0 plan. The project was moved from a single-file prototype toward a maintainable application structure while preserving the existing Flask and static-export workflow.
 
+## v1.0.1
+### Scheduled Updates
+- Updated [deploy-pages.yml](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/.github/workflows/deploy-pages.yml) to run one automatic GitHub Pages refresh per day.
+- The new schedule is based on Taipei time:
+  - `08:00 Asia/Taipei`
+- The corresponding GitHub Actions cron entry was set to:
+  - `00:00 UTC`
+- `push` on `main` and `workflow_dispatch` remain available.
+- No UI, data model, or application behavior was changed in this version.
+- For ad-hoc refreshes, the recommended manual path remains GitHub Actions `Run workflow`.
+
 ## What Changed
 ### Data and Holdings
 - Added canonical holdings input in [data/holdings.csv](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/data/holdings.csv).
@@ -29,6 +40,12 @@ This document records the first implementation pass of the approved v1.0.0 plan.
 ### Static Output
 - Generated the updated static site at [docs/index.html](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/docs/index.html).
 - Added static assets under [docs/static](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/docs/static).
+
+### Deployment Preparation
+- Updated [deploy-pages.yml](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/.github/workflows/deploy-pages.yml) to deploy from the `main` branch through GitHub Pages Actions.
+- Added [docs/CNAME](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/docs/CNAME) for the custom domain `portfolio.weiweifan.com`.
+- Configured the local `origin` remote for the GitHub repository `BrianEE07/MyPortfolio`.
+- Corrected the GitHub account typo during deployment setup and confirmed the remote now points to `BrianEE07`.
 
 ## Verification
 - Python syntax check passed for the new application modules.
