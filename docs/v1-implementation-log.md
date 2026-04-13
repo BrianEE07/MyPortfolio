@@ -43,7 +43,7 @@ This document records the first implementation pass of the approved v1.0.0 plan.
 
 ### Deployment Preparation
 - Updated [deploy-pages.yml](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/.github/workflows/deploy-pages.yml) to deploy from the `main` branch through GitHub Pages Actions.
-- Added [docs/CNAME](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/docs/CNAME) for the custom domain `portfolio.weiweifan.com`.
+- Confirmed that a separate `docs/CNAME` file is not required for this site because deployment uses a custom GitHub Actions workflow for GitHub Pages.
 - Configured the local `origin` remote for the GitHub repository `BrianEE07/MyPortfolio`.
 - Corrected the GitHub account typo during deployment setup and confirmed the remote now points to `BrianEE07`.
 
