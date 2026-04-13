@@ -125,3 +125,22 @@ python3 portfolio.py --output docs/index.html
 - Keep pull requests focused and narrow in scope.
 - Document behavior impact, UI impact, data-model impact, and deployment impact when relevant.
 - Include screenshots when UI output changes.
+
+## Git Commit Workflow
+- Before creating a commit, record the implementation scope in project docs when the change is substantial.
+- For milestone-sized work, add or update a version log under `docs/`, such as `docs/v1-implementation-log.md`.
+- Run the minimum relevant verification before staging changes.
+- At a minimum, prefer:
+
+```bash
+PYTHONPYCACHEPREFIX=/tmp/pycache python3 -m py_compile portfolio.py
+python3 portfolio.py --output docs/index.html
+```
+
+- Stage only files related to the requested task.
+- Do not stage local-only artifacts such as `.venv/`, `.DS_Store`, temporary output, or unrelated generated files.
+- Keep `.gitignore` updated when local environment noise appears during work.
+- If a tracked deployment file is intentionally ignored, add it explicitly and document why.
+- Check `git status --short` before commit and leave the working tree clean after commit whenever practical.
+- Use concise commit messages in the form `<type>: <summary>`.
+- If the change includes user-visible behavior, ensure the commit includes the related docs, generated static output, and runtime assets needed for deployment consistency.
