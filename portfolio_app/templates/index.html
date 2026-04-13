@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_title }}</title>
+    <script>
+        (function () {
+            try {
+                var savedTheme = localStorage.getItem("portfolio-theme");
+                if (savedTheme === "dark" || savedTheme === "light") {
+                    document.documentElement.setAttribute("data-theme", savedTheme);
+                }
+            } catch (error) {
+                document.documentElement.setAttribute("data-theme", "light");
+            }
+        }());
+    </script>
+    <link rel="stylesheet" href="{{ styles_url }}">
+    <script defer src="{{ chart_js_url }}"></script>
+    <script defer src="{{ app_js_url }}"></script>
+</head>
+<body>
+    <div class="site-shell">
+        <header class="site-header">
+            <div>
+                <p class="eyebrow">Portfolio Dashboard / 投資儀表板</p>
+                <h1>{{ site_title }}</h1>
+                <p class="site-subtitle">{{ site_subtitle }}</p>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
+                    <span class="theme-toggle-label">Theme / 主題</span>
+                    <span class="theme-toggle-value" id="themeToggleValue">Light / 淺色</span>
+                </button>
+                <div class="updated-at">
+                    <span>Last Updated / 最後更新</span>
+                    <strong>{{ updated_at }} (Taipei)</strong>
+                </div>
+            </div>
+        </header>
+
+        <nav class="tabs" aria-label="Primary sections">
+            {% for tab in tabs %}
+            <button
+                type="button"
+                class="tab-button{% if loop.first %} is-active{% endif %}"
+                data-tab-target="{{ tab.id }}"
+                aria-selected="{{ 'true' if loop.first else 'false' }}"
+            >
+                <span>{{ tab.label_zh }}</span>
+                <span>{{ tab.label_en }}</span>
+            </button>
+            {% endfor %}
+        </nav>
+
+        <main class="tab-panels">
+            <section class="tab-panel is-active" id="tab-overview" data-tab-panel="overview">
+                <div class="section-heading">
+                    <h2>持倉總覽 / Holdings Overview</h2>
+                    <p>Portfolio summary and allocation snapshot / 持倉摘要與配置概覽</p>
+                </div>
+
+                {% if has_holdings %}
+                <div class="summary-grid">
+                    {% for card in summary_cards %}
+                    <article class="summary-card">
+                        <p class="summary-card-label">{{ card.label_zh }} / {{ card.label_en }}</p>
+                        <p class="summary-card-value{% if card.tone %} is-{{ card.tone }}{% endif %}">{{ card.value }}</p>
+                        <p class="summary-card-meta">{{ card.meta }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3>前十大持股 / Top Holdings</h3>
+                            <p>Position size by market value / 依市值排序的持倉分布</p>
+                        </div>
+                    </div>
+                    <div class="chart-panel">
+                        <canvas id="holdingsChart" aria-label="Top holdings chart"></canvas>
+                    </div>
+                    {% if holdings_chart_note %}
+                    <p class="panel-note">{{ holdings_chart_note }}</p>
+                    {% endif %}
+                </section>
+                {% else %}
+                <section class="empty-state">
+                    <h2>No holdings / 尚無持倉資料</h2>
+                    <p>Please provide canonical holdings data before rendering the dashboard. / 請先提供 canonical holdings 資料。</p>
+                </section>
+                {% endif %}
+            </section>
+
+            <section class="tab-panel" id="tab-details" data-tab-panel="details">
+                <div class="section-heading">
+                    <h2>個股明細 / Stock Details</h2>
+                    <p>Per-position pricing, valuation, and trend details / 個股報價、估值與趨勢資訊</p>
+                </div>
+
+                <section class="panel">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>代號 / Symbol</th>
+                                    <th>現價 / Price</th>
+                                    <th>均價 / Avg Cost</th>
+                                    <th>股數 / Shares</th>
+                                    <th>市值 / Market Value</th>
+                                    <th>回檔 / 1Y Drawdown</th>
+                                    <th>本益比 / Trailing P/E</th>
+                                    <th>預估本益比 / Forward P/E</th>
+                                    <th>趨勢 / Trend</th>
+                                    <th>損益 / P&amp;L</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in holdings_rows %}
+                                <tr>
+                                    <td>{{ row.symbol }}</td>
+                                    <td>{{ row.price_str }}</td>
+                                    <td>${{ row.cost_basis_str }}</td>
+                                    <td>{{ row.shares_str }}</td>
+                                    <td>{{ row.market_value_str }}</td>
+                                    <td>{{ row.drawdown_str }}</td>
+                                    <td>{{ row.trailing_pe_str }}</td>
+                                    <td>{{ row.forward_pe_str }}</td>
+                                    <td><span class="pill is-{{ row.trend_tone }}">{{ row.trend_label }}</span></td>
+                                    <td class="tone-{{ row.profit_tone }}">
+                                        {{ row.profit_str }}<br>
+                                        <span class="table-subtext">{{ row.profit_pct_str }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <section class="tab-panel" id="tab-pulse" data-tab-panel="pulse">
+                <div class="section-heading">
+                    <h2>市場觀察 / Market Pulse</h2>
+                    <p>Macro and sentiment indicators preserved from the original dashboard / 保留原始儀表板中的市場情緒與宏觀觀察</p>
+                </div>
+
+                <div class="macro-layout">
+                    <section class="panel fear-greed-panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3>市場情緒 / Fear &amp; Greed</h3>
+                                <p>CNN Fear &amp; Greed overview / 市場情緒快照</p>
+                            </div>
+                            <a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener">Source ↗</a>
+                        </div>
+                        <div class="fear-greed-grid">
+                            <div class="fear-greed-score">
+                                <div class="score-value">{{ fear_greed.score_str }}</div>
+                                <div class="score-label">{{ fear_greed.rating }}</div>
+                                <dl class="score-meta">
+                                    <div>
+                                        <dt>Previous / 前一日</dt>
+                                        <dd>{{ fear_greed.previous_close_str }} · {{ fear_greed.previous_close_rating }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Delta / 變動</dt>
+                                        <dd class="tone-{{ fear_greed.delta_tone }}">{{ fear_greed.delta_str }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>1W / 一週前</dt>
+                                        <dd>{{ fear_greed.week_ago.score_str }} · {{ fear_greed.week_ago.rating }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>1M / 一月前</dt>
+                                        <dd>{{ fear_greed.month_ago.score_str }} · {{ fear_greed.month_ago.rating }}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>1Y / 一年前</dt>
+                                        <dd>{{ fear_greed.year_ago.score_str }} · {{ fear_greed.year_ago.rating }}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            <div class="chart-panel">
+                                <canvas id="fearGreedChart" aria-label="Fear and Greed chart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3>S&amp;P 500 實際本益比 / S&amp;P 500 Trailing P/E</h3>
+                                <p>Trailing valuation snapshot / 實際本益比觀察</p>
+                            </div>
+                            <a href="{{ sp500_trailing_pe.source_url }}" target="_blank" rel="noopener">Source ↗</a>
+                        </div>
+                        <div class="metric-strip">
+                            <div class="metric-strip-item">
+                                <span>Latest / 最新值</span>
+                                <strong>{{ sp500_trailing_pe.value_str }}</strong>
+                                <small>{{ sp500_trailing_pe.valuation }}</small>
+                            </div>
+                            <div class="metric-strip-item">
+                                <span>Previous / 前值</span>
+                                <strong>{{ sp500_trailing_pe.prev_value_str }}</strong>
+                                <small>{{ sp500_trailing_pe.date }}</small>
+                            </div>
+                            <div class="metric-strip-item">
+                                <span>Delta / 變動</span>
+                                <strong>{{ sp500_trailing_pe.delta_str }}</strong>
+                                <small>{{ sp500_trailing_pe.source_name }}</small>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="macro-card-grid">
+                        {% for card in macro_cards %}
+                        <article class="panel macro-card">
+                            <p class="macro-card-title">{{ card.title_zh }} / {{ card.title_en }}</p>
+                            <p class="macro-card-value">{{ card.value }}</p>
+                            <p class="macro-card-description">{{ card.description }}</p>
+                        </article>
+                        {% endfor %}
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3>S&amp;P 500 指數快照 / S&amp;P 500 Snapshot</h3>
+                                <p>Price and moving averages / 價格與均線</p>
+                            </div>
+                        </div>
+                        <div class="snapshot-grid">
+                            {% for item in sp500_snapshot_cards %}
+                            <div class="snapshot-cell">
+                                <span>{{ item.label_zh }} / {{ item.label_en }}</span>
+                                <strong>{{ item.value }}</strong>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            Data sources: Yahoo Finance, CNN, FINRA, Multpl / 僅供個人追蹤參考，不構成任何投資建議
+        </footer>
+    </div>
+
+    <script id="app-payload" type="application/json">{{ frontend_payload | tojson }}</script>
+</body>
+</html>

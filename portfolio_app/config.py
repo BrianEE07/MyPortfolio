@@ -1,0 +1,17 @@
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
+HOLDINGS_CSV_PATH = DATA_DIR / "holdings.csv"
+HOLDINGS_JSON_PATH = DATA_DIR / "holdings.json"
+
+SITE_TITLE = "Wei's Portfolio"
+SITE_SUBTITLE = "為的投資組合"
+TIMEZONE_NAME = "Asia/Taipei"
+CHART_JS_URL = "https://cdn.jsdelivr.net/npm/chart.js"
+
+DEFAULT_TABS = (
+    {"id": "overview", "label_zh": "持倉總覽", "label_en": "Holdings Overview"},
+    {"id": "details", "label_zh": "個股明細", "label_en": "Stock Details"},
+    {"id": "pulse", "label_zh": "市場觀察", "label_en": "Market Pulse"},
+)

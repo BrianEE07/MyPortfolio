@@ -1,3 +1,4 @@
 .github
 Procfile
-
+.DS_Store
+.venv/
