@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from .config import HOLDINGS_CSV_PATH, HOLDINGS_JSON_PATH
+from .config import HOLDINGS_JSON_PATH, LOCAL_CANONICAL_HOLDINGS_CSV_PATH
 
 CANONICAL_FIELDS = ("symbol", "shares", "cost_basis")
 
@@ -47,6 +47,21 @@ def normalize_holding(raw_holding: dict, row_number: int) -> dict:
     return holding
 
 
+def validate_holdings_data(raw_holdings: object) -> list[dict]:
+    """Validate and normalize a list of holdings records."""
+    if not isinstance(raw_holdings, list):
+        raise HoldingsValidationError("Holdings data must contain a list.")
+
+    holdings = []
+    for index, entry in enumerate(raw_holdings, start=1):
+        if not isinstance(entry, dict):
+            raise HoldingsValidationError(
+                f"Entry {index}: each holding must be an object."
+            )
+        holdings.append(normalize_holding(entry, index))
+    return holdings
+
+
 def _validate_fields(fieldnames: Optional[list[str]]) -> None:
     if not fieldnames:
         raise HoldingsValidationError("The CSV file is missing a header row.")
@@ -58,7 +73,9 @@ def _validate_fields(fieldnames: Optional[list[str]]) -> None:
         )
 
 
-def convert_holdings_csv_to_data(csv_path: Path = HOLDINGS_CSV_PATH) -> list[dict]:
+def convert_holdings_csv_to_data(
+    csv_path: Path = LOCAL_CANONICAL_HOLDINGS_CSV_PATH,
+) -> list[dict]:
     """Convert canonical CSV holdings input into validated holdings records."""
     with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -73,26 +90,29 @@ def convert_holdings_csv_to_data(csv_path: Path = HOLDINGS_CSV_PATH) -> list[dic
 
 
 def write_holdings_json(
-    csv_path: Path = HOLDINGS_CSV_PATH, json_path: Path = HOLDINGS_JSON_PATH
+    csv_path: Path = LOCAL_CANONICAL_HOLDINGS_CSV_PATH,
+    json_path: Path = HOLDINGS_JSON_PATH,
 ) -> list[dict]:
     """Convert holdings CSV into canonical JSON and write it to disk."""
     holdings = convert_holdings_csv_to_data(csv_path)
+    return write_holdings_data(holdings, json_path)
+
+
+def write_holdings_data(
+    holdings: object, json_path: Path = HOLDINGS_JSON_PATH
+) -> list[dict]:
+    """Validate holdings and atomically persist canonical JSON to disk."""
+    normalized_holdings = validate_holdings_data(holdings)
     json_path.parent.mkdir(parents=True, exist_ok=True)
-    json_path.write_text(json.dumps(holdings, indent=2), encoding="utf-8")
-    return holdings
+    temp_path = json_path.with_name(f"{json_path.name}.tmp")
+    temp_path.write_text(
+        json.dumps(normalized_holdings, indent=2), encoding="utf-8"
+    )
+    temp_path.replace(json_path)
+    return normalized_holdings
 
 
 def load_holdings(json_path: Path = HOLDINGS_JSON_PATH) -> list[dict]:
     """Load holdings from canonical JSON and validate the stored schema."""
     data = json.loads(json_path.read_text(encoding="utf-8"))
-    if not isinstance(data, list):
-        raise HoldingsValidationError("Holdings JSON must contain a list.")
-
-    holdings = []
-    for index, entry in enumerate(data, start=1):
-        if not isinstance(entry, dict):
-            raise HoldingsValidationError(
-                f"Entry {index}: each holding must be an object."
-            )
-        holdings.append(normalize_holding(entry, index))
-    return holdings
+    return validate_holdings_data(data)

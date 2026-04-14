@@ -1,2 +1,12 @@
 .DS_Store
 .venv/
+.env
+.env.*
+!.env.example
+imports/
+private/
+secrets/
+*.key
+*.pem
+*.pfx
+*.xlsx

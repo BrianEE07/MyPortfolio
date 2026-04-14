@@ -16,8 +16,21 @@ Current implementation work should align with the approved v1.0.0 plan:
 
 When making implementation decisions, prefer options that move the project toward this structure.
 
+## Active v1.1.0 Direction
+Current implementation work should also support the approved v1.1.0 holdings update direction:
+
+- keep one canonical holdings schema: `symbol`, `shares`, `cost_basis`
+- treat `data/holdings.json` as the single canonical source used by the app
+- prefer local import flows over direct broker API integration
+- keep raw broker exports, local config, and secrets outside the repo
+- extend holdings ingestion through adapter-style source boundaries rather than UI changes
+- preserve the current Flask, static export, and GitHub Pages deployment flow
+
 ## Project Context
-- The current project is centered on `portfolio.py`, a single-file Flask application that can both serve the site locally and generate a static HTML snapshot.
+- The current project uses `portfolio.py` as a thin wrapper around the modular `portfolio_app/` package.
+- `portfolio_app/` separates holdings validation, local import flow, market data access, snapshot assembly, Flask routing, templates, and static assets.
+- `data/holdings.json` is the only canonical holdings data file used at runtime.
+- `imports/` is the local-only input area for manual CSV and broker export files.
 - Runtime dependencies live in `requirements.txt`.
 - Deployment-related files include `Procfile` and `.github/workflows/deploy-pages.yml`.
 - Generated static output should be written under `docs/`, such as `docs/index.html`.
@@ -59,6 +72,7 @@ When making implementation decisions, prefer options that move the project towar
 - Dark mode support should be implemented through reusable theme tokens or an equivalent maintainable system, not by duplicating entire templates.
 - The default top-level information architecture should center on `Holdings Overview` and `Stock Details`.
 - The holdings model should be kept minimal during v1.0.0. Add fields only when they support a concrete need in calculations, rendering, or migration.
+- For v1.1.0, new holdings sources should normalize into the existing canonical schema before any snapshot or UI logic runs.
 - UI restructuring should not bypass structural cleanup. Prefer aligning tabs and themes with extracted templates and clearer view models.
 
 ## Modification Strategy
@@ -100,8 +114,24 @@ python3 portfolio.py --serve
 python3 portfolio.py --output docs/index.html
 ```
 
+- For local holdings import validation, use:
+
+```bash
+python3 scripts/import_holdings.py imports/holdings.csv
+python3 scripts/import_holdings.py data/holdings.json --source-type canonical_json
+python3 scripts/import_holdings.py imports/firstrade/FT_CSV_91323853.csv --source-type firstrade_csv
+python3 scripts/import_holdings.py imports/holdings.csv --build-output /tmp/portfolio-preview/index.html
+pytest
+```
+
 - If a change affects rendering or data assembly, verify both `/` and `/health`, and confirm static export still works.
 - If a change introduces new module seams or data transformations, add focused tests where practical rather than relying only on manual checks.
+
+## Data And Secrets Boundary
+- Canonical holdings that are intentionally shown on the public site may remain in repo.
+- Raw broker exports, local-only import files, `.env`, `.env.local`, API keys, certificates, and account secrets must stay out of repo.
+- Prefer `imports/`, `private/`, or `secrets/` for local source material, and keep them in `.gitignore`.
+- Use `.env.example` only for placeholder variable names, never real values.
 
 ## Refactoring Guidance For This Repository
 - The current codebase has significant responsibility concentration in `portfolio.py`.
@@ -122,6 +152,7 @@ python3 portfolio.py --output docs/index.html
 
 ## Commit And PR Guidance
 - Follow concise commit subjects in the form `<type>: <summary>`, consistent with the current history such as `init: clone portfolio template`.
+- For versioned milestone commits, include the version keyword in the subject, such as `feat: v1.1.0 add firstrade holdings import`.
 - Keep pull requests focused and narrow in scope.
 - Document behavior impact, UI impact, data-model impact, and deployment impact when relevant.
 - Include screenshots when UI output changes.
@@ -143,4 +174,5 @@ python3 portfolio.py --output docs/index.html
 - If a tracked deployment file is intentionally ignored, add it explicitly and document why.
 - Check `git status --short` before commit and leave the working tree clean after commit whenever practical.
 - Use concise commit messages in the form `<type>: <summary>`.
+- When the commit represents a version update or milestone, include the version keyword `vX.Y.Z` in the commit subject.
 - If the change includes user-visible behavior, ensure the commit includes the related docs, generated static output, and runtime assets needed for deployment consistency.

@@ -1,82 +1,66 @@
 # Codebase Review
 
 ## Project Overview
-This repository is currently a single-file Flask application centered on `portfolio.py`. It supports two delivery modes:
+This repository is now a modular Flask application that supports two runtime paths:
 
 - local serving through Flask
-- static HTML generation for GitHub Pages deployment
+- static HTML export for GitHub Pages deployment
 
-The application combines portfolio inventory, market data fetching, portfolio calculations, signal logic, HTML rendering, CSS, JavaScript, and application bootstrap in one place.
+v1.0.0 already separated the original prototype into clearer modules. The current v1.1.0 direction is to keep the UI and snapshot layer stable while making holdings updates easier and safer through local import flows.
 
 ## Current Architecture
-The current implementation is highly centralized. `portfolio.py` currently owns all of the following:
+The current structure is organized around four main layers:
 
-- holdings and watchlist data
-- external API access
-- in-memory caching
-- portfolio metrics and signal calculations
-- snapshot assembly for the template
-- Jinja template markup
-- inline CSS and frontend JavaScript
-- Flask routes and CLI entry behavior
+- `portfolio_app/holdings.py` for canonical holdings schema validation and persistence
+- `portfolio_app/market_data.py` for external market data access and caching
+- `portfolio_app/snapshot.py` for portfolio calculations and view-model assembly
+- `portfolio_app/web.py` plus templates and static assets for Flask routes and rendering
 
-This architecture helped the project move quickly as a prototype, but it now creates friction for the approved v1.0.0 direction.
+`portfolio.py` is now a thin wrapper that preserves the existing serve and static-export entrypoints.
 
 ## Main Files And Responsibilities
 ### `portfolio.py`
-The main application file. It currently acts as data source, service layer, rendering layer, and app entrypoint.
+Thin CLI and application entry wrapper.
 
-### `requirements.txt`
-The Python dependency list for local development and CI installation.
+### `portfolio_app/config.py`
+Shared paths and site-level constants.
 
-### `Procfile`
-Deployment entry configuration for a WSGI-style runtime. This area still needs reconciliation with the actual module structure.
+### `portfolio_app/holdings.py`
+Canonical holdings schema validation, optional local canonical CSV parsing, JSON loading, and JSON persistence.
 
-### `.github/workflows/deploy-pages.yml`
-The workflow that installs dependencies, generates `docs/index.html`, and deploys the result to GitHub Pages.
+### `portfolio_app/holdings_import.py`
+Local source import entrypoint for supported holdings source types. This layer is the main extension point for future broker-specific adapters and now includes the first conservative Firstrade CSV adapter.
 
-### `AGENTS.md`
-The repository-level engineering rules used for future Codex collaboration and implementation decisions.
+### `portfolio_app/snapshot.py`
+Builds the snapshot used by the template from canonical holdings and external market data.
+
+### `portfolio_app/market_data.py`
+Fetches and caches prices, valuation data, and macro indicators.
+
+### `portfolio_app/web.py`
+Defines Flask routes and static export behavior.
+
+### `scripts/import_holdings.py`
+Local CLI for importing manual source files under `imports/` into canonical JSON and optionally rebuilding static output.
 
 ## Current Technical Debt
-- Too many responsibilities are concentrated in `portfolio.py`
-- Data access, business logic, UI composition, and app bootstrap are tightly coupled
-- Holdings data is still stored in a prototype-oriented structure instead of a stable canonical format
-- The current UI is implemented as one large page with one large template string
-- Theme decisions are embedded directly in the template instead of being driven by a reusable system
-- External data fetching behavior is scattered across the main file without a dedicated adapter layer
-- Error handling and observability remain weak
-- There is still no committed automated test baseline
+- `portfolio_app/market_data.py` still carries many responsibilities and multiple upstream integrations in one file
+- The import layer is intentionally minimal and currently supports only canonical CSV and canonical JSON
+- There is still no broker-specific adapter contract beyond the local source type boundary
+- The repo only has focused import tests today; market data and snapshot logic still rely mostly on smoke verification
 
 ## Maintainability Risks
-- Replacing prototype holdings with real portfolio data is harder than it should be because the current data shape is embedded directly in rendering and calculation flows
-- Introducing a minimal holdings schema will be error-prone if the current structure is not normalized first
-- Changing the site to tab-based navigation will be expensive while template, state, and rendering logic remain in one file
-- Adding light and dark themes will become messy if styling continues to live as inline, page-specific decisions
-- Small changes can still trigger regressions across calculations, rendering, and data access at the same time
-- The current structure makes isolated testing difficult and discourages incremental improvement
+- Future broker exports will drift in column names and formatting unless adapter-specific normalization stays isolated from the canonical schema layer
+- `snapshot.py` still assumes canonical `data/holdings.json` is always present locally; future multi-source or scheduled ingestion must keep that boundary explicit
+- Generated static output under `docs/` can create review noise if rebuilds are mixed into unrelated code changes
 
-## Issues Likely To Block Future Expansion
-### Holdings Data Evolution
-Future changes to cost basis rules, metadata, account grouping, or additional fields will be difficult until a single canonical holdings format exists.
+## v1.1.0 Focus
+The recommended low-risk path remains:
 
-### UI Evolution
-The current one-page template is a poor fit for a tabbed layout, theme switching, and future navigation growth. Any additional UI work will become progressively harder if the template is not decomposed.
+- keep one canonical holdings schema
+- keep `data/holdings.json` as the single runtime source of truth
+- import external files locally, not through the public website
+- fail fast on invalid data and avoid partial writes
+- keep broker credentials, raw exports, and local-only config outside the repo
 
-### Service Boundaries
-Switching data providers, changing fallback behavior, or adding validation logic will require touching central application flow unless external integrations are extracted into dedicated modules.
-
-### Testing And Reviewability
-The absence of stable seams between data, logic, and UI increases review risk. Refactoring without stronger boundaries will remain slow and fragile.
-
-## v1.0.0 Implications
-Under the approved v1.0.0 plan, the most important architectural pressure points are now clear:
-
-- define the minimal holdings schema first
-- refactor around that schema rather than around the old prototype data
-- separate data, UI, and external fetch logic before major UI changes
-- introduce a theme system before layering light and dark mode behavior
-- move from a long single-page layout to explicit tabs only after structural boundaries are in place
-
-## Conclusion
-The current codebase is still functional as a prototype, but it does not match the shape required for the approved v1.0.0 roadmap. The immediate priority is no longer generic cleanup alone; it is to establish the structural and data foundations required for real holdings data, tab-based navigation, and a maintainable light/dark theme system.
+This keeps the codebase easy to reason about while leaving room for future FT or 永豐專用 adapters without forcing a backend rewrite.

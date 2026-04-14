@@ -5,3 +5,4 @@ pytz
 requests
 pandas
 numpy
+pytest

@@ -3,6 +3,66 @@
 ## Summary
 This document records the first implementation pass of the approved v1.0.0 plan. The project was moved from a single-file prototype toward a maintainable application structure while preserving the existing Flask and static-export workflow.
 
+## v1.1.0
+### Local Holdings Import
+- Added a local holdings import path for v1.1.0 instead of integrating broker APIs directly.
+- Chose the local import approach to keep broker credentials, raw exports, and future certificates out of the public site, repo history, and deployment workflow.
+- Kept the public application boundary unchanged: the app still reads canonical holdings from `data/holdings.json`.
+- Finalized `data/holdings.json` as the single canonical holdings source used by the app runtime.
+
+### Data Flow
+- Clarified the intended data flow as:
+  - local source file
+  - source normalization
+  - canonical holdings validation
+  - canonical JSON persistence
+  - snapshot assembly
+  - Flask rendering or static export
+- Added [portfolio_app/holdings_import.py](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/portfolio_app/holdings_import.py) as the local import boundary for supported source types.
+- Kept the canonical holdings schema unchanged:
+  - `symbol`
+  - `shares`
+  - `cost_basis`
+
+### CLI And Safety
+- Expanded [scripts/import_holdings.py](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/scripts/import_holdings.py) into a general local import CLI.
+- Added support for:
+  - canonical CSV
+  - canonical JSON
+  - Firstrade Account History / Transactions CSV
+  - optional static HTML rebuild after import
+- Moved local manual input files out of `data/` and into `imports/`, so repo-tracked data and local source files are no longer mixed together.
+- Added fail-fast protection so invalid imports do not overwrite the existing canonical JSON file.
+- Switched canonical JSON persistence to an atomic write path.
+- Added the first broker-specific adapter with a conservative Firstrade mapping:
+  - only `RecordType=Trade`
+  - only `BUY` and `SELL`
+  - weighted-average cost basis reconstruction
+  - non-trade funding rows ignored
+
+### Repo And Security Boundary
+- Added `.env.example` for future local-only broker integration placeholders.
+- Updated `.gitignore` to exclude:
+  - `.env` and `.env.*`
+  - local import directories
+  - certificates and common key file types
+  - spreadsheet exports
+- Moved the provided Firstrade export sample into `imports/firstrade/`, which is ignored by git.
+- Removed the tracked `data/holdings.csv` role from the canonical runtime path and kept canonical CSV as a local import-only format under `imports/`.
+- Added [docs/holdings-import.md](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/docs/holdings-import.md) to document the supported local update flow.
+
+### Documentation Refresh
+- Updated [docs/codebase-review.md](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/docs/codebase-review.md) to reflect the current modular application structure rather than the old single-file prototype.
+- Updated [AGENTS.md](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/AGENTS.md) with the v1.1.0 holdings-import direction, test commands, and local secrets boundary.
+
+### Verification
+- Added focused `pytest` coverage for:
+  - canonical CSV import
+  - canonical JSON import
+  - fail-fast behavior when CSV input is invalid
+  - fail-fast behavior when JSON input is invalid
+- Verified that local import can still feed static export successfully without changing the public runtime interface.
+
 ## v1.0.1
 ### Scheduled Updates
 - Updated [deploy-pages.yml](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/.github/workflows/deploy-pages.yml) to run one automatic GitHub Pages refresh per day.
@@ -16,9 +76,8 @@ This document records the first implementation pass of the approved v1.0.0 plan.
 
 ## What Changed
 ### Data and Holdings
-- Added canonical holdings input in [data/holdings.csv](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/data/holdings.csv).
 - Added canonical holdings storage in [data/holdings.json](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/data/holdings.json).
-- Added a reusable CSV-to-JSON import flow in [scripts/import_holdings.py](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/scripts/import_holdings.py).
+- Added a reusable local import flow in [scripts/import_holdings.py](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/scripts/import_holdings.py).
 - Defined the v1 holdings schema as `symbol`, `shares`, and `cost_basis`.
 
 ### Application Structure

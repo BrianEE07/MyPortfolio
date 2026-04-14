@@ -2,7 +2,8 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
-HOLDINGS_CSV_PATH = DATA_DIR / "holdings.csv"
+IMPORTS_DIR = BASE_DIR / "imports"
+LOCAL_CANONICAL_HOLDINGS_CSV_PATH = IMPORTS_DIR / "holdings.csv"
 HOLDINGS_JSON_PATH = DATA_DIR / "holdings.json"
 
 SITE_TITLE = "Wei's Portfolio"
