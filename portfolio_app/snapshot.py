@@ -24,10 +24,31 @@ def _format_currency(value):
     return f"${value:,.2f}"
 
 
+def _format_detail_currency(value, decimals_small=2, decimals_medium=1):
+    if value is None:
+        return "N/A"
+    absolute_value = abs(value)
+    if absolute_value >= 100000:
+        return f"${value:,.0f}"
+    if absolute_value >= 10000:
+        return f"${value:,.1f}"
+    return f"${value:,.{decimals_small}f}" if absolute_value < 1000 else f"${value:,.{decimals_medium}f}"
+
+
 def _format_percent(value, signed=False):
     if value is None:
         return "N/A"
     return f"{value:+.2f}%" if signed else f"{value:.2f}%"
+
+
+def _format_detail_percent(value):
+    if value is None:
+        return "N/A"
+    if value == 0:
+        return "0.00%"
+    if abs(value) >= 100:
+        return f"{value:+.1f}%"
+    return f"{value:+.2f}%"
 
 
 def _format_signed_currency(value):
@@ -46,10 +67,34 @@ def _tone_for_number(value):
     return "muted"
 
 
+def _format_detail_shares(value):
+    if value is None:
+        return "N/A"
+
+    absolute_value = abs(value)
+    if absolute_value >= 1000:
+        formatted = f"{value:,.1f}"
+    elif absolute_value >= 100:
+        formatted = f"{value:,.2f}"
+    elif absolute_value >= 1:
+        formatted = f"{value:,.4f}"
+    else:
+        formatted = f"{value:,.5f}"
+
+    return formatted.rstrip("0").rstrip(".")
+
+
+def _format_detail_signed_currency(value):
+    if value is None:
+        return "N/A"
+    sign = "+" if value > 0 else "-" if value < 0 else ""
+    return sign + _format_detail_currency(abs(value))
+
+
 def _trend_label(is_below_ma250):
     if is_below_ma250:
-        return "Below 250D / 跌破年線"
-    return "Above 250D / 站上年線"
+        return "Below 250D"
+    return "Above 250D"
 
 
 def build_portfolio_snapshot():
@@ -93,26 +138,48 @@ def build_portfolio_snapshot():
             {
                 "symbol": symbol,
                 "shares": shares,
-                "shares_str": f"{shares:.5f}",
+                "shares_str": _format_detail_shares(shares),
                 "cost_basis": cost_basis,
                 "cost_basis_str": f"{cost_basis:.2f}",
+                "cost_basis_detail_str": _format_detail_currency(cost_basis).replace("$", ""),
                 "cost_total": cost_total,
                 "cost_total_str": _format_currency(cost_total),
                 "price": live_price,
                 "price_str": f"{live_price:.2f}" if live_price is not None else "N/A",
+                "price_detail_str": _format_detail_currency(live_price),
+                "price_tone": (
+                    _tone_for_number(live_price - cost_basis)
+                    if live_price is not None
+                    else "muted"
+                ),
                 "market_value": market_value,
                 "market_value_str": _format_currency(market_value),
+                "market_value_detail_str": _format_detail_currency(market_value),
                 "profit": profit,
                 "profit_str": _format_currency(profit),
+                "profit_detail_str": _format_detail_signed_currency(profit),
                 "profit_pct": profit_pct,
                 "profit_pct_str": _format_percent(profit_pct, signed=True),
+                "profit_pct_detail_str": _format_detail_percent(profit_pct),
                 "profit_tone": _tone_for_number(profit),
                 "drawdown": technicals.get("drawdown"),
                 "drawdown_str": _format_percent(technicals.get("drawdown"), signed=True),
+                "drawdown_detail_str": _format_detail_percent(technicals.get("drawdown")),
+                "drawdown_tone": _tone_for_number(technicals.get("drawdown")),
+                "trailing_pe": (
+                    pe_data.get("trailing_pe")
+                    if pe_data and pe_data.get("trailing_pe") is not None
+                    else None
+                ),
                 "trailing_pe_str": (
                     f"{pe_data['trailing_pe']:.1f}"
                     if pe_data and pe_data.get("trailing_pe") is not None
                     else "N/A"
+                ),
+                "forward_pe": (
+                    pe_data.get("forward_pe")
+                    if pe_data and pe_data.get("forward_pe") is not None
+                    else None
                 ),
                 "forward_pe_str": (
                     f"{pe_data['forward_pe']:.1f}"

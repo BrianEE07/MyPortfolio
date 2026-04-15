@@ -90,6 +90,8 @@ Current implementation work should also support the approved v1.1.0 holdings upd
 - Avoid opportunistic edits unrelated to the requested task.
 - If a decision has meaningful tradeoffs, surface them clearly before proceeding.
 - Keep document updates and implementation work aligned. If the plan changes, update the relevant project documents before or alongside the code.
+- When a version-sized change is completed, record it in an existing version document or create a new version document under `docs/` if needed.
+- Prefer leaving a clear written implementation trail for each completed version rather than relying only on commit history.
 
 ## Testing And Verification
 - There is no committed automated test suite yet, so verification must be intentional.
@@ -126,6 +128,8 @@ pytest
 
 - If a change affects rendering or data assembly, verify both `/` and `/health`, and confirm static export still works.
 - If a change introduces new module seams or data transformations, add focused tests where practical rather than relying only on manual checks.
+- For user-visible UI changes, usually start the local server and provide a localhost URL for review unless the user explicitly says not to.
+- When local review is part of the workflow, prefer giving the user a working local URL before moving on to commit and push steps.
 
 ## Data And Secrets Boundary
 - Canonical holdings that are intentionally shown on the public site may remain in repo.
@@ -159,7 +163,7 @@ pytest
 
 ## Git Commit Workflow
 - Before creating a commit, record the implementation scope in project docs when the change is substantial.
-- For milestone-sized work, add or update a version log under `docs/`, such as `docs/v1-implementation-log.md`.
+- For milestone-sized or versioned work, add or update a version log under `docs/`, such as `docs/v1-implementation-log.md`, or create a new version-specific document when that is clearer.
 - Run the minimum relevant verification before staging changes.
 - At a minimum, prefer:
 

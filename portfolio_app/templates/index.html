@@ -30,8 +30,8 @@
             </div>
             <div class="header-actions">
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
-                    <span class="theme-toggle-label">Theme / 主題</span>
-                    <span class="theme-toggle-value" id="themeToggleValue">Light / 淺色</span>
+                    <span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">☀</span>
+                    <span class="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">☾</span>
                 </button>
                 <div class="updated-at">
                     <span>Last Updated / 最後更新</span>
@@ -95,43 +95,152 @@
             </section>
 
             <section class="tab-panel" id="tab-details" data-tab-panel="details">
-                <div class="section-heading">
+                <div class="section-heading section-heading-compact">
                     <h2>個股明細 / Stock Details</h2>
                     <p>Per-position pricing, valuation, and trend details / 個股報價、估值與趨勢資訊</p>
                 </div>
 
-                <section class="panel">
-                    <div class="table-wrapper">
-                        <table>
+                <section class="panel panel-compact holdings-detail-panel">
+                    <div class="table-wrapper table-wrapper-compact">
+                        <table class="holdings-detail-table">
+                            <colgroup>
+                                <col class="col-symbol">
+                                <col class="col-price">
+                                <col class="col-cost">
+                                <col class="col-shares">
+                                <col class="col-market-value">
+                                <col class="col-trailing-pe">
+                                <col class="col-forward-pe">
+                                <col class="col-drawdown">
+                                <col class="col-trend">
+                                <col class="col-pnl">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th>代號 / Symbol</th>
-                                    <th>現價 / Price</th>
-                                    <th>均價 / Avg Cost</th>
-                                    <th>股數 / Shares</th>
-                                    <th>市值 / Market Value</th>
-                                    <th>回檔 / 1Y Drawdown</th>
-                                    <th>本益比 / Trailing P/E</th>
-                                    <th>預估本益比 / Forward P/E</th>
-                                    <th>趨勢 / Trend</th>
-                                    <th>損益 / P&amp;L</th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell">
+                                            <button type="button" class="sort-button" data-sort-key="symbol" data-sort-type="string">
+                                                <span>代號</span><small>Symbol</small>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell">
+                                            <button type="button" class="sort-button" data-sort-key="price" data-sort-type="number">
+                                                <span>現價</span><small>Price</small>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell">
+                                            <button type="button" class="sort-button" data-sort-key="cost-basis" data-sort-type="number">
+                                                <span>均價</span><small>Avg Cost</small>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell">
+                                            <button type="button" class="sort-button" data-sort-key="shares" data-sort-type="number">
+                                                <span>股數</span><small>Shares</small>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="descending">
+                                        <div class="header-cell">
+                                            <button type="button" class="sort-button is-active" data-sort-key="market-value" data-sort-type="number" data-default-direction="desc">
+                                                <span>持倉市值</span><small>Position Value</small>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell has-info">
+                                            <button type="button" class="sort-button" data-sort-key="trailing-pe" data-sort-type="number">
+                                                <span class="sort-button-topline">
+                                                    <span>本益比</span>
+                                                    <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比。" data-tooltip-en="Price divided by trailing twelve-month earnings per share.">?</span>
+                                                </span>
+                                                <small>Trailing P/E</small>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell has-info">
+                                            <button type="button" class="sort-button" data-sort-key="forward-pe" data-sort-type="number">
+                                                <span class="sort-button-topline">
+                                                    <span>預估本益比</span>
+                                                    <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比。" data-tooltip-en="Price divided by expected next-year earnings per share.">?</span>
+                                                </span>
+                                                <small>Forward P/E</small>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell has-info">
+                                            <button type="button" class="sort-button" data-sort-key="drawdown" data-sort-type="number">
+                                                <span class="sort-button-topline">
+                                                    <span>一年回檔</span>
+                                                    <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="一年內距離高點的跌幅。" data-tooltip-en="Percentage drop from the stock's highest price over the past year.">?</span>
+                                                </span>
+                                                <small>1Y Drawdown</small>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="header-cell has-info">
+                                            <div class="header-label header-label-with-info">
+                                                <span class="header-label-topline">
+                                                    <span>趨勢</span>
+                                                    <span class="info-chip" tabindex="0" aria-label="Trend help" data-tooltip-zh="比較現價和 250 日均線的位置。" data-tooltip-en="Compares the current price with the 250-day moving average.">?</span>
+                                                </span>
+                                                <small>Trend</small>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell has-info">
+                                            <button type="button" class="sort-button" data-sort-key="profit-pct" data-sort-type="number">
+                                                <span class="sort-button-topline">
+                                                    <span>損益</span>
+                                                    <span class="info-chip" tabindex="0" aria-label="P and L help" data-tooltip-zh="未實現報酬率與損益金額。" data-tooltip-en="Unrealized return percentage and profit or loss amount.">?</span>
+                                                </span>
+                                                <small>P&amp;L</small>
+                                            </button>
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody data-sort-default-key="market-value" data-sort-default-direction="desc">
                                 {% for row in holdings_rows %}
-                                <tr>
-                                    <td>{{ row.symbol }}</td>
-                                    <td>{{ row.price_str }}</td>
-                                    <td>${{ row.cost_basis_str }}</td>
+                                <tr
+                                    data-sort-symbol="{{ row.symbol }}"
+                                    data-sort-price="{{ row.price if row.price is not none else '' }}"
+                                    data-sort-cost-basis="{{ row.cost_basis }}"
+                                    data-sort-shares="{{ row.shares }}"
+                                    data-sort-market-value="{{ row.market_value if row.market_value is not none else '' }}"
+                                    data-sort-drawdown="{{ row.drawdown if row.drawdown is not none else '' }}"
+                                    data-sort-trailing-pe="{{ row.trailing_pe if row.trailing_pe is not none else '' }}"
+                                    data-sort-forward-pe="{{ row.forward_pe if row.forward_pe is not none else '' }}"
+                                    data-sort-profit-pct="{{ row.profit_pct if row.profit_pct is not none else '' }}"
+                                >
+                                    <td>
+                                        <div class="symbol-cell">
+                                            <span class="symbol-rank">{{ loop.index }}</span>
+                                            <div class="symbol-copy">
+                                                <strong>{{ row.symbol }}</strong>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="tone-{{ row.price_tone }}">{{ row.price_detail_str }}</td>
+                                    <td>${{ row.cost_basis_detail_str }}</td>
                                     <td>{{ row.shares_str }}</td>
-                                    <td>{{ row.market_value_str }}</td>
-                                    <td>{{ row.drawdown_str }}</td>
+                                    <td>{{ row.market_value_detail_str }}</td>
                                     <td>{{ row.trailing_pe_str }}</td>
                                     <td>{{ row.forward_pe_str }}</td>
+                                    <td class="tone-{{ row.drawdown_tone }}">{{ row.drawdown_detail_str }}</td>
                                     <td><span class="pill is-{{ row.trend_tone }}">{{ row.trend_label }}</span></td>
-                                    <td class="tone-{{ row.profit_tone }}">
-                                        {{ row.profit_str }}<br>
-                                        <span class="table-subtext">{{ row.profit_pct_str }}</span>
+                                    <td>
+                                        <span class="table-primary tone-{{ row.profit_tone }}">{{ row.profit_pct_detail_str }}</span><br>
+                                        <span class="table-subtext">{{ row.profit_detail_str }}</span>
                                     </td>
                                 </tr>
                                 {% endfor %}

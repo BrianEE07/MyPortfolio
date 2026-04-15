@@ -13,4 +13,4 @@ python3 scripts/import_holdings.py imports/holdings.csv
 python3 scripts/import_holdings.py imports/firstrade/FT_CSV_91323853.csv --source-type firstrade_csv
 ```
 
-For local holdings update details, see [docs/holdings-import.md](/Users/ywfan/Documents/Side_Projects/MySite/myportfolio/docs/holdings-import.md).
+For local holdings update details, see [docs/holdings-import.md](docs/holdings-import.md).
