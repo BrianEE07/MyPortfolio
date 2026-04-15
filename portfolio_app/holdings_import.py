@@ -44,7 +44,7 @@ class HoldingsImportError(ValueError):
 
 
 def _parse_number(raw_value: object, field_name: str) -> float:
-    value = str(raw_value or "").strip().replace(",", "").replace("$", "")
+    value = str("" if raw_value is None else raw_value).strip().replace(",", "").replace("$", "")
     if not value:
         raise HoldingsValidationError(f"'{field_name}' cannot be empty.")
     try:
@@ -105,13 +105,16 @@ def _normalize_firstrade_holdings(source_path: Path) -> list[dict]:
                     f"Row {row_number}: Firstrade trade row is missing a symbol."
                 )
 
-            quantity = _parse_number(row.get("Quantity"), f"Row {row_number} quantity")
+            raw_quantity = _parse_number(
+                row.get("Quantity"), f"Row {row_number} quantity"
+            )
             price = _parse_number(row.get("Price"), f"Row {row_number} price")
             commission = _parse_number(
                 row.get("Commission", 0) or 0, f"Row {row_number} commission"
             )
             fee = _parse_number(row.get("Fee", 0) or 0, f"Row {row_number} fee")
 
+            quantity = abs(raw_quantity)
             if quantity <= 0:
                 raise HoldingsValidationError(
                     f"Row {row_number}: trade quantity must be positive."

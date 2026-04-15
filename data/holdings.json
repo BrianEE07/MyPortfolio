@@ -1,7 +1,7 @@
 [
   {
     "symbol": "CRCL",
-    "shares": 0.87997,
+    "shares": 0.6922,
     "cost_basis": 85.23
   },
   {
@@ -10,9 +10,14 @@
     "cost_basis": 290.535
   },
   {
+    "symbol": "INTC",
+    "shares": 0.63495,
+    "cost_basis": 62.965
+  },
+  {
     "symbol": "MU",
-    "shares": 0.21355,
-    "cost_basis": 351.19
+    "shares": 0.16777999999999998,
+    "cost_basis": 351.19000000000005
   },
   {
     "symbol": "NVDA",
