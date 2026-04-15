@@ -160,6 +160,9 @@ This document records the first implementation pass of the approved v1.0.0 plan.
 - `push` on `main` and `workflow_dispatch` remain available.
 - No UI, data model, or application behavior was changed in this version.
 - For ad-hoc refreshes, the recommended manual path remains GitHub Actions `Run workflow`.
+- Current workflow timing was later adjusted to:
+  - `21:30 UTC`
+  - `05:30 Asia/Taipei`
 
 ## What Changed
 ### Data and Holdings
