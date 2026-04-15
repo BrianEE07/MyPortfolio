@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -6,6 +7,18 @@ from flask import Flask, render_template, url_for
 
 from .config import CHART_JS_URL
 from .snapshot import build_portfolio_snapshot
+
+
+def _asset_version(asset_name: str) -> str:
+    asset_path = Path(app.static_folder) / asset_name
+    return hashlib.md5(asset_path.read_bytes()).hexdigest()[:10]
+
+
+def _asset_url(asset_name: str, static_mode: bool = False) -> str:
+    version = _asset_version(asset_name)
+    if static_mode:
+        return f"static/{asset_name}?v={version}"
+    return url_for("static", filename=asset_name, v=version)
 
 
 def create_app():
@@ -16,8 +29,8 @@ def create_app():
         return render_template(
             "index.html",
             **build_portfolio_snapshot(),
-            styles_url=url_for("static", filename="styles.css"),
-            app_js_url=url_for("static", filename="app.js"),
+            styles_url=_asset_url("styles.css"),
+            app_js_url=_asset_url("app.js"),
             chart_js_url=CHART_JS_URL,
         )
 
@@ -33,13 +46,11 @@ app = create_app()
 
 def render_portfolio_html(static_mode=False):
     with app.app_context():
-        styles_url = "static/styles.css" if static_mode else url_for("static", filename="styles.css")
-        app_js_url = "static/app.js" if static_mode else url_for("static", filename="app.js")
         return render_template(
             "index.html",
             **build_portfolio_snapshot(),
-            styles_url=styles_url,
-            app_js_url=app_js_url,
+            styles_url=_asset_url("styles.css", static_mode=static_mode),
+            app_js_url=_asset_url("app.js", static_mode=static_mode),
             chart_js_url=CHART_JS_URL,
         )
 

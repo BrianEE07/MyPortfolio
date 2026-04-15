@@ -61,6 +61,7 @@ This document records the first implementation pass of the approved v1.0.0 plan.
 - Narrowed `Trailing P/E`, `Forward P/E`, and `1Y Drawdown` further and reallocated that space to the `Symbol` column.
 - Rebalanced the final header widths once more by giving `Forward P/E` a bit more room and tightening `P&L`, so the help icon and sort arrow no longer feel crowded.
 - Shifted `0.5%` of width from `Symbol` to `Trend` as the final table-balance adjustment before the `v1.1.2` commit.
+- Added content-hash query strings to exported `styles.css` and `app.js` URLs so GitHub Pages clients do not keep rendering stale cached assets after deployment.
 
 ### Verification
 - Rebuilt the static site successfully with `python portfolio.py --output docs/index.html`.
