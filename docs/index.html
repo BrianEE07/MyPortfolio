@@ -16,31 +16,53 @@
             }
         }());
     </script>
-    <link rel="stylesheet" href="static/styles.css?v=7b56ee01db">
+    <link rel="stylesheet" href="static/styles.css?v=e34fd31f05">
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script defer src="static/app.js?v=5f7ad57293"></script>
 </head>
 <body>
     <div class="site-shell">
         <header class="site-header">
-            <div>
-                <p class="eyebrow">Portfolio Dashboard / 投資儀表板</p>
+            <div class="site-brand">
+                <p class="eyebrow">
+                    <span class="eyebrow-en eyebrow-en-full">Portfolio Dashboard /</span>
+                    <span class="eyebrow-en eyebrow-en-short">Dashboard /</span>
+                    <span class="eyebrow-zh">投資儀表板</span>
+                </p>
                 <h1>Wei&#39;s Portfolio</h1>
                 <p class="site-subtitle">為的投資組合</p>
             </div>
             <div class="header-actions">
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
-                    <span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">☀</span>
-                    <span class="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">☾</span>
+                    <span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                            <circle cx="12" cy="12" r="4.5"></circle>
+                            <path d="M12 1.75v2.5M12 19.75v2.5M4.75 4.75l1.77 1.77M17.48 17.48l1.77 1.77M1.75 12h2.5M19.75 12h2.5M4.75 19.25l1.77-1.77M17.48 6.52l1.77-1.77"></path>
+                        </svg>
+                    </span>
+                    <span class="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                            <defs>
+                                <mask id="themeMoonMask">
+                                    <rect width="24" height="24" fill="white"></rect>
+                                    <circle cx="15.5" cy="8.5" r="7.25" fill="black"></circle>
+                                </mask>
+                            </defs>
+                            <circle cx="11.25" cy="12" r="7.5" mask="url(#themeMoonMask)"></circle>
+                        </svg>
+                    </span>
                 </button>
-                <div class="updated-at">
-                    <span>Last Updated / 最後更新</span>
-                    <strong>2026-04-15 23:18 (Taipei)</strong>
-                </div>
+                <p class="updated-at-inline">
+                    <span class="updated-at-label">Last updated</span>
+                    <time class="updated-at-value">
+                        <span class="updated-at-date">2026-04-16</span>
+                        <span class="updated-at-time">22:33 (Taipei)</span>
+                    </time>
+                </p>
             </div>
         </header>
 
-        <nav class="tabs" aria-label="Primary sections">
+        <nav class="tabs tabs-desktop" aria-label="Primary sections">
             
             <button
                 type="button"
@@ -576,6 +598,45 @@
                 </div>
             </section>
         </main>
+
+        <nav class="tabs-floating-shell" aria-label="Primary sections mobile">
+            <div class="tabs tabs-floating">
+                
+                <button
+                    type="button"
+                    class="tab-button tab-button-floating is-active"
+                    data-tab-target="overview"
+                    aria-selected="true"
+                    aria-label="持倉總覽 / Holdings Overview"
+                >
+                    <span>持倉總覽</span>
+                    <span>Holdings Overview</span>
+                </button>
+                
+                <button
+                    type="button"
+                    class="tab-button tab-button-floating"
+                    data-tab-target="details"
+                    aria-selected="false"
+                    aria-label="個股明細 / Stock Details"
+                >
+                    <span>個股明細</span>
+                    <span>Stock Details</span>
+                </button>
+                
+                <button
+                    type="button"
+                    class="tab-button tab-button-floating"
+                    data-tab-target="pulse"
+                    aria-selected="false"
+                    aria-label="市場觀察 / Market Pulse"
+                >
+                    <span>市場觀察</span>
+                    <span>Market Pulse</span>
+                </button>
+                
+            </div>
+        </nav>
 
         <footer class="site-footer">
             Data sources: Yahoo Finance, CNN, FINRA, Multpl / 僅供個人追蹤參考，不構成任何投資建議

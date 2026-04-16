@@ -3,6 +3,34 @@
 ## Summary
 This document records the first implementation pass of the approved v1.0.0 plan. The project was moved from a single-file prototype toward a maintainable application structure while preserving the existing Flask and static-export workflow.
 
+## v1.1.3
+### Mobile Header Cleanup
+- Reworked the hero header so the title block remains primary while the theme toggle and update metadata stay pinned in the top-right.
+- Replaced the old `Last Updated / 最後更新` card with a lighter English-only inline `Last updated` block.
+- Right-aligned the update metadata and kept healthier spacing between the label and timestamp in both side-by-side and stacked layouts.
+- On phone widths, the update value now splits into date and time lines to avoid overlapping the hero title.
+- Kept `Wei's Portfolio` on a single line and reduced the mobile title scale slightly when space becomes tight.
+- The eyebrow copy now behaves as:
+  - desktop and tablet: `Portfolio Dashboard / 投資儀表板`
+  - phone: `Dashboard / 投資儀表板`
+
+### Theme Toggle
+- Replaced emoji-based theme icons with monochrome inline SVG so mobile browsers no longer render the sun as a yellow emoji glyph.
+- Tightened the toggle into a smaller, less attention-grabbing pill while preserving the existing light/dark behavior and active-state indicator.
+
+### Bottom Floating Tabs
+- Kept the top tab row for desktop, but restyled it into equal-width bookmark-style tabs with lower visual weight.
+- Added a bottom floating tab control for tablet and mobile breakpoints with glass-like styling, safe-area-aware spacing, and bilingual labels.
+- Hid the large top tab cards on smaller screens so overview summary cards appear earlier in the first viewport.
+- Added extra bottom page padding on smaller screens so the floating navigation does not cover content while scrolling.
+- Removed size-changing active states from both desktop and floating tabs to avoid left-right jitter while switching sections.
+- Preserved a softer mixed-surface active fill on desktop tabs so the selected state stays visually distinct without the harsher page-background cutout.
+
+### Verification
+- Rebuilt the static site successfully with `python portfolio.py --output docs/index.html`.
+- Verified the Flask app still serves `GET /` and `GET /health` successfully.
+- Confirmed the rendered HTML includes both desktop and floating tab controls and uses the English-only `Last updated` label.
+
 ## v1.1.2
 ### Stock Details Sorting
 - Added client-side sorting to the `個股明細 / Stock Details` table without changing the route interface or holdings schema.
