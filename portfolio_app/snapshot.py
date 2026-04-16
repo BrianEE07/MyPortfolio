@@ -3,7 +3,13 @@ from datetime import datetime
 
 from pytz import timezone
 
-from .config import DEFAULT_TABS, SITE_SUBTITLE, SITE_TITLE, TIMEZONE_NAME
+from .config import (
+    DEFAULT_TABS,
+    FIRST_US_STOCK_PURCHASE_DATE,
+    SITE_TITLE,
+    TIMEZONE_NAME,
+    WEALTH_GOAL_USD,
+)
 from .holdings import load_holdings
 from .market_data import (
     cached_close,
@@ -22,6 +28,12 @@ def _format_currency(value):
     if value is None:
         return "N/A"
     return f"${value:,.2f}"
+
+
+def _format_whole_currency(value):
+    if value is None:
+        return "N/A"
+    return f"${value:,.0f}"
 
 
 def _format_detail_currency(value, decimals_small=2, decimals_medium=1):
@@ -97,11 +109,37 @@ def _trend_label(is_below_ma250):
     return "Above 250D"
 
 
+def _build_site_subtitle(current_market_value, current_datetime):
+    start_date = datetime.strptime(FIRST_US_STOCK_PURCHASE_DATE, "%Y-%m-%d").date()
+    current_date = current_datetime.date()
+    journey_day = max((current_date - start_date).days + 1, 1)
+
+    prefix = f"邁向財富自由之路的第 {journey_day} 天"
+    if current_market_value is None:
+        return {
+            "full_text": f"{prefix}｜進度暫不可用",
+            "lead_text": prefix,
+            "progress_text": "進度暫不可用",
+        }
+
+    progress_pct = (current_market_value / WEALTH_GOAL_USD) * 100
+    progress_text = (
+        f"{_format_percent(progress_pct)}"
+        f" · {_format_currency(current_market_value)} / {_format_whole_currency(WEALTH_GOAL_USD)}"
+    )
+    return {
+        "full_text": f"{prefix}｜{progress_text}",
+        "lead_text": prefix,
+        "progress_text": progress_text,
+    }
+
+
 def build_portfolio_snapshot():
     """Build the server-side snapshot used by Flask rendering and static export."""
     holdings = load_holdings()
     current_timezone = timezone(TIMEZONE_NAME)
-    updated_at = datetime.now(current_timezone).strftime("%Y-%m-%d %H:%M")
+    current_datetime = datetime.now(current_timezone)
+    updated_at = current_datetime.strftime("%Y-%m-%d %H:%M")
 
     rows = []
     total_cost = 0.0
@@ -205,6 +243,7 @@ def build_portfolio_snapshot():
         if total_profit_value is not None and total_cost
         else None
     )
+    site_subtitle = _build_site_subtitle(total_market_value_value, current_datetime)
 
     portfolio_metrics = cached_portfolio_metrics(holdings)
     top_holdings = rows[:10]
@@ -335,7 +374,8 @@ def build_portfolio_snapshot():
 
     return {
         "site_title": SITE_TITLE,
-        "site_subtitle": SITE_SUBTITLE,
+        "site_subtitle": site_subtitle["full_text"],
+        "site_subtitle_parts": site_subtitle,
         "updated_at": updated_at,
         "tabs": DEFAULT_TABS,
         "summary_cards": summary_cards,

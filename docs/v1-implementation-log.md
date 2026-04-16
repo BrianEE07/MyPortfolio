@@ -31,6 +31,22 @@ This document records the first implementation pass of the approved v1.0.0 plan.
 - Verified the Flask app still serves `GET /` and `GET /health` successfully.
 - Confirmed the rendered HTML includes both desktop and floating tab controls and uses the English-only `Last updated` label.
 
+## v1.1.4
+### Hero Progress Subtitle
+- Reduced the `Wei's Portfolio` hero title to 80% of the previous visual size across desktop and mobile layouts.
+- Replaced the fixed subtitle with a server-side progress line:
+  - `邁向財富自由之路的第 X 天｜Y% · $CURRENT / $1,000,000`
+- Defined `X` from the first US stock purchase date `2026-04-02`, with the start date counted as Day 1.
+- Calculated progress from current total market value toward a fixed `USD 1,000,000` goal.
+- Kept the subtitle Chinese-only and server-rendered, with no client-side calculation.
+- Added a fallback subtitle when live pricing is unavailable:
+  - `邁向財富自由之路的第 X 天｜進度暫不可用`
+- Split the subtitle into structured lead/progress segments so desktop keeps a single line with a `｜` separator while phone layouts stack into two lines without the separator.
+
+### Verification
+- Rebuilt the static site successfully with `python portfolio.py --output docs/index.html`.
+- Verified the Flask app still serves `GET /` and `GET /health` successfully.
+
 ## v1.1.2
 ### Stock Details Sorting
 - Added client-side sorting to the `個股明細 / Stock Details` table without changing the route interface or holdings schema.

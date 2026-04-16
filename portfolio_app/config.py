@@ -7,9 +7,10 @@ LOCAL_CANONICAL_HOLDINGS_CSV_PATH = IMPORTS_DIR / "holdings.csv"
 HOLDINGS_JSON_PATH = DATA_DIR / "holdings.json"
 
 SITE_TITLE = "Wei's Portfolio"
-SITE_SUBTITLE = "為的投資組合"
 TIMEZONE_NAME = "Asia/Taipei"
 CHART_JS_URL = "https://cdn.jsdelivr.net/npm/chart.js"
+WEALTH_GOAL_USD = 1_000_000
+FIRST_US_STOCK_PURCHASE_DATE = "2026-04-02"
 
 DEFAULT_TABS = (
     {"id": "overview", "label_zh": "持倉總覽", "label_en": "Holdings Overview"},
