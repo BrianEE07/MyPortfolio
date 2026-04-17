@@ -36,6 +36,7 @@
   const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
 
   function activateTab(tabId) {
+    clearActiveInfoChip();
     tabButtons.forEach(function (button) {
       const isActive = button.getAttribute("data-tab-target") === tabId;
       button.classList.toggle("is-active", isActive);
@@ -52,8 +53,6 @@
     });
   });
 
-  activateTab("overview");
-
   const detailTable = document.querySelector(".holdings-detail-table");
   const detailTableBody = detailTable ? detailTable.querySelector("tbody") : null;
   const sortButtons = detailTable
@@ -69,16 +68,14 @@
   const tooltipElement = document.createElement("div");
   tooltipElement.className = "info-chip-tooltip";
   document.body.appendChild(tooltipElement);
+  let activeInfoChip = null;
 
-  function showInfoTooltip(chip) {
-    const tooltipText = [chip.dataset.tooltipZh, chip.dataset.tooltipEn]
-      .filter(Boolean)
-      .join("\n");
-    if (!tooltipText) return;
+  function setInfoChipExpanded(chip, isExpanded) {
+    if (!chip) return;
+    chip.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  }
 
-    tooltipElement.textContent = tooltipText;
-    tooltipElement.classList.add("is-visible");
-
+  function positionInfoTooltip(chip) {
     const chipRect = chip.getBoundingClientRect();
     const tooltipRect = tooltipElement.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
@@ -95,9 +92,45 @@
     tooltipElement.style.top = tooltipTop + "px";
   }
 
+  function showInfoTooltip(chip) {
+    const tooltipText = [chip.dataset.tooltipZh, chip.dataset.tooltipEn]
+      .filter(Boolean)
+      .join("\n");
+    if (!tooltipText) return;
+
+    tooltipElement.textContent = tooltipText;
+    tooltipElement.classList.add("is-visible");
+    positionInfoTooltip(chip);
+  }
+
   function hideInfoTooltip() {
     tooltipElement.classList.remove("is-visible");
   }
+
+  function clearActiveInfoChip() {
+    setInfoChipExpanded(activeInfoChip, false);
+    activeInfoChip = null;
+    hideInfoTooltip();
+  }
+
+  function setActiveInfoChip(chip) {
+    if (activeInfoChip && activeInfoChip !== chip) {
+      setInfoChipExpanded(activeInfoChip, false);
+    }
+    activeInfoChip = chip;
+    setInfoChipExpanded(activeInfoChip, true);
+    showInfoTooltip(activeInfoChip);
+  }
+
+  function toggleActiveInfoChip(chip) {
+    if (activeInfoChip === chip) {
+      clearActiveInfoChip();
+      return;
+    }
+    setActiveInfoChip(chip);
+  }
+
+  activateTab("overview");
 
   function updateRankBadges(shouldHighlightTopHoldings) {
     if (!detailTableBody) return;
@@ -249,10 +282,11 @@
   }
 
   infoChips.forEach(function (chip) {
+    setInfoChipExpanded(chip, false);
     chip.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();
-      showInfoTooltip(chip);
+      toggleActiveInfoChip(chip);
     });
     chip.addEventListener("mousedown", function (event) {
       event.preventDefault();
@@ -262,18 +296,41 @@
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         event.stopPropagation();
-        showInfoTooltip(chip);
+        toggleActiveInfoChip(chip);
       }
     });
     chip.addEventListener("mouseenter", function () {
+      if (activeInfoChip && activeInfoChip !== chip) return;
       showInfoTooltip(chip);
     });
-    chip.addEventListener("mouseleave", hideInfoTooltip);
+    chip.addEventListener("mouseleave", function () {
+      if (activeInfoChip === chip) return;
+      hideInfoTooltip();
+    });
     chip.addEventListener("focus", function () {
+      if (activeInfoChip && activeInfoChip !== chip) return;
       showInfoTooltip(chip);
     });
-    chip.addEventListener("blur", hideInfoTooltip);
+    chip.addEventListener("blur", function () {
+      if (activeInfoChip === chip) return;
+      hideInfoTooltip();
+    });
   });
+
+  document.addEventListener("click", function (event) {
+    if (!activeInfoChip) return;
+    if (event.target.closest(".info-chip") === activeInfoChip) return;
+    clearActiveInfoChip();
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      clearActiveInfoChip();
+    }
+  });
+
+  window.addEventListener("resize", clearActiveInfoChip);
+  window.addEventListener("scroll", clearActiveInfoChip, true);
 
   if (window.Chart && payload.holdingsChart && payload.holdingsChart.labels && payload.holdingsChart.labels.length) {
     const holdingsCanvas = document.getElementById("holdingsChart");

@@ -37,6 +37,13 @@
                 </p>
             </div>
             <div class="header-actions">
+                <p class="updated-at-inline">
+                    <span class="updated-at-label">Last updated</span>
+                    <time class="updated-at-value">
+                        <span class="updated-at-date">{{ updated_at.split(' ')[0] }}</span>
+                        <span class="updated-at-time">{{ updated_at.split(' ', 1)[1] }} (Taipei)</span>
+                    </time>
+                </p>
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
                     <span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">
                         <svg viewBox="0 0 24 24" role="presentation" focusable="false">
@@ -56,13 +63,6 @@
                         </svg>
                     </span>
                 </button>
-                <p class="updated-at-inline">
-                    <span class="updated-at-label">Last updated</span>
-                    <time class="updated-at-value">
-                        <span class="updated-at-date">{{ updated_at.split(' ')[0] }}</span>
-                        <span class="updated-at-time">{{ updated_at.split(' ', 1)[1] }} (Taipei)</span>
-                    </time>
-                </p>
             </div>
         </header>
 

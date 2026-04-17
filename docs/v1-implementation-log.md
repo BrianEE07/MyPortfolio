@@ -3,6 +3,29 @@
 ## Summary
 This document records the first implementation pass of the approved v1.0.0 plan. The project was moved from a single-file prototype toward a maintainable application structure while preserving the existing Flask and static-export workflow.
 
+## v1.1.5
+### Header Responsive Fixes
+- Reordered the header actions so `Last updated` now appears before the theme toggle in both DOM order and visual layout.
+- Kept `Last updated` on the left when the header actions sit side by side, and moved it above the theme toggle when the actions stack vertically.
+- Added explicit text-size-adjust rules to reduce real-mobile browser font inflation that was not reproducible in desktop device emulation.
+- Added a small-screen landscape header rule so phone landscape layouts keep the subtitle compact, allow it to wrap, and hide the separator instead of falling back to the desktop one-line treatment.
+
+### Tooltip Interaction
+- Reworked the help `?` tooltip behavior around a single active tooltip state instead of one-off show and hide calls.
+- On touch screens, tapping a help chip now toggles that tooltip, tapping another chip switches the active tooltip, and tapping outside closes it.
+- Added `Escape`, scroll, resize, and tab-switch cleanup so floating tooltips do not remain visible after the user changes context.
+- Kept desktop hover and keyboard focus behavior intact.
+
+### Stock Details Sorting
+- Preserved the existing three-step sort cycle for sortable headers.
+- Tightened the reset-to-default path so returning to `持倉市值 / Position Value` restores the active header styling and descending state cleanly.
+- Limited the inactive hover tint to hover-capable pointers so touch devices no longer keep a previously tapped header looking active after the table resets to the default sort.
+
+### Verification
+- Rebuilt the static site successfully with `python3 portfolio.py --output docs/index.html`.
+- Verified the Flask app still serves `GET /` and `GET /health` successfully.
+- Confirmed the header action order, tooltip dismissal behavior, and stock-details reset styling in the rendered output.
+
 ## v1.1.3
 ### Mobile Header Cleanup
 - Reworked the hero header so the title block remains primary while the theme toggle and update metadata stay pinned in the top-right.

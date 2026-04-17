@@ -50,6 +50,11 @@ body {
   min-height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   font-family: "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
   background:
@@ -131,7 +136,7 @@ textarea {
 
 .header-actions {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   flex-wrap: nowrap;
   justify-content: flex-end;
@@ -228,7 +233,6 @@ textarea {
   color: var(--text-muted);
   text-align: right;
   white-space: nowrap;
-  padding-top: 4px;
 }
 
 .updated-at-label {
@@ -685,11 +689,16 @@ th {
   border-bottom: 5px solid var(--accent-strong);
 }
 
-.sort-button:not(.is-active):hover span,
-.sort-button:not(.is-active):hover small,
 .sort-button.is-active span,
 .sort-button.is-active small {
   color: var(--accent-strong);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sort-button:not(.is-active):hover span,
+  .sort-button:not(.is-active):hover small {
+    color: var(--accent-strong);
+  }
 }
 
 .info-chip {
@@ -960,8 +969,6 @@ tbody tr:last-child td {
     align-items: flex-end;
     max-width: 9.5rem;
     line-height: 1.15;
-    padding-top: 2px;
-    margin-top: 6px;
   }
 
   .fear-greed-grid {
@@ -1027,8 +1034,6 @@ tbody tr:last-child td {
   .updated-at-inline {
     align-items: flex-end;
     max-width: 8.25rem;
-    margin-top: 6px;
-    padding-top: 0;
   }
 
   .updated-at-label {
@@ -1112,6 +1117,44 @@ tbody tr:last-child td {
   .symbol-rank {
     min-width: 28px;
     height: 28px;
+  }
+}
+
+@media (max-width: 932px) and (max-height: 520px) and (orientation: landscape) {
+  .site-header {
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .site-header h1 {
+    font-size: clamp(1.32rem, 4.2vw, 1.9rem);
+  }
+
+  .site-subtitle {
+    max-width: min(100%, 35rem);
+    font-size: 0.72rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    white-space: normal;
+    line-height: 1.18;
+  }
+
+  .site-subtitle-separator {
+    display: none;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .updated-at-inline {
+    max-width: 8.75rem;
+    line-height: 1.15;
   }
 }
 
