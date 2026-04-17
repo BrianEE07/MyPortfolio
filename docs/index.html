@@ -16,9 +16,9 @@
             }
         }());
     </script>
-    <link rel="stylesheet" href="static/styles.css?v=76ac875182">
+    <link rel="stylesheet" href="static/styles.css?v=1bcd2a2191">
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script defer src="static/app.js?v=265d3b6a3b"></script>
+    <script defer src="static/app.js?v=aa2cf90ded"></script>
 </head>
 <body>
     <div class="site-shell">
@@ -41,7 +41,7 @@
                     <span class="updated-at-label">Last updated</span>
                     <time class="updated-at-value">
                         <span class="updated-at-date">2026-04-17</span>
-                        <span class="updated-at-time">20:18 (Taipei)</span>
+                        <span class="updated-at-time">21:18 (Taipei)</span>
                     </time>
                 </p>
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
@@ -104,7 +104,6 @@
             <section class="tab-panel is-active" id="tab-overview" data-tab-panel="overview">
                 <div class="section-heading">
                     <h2>持倉總覽 / Holdings Overview</h2>
-                    <p>Portfolio summary and allocation snapshot / 持倉摘要與配置概覽</p>
                 </div>
 
                 
@@ -180,11 +179,10 @@
             <section class="tab-panel" id="tab-details" data-tab-panel="details">
                 <div class="section-heading section-heading-compact">
                     <h2>個股明細 / Stock Details</h2>
-                    <p>Per-position pricing, valuation, and trend details / 個股報價、估值與趨勢資訊</p>
                 </div>
 
                 <section class="panel panel-compact holdings-detail-panel">
-                    <div class="table-wrapper table-wrapper-compact">
+                    <div class="table-wrapper table-wrapper-compact holdings-detail-wrapper">
                         <table class="holdings-detail-table">
                             <colgroup>
                                 <col class="col-symbol">
@@ -203,68 +201,107 @@
                                     <th aria-sort="none">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button" data-sort-key="symbol" data-sort-type="string">
-                                                <span>代號</span><small>Symbol</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">代號</span>
+                                                    </span>
+                                                    <small>Symbol</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button" data-sort-key="price" data-sort-type="number">
-                                                <span>現價</span><small>Price</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">現價</span>
+                                                    </span>
+                                                    <small>Price</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button" data-sort-key="cost-basis" data-sort-type="number">
-                                                <span>均價</span><small>Avg Cost</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">均價</span>
+                                                    </span>
+                                                    <small>Avg Cost</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button" data-sort-key="shares" data-sort-type="number">
-                                                <span>股數</span><small>Shares</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">股數</span>
+                                                    </span>
+                                                    <small>Shares</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="descending">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button is-active" data-sort-key="market-value" data-sort-type="number" data-default-direction="desc">
-                                                <span>持倉市值</span><small>Position Value</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">市值</span>
+                                                    </span>
+                                                    <small>Value</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell has-info">
                                             <button type="button" class="sort-button" data-sort-key="trailing-pe" data-sort-type="number">
-                                                <span class="sort-button-topline">
-                                                    <span>本益比</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比。" data-tooltip-en="Price divided by trailing twelve-month earnings per share.">?</span>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">本益比</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比。" data-tooltip-en="Price divided by trailing twelve-month earnings per share.">?</span>
+                                                    </span>
+                                                    <small>Trailing P/E</small>
                                                 </span>
-                                                <small>Trailing P/E</small>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell has-info">
                                             <button type="button" class="sort-button" data-sort-key="forward-pe" data-sort-type="number">
-                                                <span class="sort-button-topline">
-                                                    <span>預估本益比</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比。" data-tooltip-en="Price divided by expected next-year earnings per share.">?</span>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">預估本益比</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比。" data-tooltip-en="Price divided by expected next-year earnings per share.">?</span>
+                                                    </span>
+                                                    <small>Forward P/E</small>
                                                 </span>
-                                                <small>Forward P/E</small>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell has-info">
                                             <button type="button" class="sort-button" data-sort-key="drawdown" data-sort-type="number">
-                                                <span class="sort-button-topline">
-                                                    <span>一年回檔</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="一年內距離高點的跌幅。" data-tooltip-en="Percentage drop from the stock's highest price over the past year.">?</span>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">一年回檔</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="一年內距離高點的跌幅。" data-tooltip-en="Percentage drop from the stock's highest price over the past year.">?</span>
+                                                    </span>
+                                                    <small>1Y Drawdown</small>
                                                 </span>
-                                                <small>1Y Drawdown</small>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
@@ -282,11 +319,14 @@
                                     <th aria-sort="none">
                                         <div class="header-cell has-info">
                                             <button type="button" class="sort-button" data-sort-key="profit-pct" data-sort-type="number">
-                                                <span class="sort-button-topline">
-                                                    <span>損益</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="P and L help" data-tooltip-zh="未實現報酬率與損益金額。" data-tooltip-en="Unrealized return percentage and profit or loss amount.">?</span>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">損益</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="P and L help" data-tooltip-zh="未實現報酬率與損益金額。" data-tooltip-en="Unrealized return percentage and profit or loss amount.">?</span>
+                                                    </span>
+                                                    <small>P&amp;L</small>
                                                 </span>
-                                                <small>P&amp;L</small>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
@@ -308,8 +348,30 @@
                                     <td>
                                         <div class="symbol-cell">
                                             <span class="symbol-rank">1</span>
-                                            <div class="symbol-copy">
-                                                <strong>NVDA</strong>
+                                            <div class="symbol-copy" data-symbol-link-group>
+                                                <button
+                                                    type="button"
+                                                    class="symbol-link-reveal"
+                                                    data-symbol-link-toggle
+                                                    aria-label="Show external link for NVDA"
+                                                    aria-expanded="false"
+                                                >
+                                                    <strong>NVDA</strong>
+                                                </button>
+                                                <a
+                                                    class="symbol-link-outbound"
+                                                    data-symbol-link
+                                                    href="https://finance.yahoo.com/quote/NVDA/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    aria-label="Open NVDA on Yahoo Finance"
+                                                    title="Open NVDA on Yahoo Finance"
+                                                >
+                                                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                                        <path d="M7 17 17 7"></path>
+                                                        <path d="M9 7h8v8"></path>
+                                                    </svg>
+                                                </a>
                                             </div>
                                         </div>
                                     </td>
@@ -341,8 +403,30 @@
                                     <td>
                                         <div class="symbol-cell">
                                             <span class="symbol-rank">2</span>
-                                            <div class="symbol-copy">
-                                                <strong>GOOG</strong>
+                                            <div class="symbol-copy" data-symbol-link-group>
+                                                <button
+                                                    type="button"
+                                                    class="symbol-link-reveal"
+                                                    data-symbol-link-toggle
+                                                    aria-label="Show external link for GOOG"
+                                                    aria-expanded="false"
+                                                >
+                                                    <strong>GOOG</strong>
+                                                </button>
+                                                <a
+                                                    class="symbol-link-outbound"
+                                                    data-symbol-link
+                                                    href="https://finance.yahoo.com/quote/GOOG/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    aria-label="Open GOOG on Yahoo Finance"
+                                                    title="Open GOOG on Yahoo Finance"
+                                                >
+                                                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                                        <path d="M7 17 17 7"></path>
+                                                        <path d="M9 7h8v8"></path>
+                                                    </svg>
+                                                </a>
                                             </div>
                                         </div>
                                     </td>
@@ -374,8 +458,30 @@
                                     <td>
                                         <div class="symbol-cell">
                                             <span class="symbol-rank">3</span>
-                                            <div class="symbol-copy">
-                                                <strong>CRCL</strong>
+                                            <div class="symbol-copy" data-symbol-link-group>
+                                                <button
+                                                    type="button"
+                                                    class="symbol-link-reveal"
+                                                    data-symbol-link-toggle
+                                                    aria-label="Show external link for CRCL"
+                                                    aria-expanded="false"
+                                                >
+                                                    <strong>CRCL</strong>
+                                                </button>
+                                                <a
+                                                    class="symbol-link-outbound"
+                                                    data-symbol-link
+                                                    href="https://finance.yahoo.com/quote/CRCL/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    aria-label="Open CRCL on Yahoo Finance"
+                                                    title="Open CRCL on Yahoo Finance"
+                                                >
+                                                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                                        <path d="M7 17 17 7"></path>
+                                                        <path d="M9 7h8v8"></path>
+                                                    </svg>
+                                                </a>
                                             </div>
                                         </div>
                                     </td>
@@ -407,8 +513,30 @@
                                     <td>
                                         <div class="symbol-cell">
                                             <span class="symbol-rank">4</span>
-                                            <div class="symbol-copy">
-                                                <strong>MU</strong>
+                                            <div class="symbol-copy" data-symbol-link-group>
+                                                <button
+                                                    type="button"
+                                                    class="symbol-link-reveal"
+                                                    data-symbol-link-toggle
+                                                    aria-label="Show external link for MU"
+                                                    aria-expanded="false"
+                                                >
+                                                    <strong>MU</strong>
+                                                </button>
+                                                <a
+                                                    class="symbol-link-outbound"
+                                                    data-symbol-link
+                                                    href="https://finance.yahoo.com/quote/MU/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    aria-label="Open MU on Yahoo Finance"
+                                                    title="Open MU on Yahoo Finance"
+                                                >
+                                                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                                        <path d="M7 17 17 7"></path>
+                                                        <path d="M9 7h8v8"></path>
+                                                    </svg>
+                                                </a>
                                             </div>
                                         </div>
                                     </td>
@@ -440,8 +568,30 @@
                                     <td>
                                         <div class="symbol-cell">
                                             <span class="symbol-rank">5</span>
-                                            <div class="symbol-copy">
-                                                <strong>INTC</strong>
+                                            <div class="symbol-copy" data-symbol-link-group>
+                                                <button
+                                                    type="button"
+                                                    class="symbol-link-reveal"
+                                                    data-symbol-link-toggle
+                                                    aria-label="Show external link for INTC"
+                                                    aria-expanded="false"
+                                                >
+                                                    <strong>INTC</strong>
+                                                </button>
+                                                <a
+                                                    class="symbol-link-outbound"
+                                                    data-symbol-link
+                                                    href="https://finance.yahoo.com/quote/INTC/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    aria-label="Open INTC on Yahoo Finance"
+                                                    title="Open INTC on Yahoo Finance"
+                                                >
+                                                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                                        <path d="M7 17 17 7"></path>
+                                                        <path d="M9 7h8v8"></path>
+                                                    </svg>
+                                                </a>
                                             </div>
                                         </div>
                                     </td>
@@ -468,7 +618,6 @@
             <section class="tab-panel" id="tab-pulse" data-tab-panel="pulse">
                 <div class="section-heading">
                     <h2>市場觀察 / Market Pulse</h2>
-                    <p>Macro and sentiment indicators preserved from the original dashboard / 保留原始儀表板中的市場情緒與宏觀觀察</p>
                 </div>
 
                 <div class="macro-layout">

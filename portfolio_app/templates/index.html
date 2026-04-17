@@ -84,7 +84,6 @@
             <section class="tab-panel is-active" id="tab-overview" data-tab-panel="overview">
                 <div class="section-heading">
                     <h2>持倉總覽 / Holdings Overview</h2>
-                    <p>Portfolio summary and allocation snapshot / 持倉摘要與配置概覽</p>
                 </div>
 
                 {% if has_holdings %}
@@ -123,11 +122,10 @@
             <section class="tab-panel" id="tab-details" data-tab-panel="details">
                 <div class="section-heading section-heading-compact">
                     <h2>個股明細 / Stock Details</h2>
-                    <p>Per-position pricing, valuation, and trend details / 個股報價、估值與趨勢資訊</p>
                 </div>
 
                 <section class="panel panel-compact holdings-detail-panel">
-                    <div class="table-wrapper table-wrapper-compact">
+                    <div class="table-wrapper table-wrapper-compact holdings-detail-wrapper">
                         <table class="holdings-detail-table">
                             <colgroup>
                                 <col class="col-symbol">
@@ -146,68 +144,107 @@
                                     <th aria-sort="none">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button" data-sort-key="symbol" data-sort-type="string">
-                                                <span>代號</span><small>Symbol</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">代號</span>
+                                                    </span>
+                                                    <small>Symbol</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button" data-sort-key="price" data-sort-type="number">
-                                                <span>現價</span><small>Price</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">現價</span>
+                                                    </span>
+                                                    <small>Price</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button" data-sort-key="cost-basis" data-sort-type="number">
-                                                <span>均價</span><small>Avg Cost</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">均價</span>
+                                                    </span>
+                                                    <small>Avg Cost</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button" data-sort-key="shares" data-sort-type="number">
-                                                <span>股數</span><small>Shares</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">股數</span>
+                                                    </span>
+                                                    <small>Shares</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="descending">
                                         <div class="header-cell">
                                             <button type="button" class="sort-button is-active" data-sort-key="market-value" data-sort-type="number" data-default-direction="desc">
-                                                <span>持倉市值</span><small>Position Value</small>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">市值</span>
+                                                    </span>
+                                                    <small>Value</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell has-info">
                                             <button type="button" class="sort-button" data-sort-key="trailing-pe" data-sort-type="number">
-                                                <span class="sort-button-topline">
-                                                    <span>本益比</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比。" data-tooltip-en="Price divided by trailing twelve-month earnings per share.">?</span>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">本益比</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比。" data-tooltip-en="Price divided by trailing twelve-month earnings per share.">?</span>
+                                                    </span>
+                                                    <small>Trailing P/E</small>
                                                 </span>
-                                                <small>Trailing P/E</small>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell has-info">
                                             <button type="button" class="sort-button" data-sort-key="forward-pe" data-sort-type="number">
-                                                <span class="sort-button-topline">
-                                                    <span>預估本益比</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比。" data-tooltip-en="Price divided by expected next-year earnings per share.">?</span>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">預估本益比</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比。" data-tooltip-en="Price divided by expected next-year earnings per share.">?</span>
+                                                    </span>
+                                                    <small>Forward P/E</small>
                                                 </span>
-                                                <small>Forward P/E</small>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
                                     <th aria-sort="none">
                                         <div class="header-cell has-info">
                                             <button type="button" class="sort-button" data-sort-key="drawdown" data-sort-type="number">
-                                                <span class="sort-button-topline">
-                                                    <span>一年回檔</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="一年內距離高點的跌幅。" data-tooltip-en="Percentage drop from the stock's highest price over the past year.">?</span>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">一年回檔</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="一年內距離高點的跌幅。" data-tooltip-en="Percentage drop from the stock's highest price over the past year.">?</span>
+                                                    </span>
+                                                    <small>1Y Drawdown</small>
                                                 </span>
-                                                <small>1Y Drawdown</small>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
@@ -225,11 +262,14 @@
                                     <th aria-sort="none">
                                         <div class="header-cell has-info">
                                             <button type="button" class="sort-button" data-sort-key="profit-pct" data-sort-type="number">
-                                                <span class="sort-button-topline">
-                                                    <span>損益</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="P and L help" data-tooltip-zh="未實現報酬率與損益金額。" data-tooltip-en="Unrealized return percentage and profit or loss amount.">?</span>
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">損益</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="P and L help" data-tooltip-zh="未實現報酬率與損益金額。" data-tooltip-en="Unrealized return percentage and profit or loss amount.">?</span>
+                                                    </span>
+                                                    <small>P&amp;L</small>
                                                 </span>
-                                                <small>P&amp;L</small>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
                                             </button>
                                         </div>
                                     </th>
@@ -251,8 +291,30 @@
                                     <td>
                                         <div class="symbol-cell">
                                             <span class="symbol-rank">{{ loop.index }}</span>
-                                            <div class="symbol-copy">
-                                                <strong>{{ row.symbol }}</strong>
+                                            <div class="symbol-copy" data-symbol-link-group>
+                                                <button
+                                                    type="button"
+                                                    class="symbol-link-reveal"
+                                                    data-symbol-link-toggle
+                                                    aria-label="Show external link for {{ row.symbol }}"
+                                                    aria-expanded="false"
+                                                >
+                                                    <strong>{{ row.symbol }}</strong>
+                                                </button>
+                                                <a
+                                                    class="symbol-link-outbound"
+                                                    data-symbol-link
+                                                    href="https://finance.yahoo.com/quote/{{ row.symbol }}/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    aria-label="Open {{ row.symbol }} on Yahoo Finance"
+                                                    title="Open {{ row.symbol }} on Yahoo Finance"
+                                                >
+                                                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                                        <path d="M7 17 17 7"></path>
+                                                        <path d="M9 7h8v8"></path>
+                                                    </svg>
+                                                </a>
                                             </div>
                                         </div>
                                     </td>
@@ -279,7 +341,6 @@
             <section class="tab-panel" id="tab-pulse" data-tab-panel="pulse">
                 <div class="section-heading">
                     <h2>市場觀察 / Market Pulse</h2>
-                    <p>Macro and sentiment indicators preserved from the original dashboard / 保留原始儀表板中的市場情緒與宏觀觀察</p>
                 </div>
 
                 <div class="macro-layout">

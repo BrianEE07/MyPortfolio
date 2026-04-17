@@ -420,12 +420,13 @@ textarea {
 
 .section-heading h2 {
   margin: 0 0 6px;
-  font-size: 1.45rem;
+  font-size: 1.16rem;
 }
 
 .section-heading p {
   margin: 0;
   color: var(--text-muted);
+  font-size: 0.8rem;
 }
 
 .summary-grid {
@@ -538,19 +539,19 @@ table {
 
 .holdings-detail-table {
   table-layout: fixed;
-  min-width: 960px;
+  min-width: 940px;
 }
 
-.holdings-detail-table col.col-symbol { width: 12%; }
-.holdings-detail-table col.col-price { width: 8.25%; }
-.holdings-detail-table col.col-cost { width: 8%; }
-.holdings-detail-table col.col-shares { width: 6.5%; }
-.holdings-detail-table col.col-market-value { width: 9.25%; }
-.holdings-detail-table col.col-trailing-pe { width: 8.75%; }
-.holdings-detail-table col.col-forward-pe { width: 9.75%; }
-.holdings-detail-table col.col-drawdown { width: 8.5%; }
-.holdings-detail-table col.col-trend { width: 8.5%; }
-.holdings-detail-table col.col-pnl { width: 8.25%; }
+.holdings-detail-table col.col-symbol { width: 12.5%; }
+.holdings-detail-table col.col-price { width: 7.5%; }
+.holdings-detail-table col.col-cost { width: 7.5%; }
+.holdings-detail-table col.col-shares { width: 7.5%; }
+.holdings-detail-table col.col-market-value { width: 7.5%; }
+.holdings-detail-table col.col-trailing-pe { width: 8.6%; }
+.holdings-detail-table col.col-forward-pe { width: 9.25%; }
+.holdings-detail-table col.col-drawdown { width: 8.25%; }
+.holdings-detail-table col.col-trend { width: 8.25%; }
+.holdings-detail-table col.col-pnl { width: 8.9%; }
 
 th,
 td {
@@ -586,20 +587,15 @@ th {
 }
 
 .header-cell {
-  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 0;
-  min-height: 42px;
-  padding-right: 14px;
-}
-
-.header-cell.has-info {
-  padding-right: 12px;
+  min-height: 52px;
 }
 
 .header-label {
-  display: block;
+  display: flex;
+  flex-direction: column;
   flex: 1;
 }
 
@@ -612,22 +608,23 @@ th {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  max-width: calc(100% - 12px);
+  max-width: 100%;
 }
 
-.holdings-detail-table thead th > span,
-.holdings-detail-table thead th > small,
+.sort-button-content {
+  display: flex;
+  flex-direction: column;
+}
+
 .header-label > span,
 .header-label > small,
-.sort-button > span,
-.sort-button > small {
-  display: block;
+.sort-button-content > span,
+.sort-button-content > small {
   line-height: 1.1;
 }
 
-.holdings-detail-table thead th > small,
 .header-label > small,
-.sort-button > small {
+.sort-button-content > small {
   margin-top: 5px;
   color: var(--text-muted);
   font-size: 0.76rem;
@@ -636,13 +633,13 @@ th {
 }
 
 .sort-button {
-  position: relative;
   display: inline-flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 0;
-  flex: 1;
-  min-width: 0;
-  padding: 0 12px 0 0;
+  width: 100%;
+  padding: 0;
   border: 0;
   background: transparent;
   color: inherit;
@@ -650,11 +647,12 @@ th {
   cursor: pointer;
 }
 
-.header-cell.has-info .sort-button {
-  padding-right: 12px;
+.sort-button-content {
+  flex: 1;
+  min-width: 0;
 }
 
-.sort-button > span,
+.sort-button-label-text,
 .sort-button-topline > span:first-child {
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -666,11 +664,20 @@ th {
   text-transform: uppercase;
 }
 
-.sort-button::after {
+.sort-button-indicator {
+  position: relative;
+  width: 10px;
+  min-width: 10px;
+  height: 8px;
+  margin-top: 7px;
+  align-self: flex-start;
+}
+
+.sort-button-indicator::before {
   content: "";
   position: absolute;
-  right: 0;
-  top: 4px;
+  top: 0;
+  left: 1px;
   width: 0;
   height: 0;
   border-left: 4px solid transparent;
@@ -679,12 +686,12 @@ th {
   opacity: 0.3;
 }
 
-.sort-button.is-active::after {
+.sort-button.is-active .sort-button-indicator::before {
   opacity: 1;
   border-top-color: var(--accent-strong);
 }
 
-.sort-button[data-sort-direction="asc"]::after {
+.sort-button[data-sort-direction="asc"] .sort-button-indicator::before {
   border-top-color: transparent;
   border-bottom: 5px solid var(--accent-strong);
 }
@@ -717,6 +724,10 @@ th {
   line-height: 1;
   cursor: help;
   transform: translate(1px, -1px);
+}
+
+.holdings-detail-wrapper {
+  position: relative;
 }
 
 .info-chip-tooltip {
@@ -785,13 +796,78 @@ th {
 }
 
 .symbol-copy {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.symbol-link-reveal {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
 }
 
-.symbol-copy strong {
+.symbol-link-reveal strong {
   font-size: 0.98rem;
   letter-spacing: 0.02em;
+}
+
+.symbol-link-reveal:focus-visible,
+.symbol-link-outbound:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-strong) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.symbol-link-outbound {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-strong) 22%, var(--border) 78%);
+  background: color-mix(in srgb, var(--surface) 80%, var(--accent-soft) 20%);
+  color: var(--accent-strong);
+  opacity: 0;
+  transform: translateX(-4px) scale(0.94);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.symbol-link-outbound svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.symbol-copy.is-link-revealed .symbol-link-outbound,
+.symbol-copy:focus-within .symbol-link-outbound {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .symbol-link-outbound:hover {
+    border-color: color-mix(in srgb, var(--accent-strong) 40%, var(--border) 60%);
+    background: color-mix(in srgb, var(--surface) 70%, var(--accent-soft) 30%);
+  }
+
+  .symbol-copy:hover .symbol-link-outbound {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    pointer-events: auto;
+  }
 }
 
 tbody tr:last-child td {
@@ -962,7 +1038,11 @@ tbody tr:last-child td {
     flex-direction: column;
     align-items: flex-end;
     justify-content: flex-start;
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .header-actions .theme-toggle {
+    margin-top: 2px;
   }
 
   .updated-at-inline {
@@ -1095,6 +1175,27 @@ tbody tr:last-child td {
     font-size: clamp(1.42rem, 7.36vw, 2.32rem);
   }
 
+  .panel,
+  .summary-card {
+    border-radius: 20px;
+  }
+
+  .symbol-rank {
+    min-width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .header-actions {
+    top: 18px;
+    gap: 7px;
+  }
+
+  .header-actions .theme-toggle {
+    margin-top: 1px;
+  }
+
   .site-subtitle {
     font-size: 0.74rem;
     display: flex;
@@ -1107,16 +1208,6 @@ tbody tr:last-child td {
 
   .site-subtitle-separator {
     display: none;
-  }
-
-  .panel,
-  .summary-card {
-    border-radius: 20px;
-  }
-
-  .symbol-rank {
-    min-width: 28px;
-    height: 28px;
   }
 }
 
@@ -1132,29 +1223,56 @@ tbody tr:last-child td {
 
   .site-subtitle {
     max-width: min(100%, 35rem);
-    font-size: 0.72rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    white-space: normal;
-    line-height: 1.18;
+    font-size: 0.68rem;
+    display: block;
+    white-space: nowrap;
+    line-height: 1.15;
   }
 
   .site-subtitle-separator {
-    display: none;
+    display: inline-block;
   }
 
   .header-actions {
     flex-direction: column;
     align-items: flex-end;
     justify-content: flex-start;
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .header-actions .theme-toggle {
+    margin-top: 1px;
   }
 
   .updated-at-inline {
     max-width: 8.75rem;
     line-height: 1.15;
+  }
+}
+
+@media (max-width: 900px) {
+  .header-cell,
+  .sort-button {
+    gap: 0;
+  }
+
+  .sort-button-indicator {
+    margin-top: 6px;
+  }
+
+  .sort-button-content > small,
+  .header-label > small {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+
+  .symbol-copy {
+    gap: 6px;
+  }
+
+  .symbol-link-outbound {
+    width: 20px;
+    height: 20px;
   }
 }
 

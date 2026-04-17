@@ -37,6 +37,7 @@
 
   function activateTab(tabId) {
     clearActiveInfoChip();
+    clearActiveSymbolLinkGroup();
     tabButtons.forEach(function (button) {
       const isActive = button.getAttribute("data-tab-target") === tabId;
       button.classList.toggle("is-active", isActive);
@@ -59,6 +60,7 @@
     ? Array.from(detailTable.querySelectorAll(".sort-button[data-sort-key]"))
     : [];
   const infoChips = Array.from(document.querySelectorAll(".info-chip[data-tooltip-zh]"));
+  const symbolLinkGroups = Array.from(document.querySelectorAll("[data-symbol-link-group]"));
   const defaultSortKey = detailTableBody
     ? (detailTableBody.dataset.sortDefaultKey || "market-value")
     : "market-value";
@@ -69,6 +71,7 @@
   tooltipElement.className = "info-chip-tooltip";
   document.body.appendChild(tooltipElement);
   let activeInfoChip = null;
+  let activeSymbolLinkGroup = null;
 
   function setInfoChipExpanded(chip, isExpanded) {
     if (!chip) return;
@@ -111,6 +114,35 @@
     setInfoChipExpanded(activeInfoChip, false);
     activeInfoChip = null;
     hideInfoTooltip();
+  }
+
+  function setSymbolLinkExpanded(group, isExpanded) {
+    if (!group) return;
+    const toggleButton = group.querySelector("[data-symbol-link-toggle]");
+    if (!toggleButton) return;
+    toggleButton.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+    group.classList.toggle("is-link-revealed", isExpanded);
+  }
+
+  function clearActiveSymbolLinkGroup() {
+    setSymbolLinkExpanded(activeSymbolLinkGroup, false);
+    activeSymbolLinkGroup = null;
+  }
+
+  function setActiveSymbolLinkGroup(group) {
+    if (activeSymbolLinkGroup && activeSymbolLinkGroup !== group) {
+      setSymbolLinkExpanded(activeSymbolLinkGroup, false);
+    }
+    activeSymbolLinkGroup = group;
+    setSymbolLinkExpanded(activeSymbolLinkGroup, true);
+  }
+
+  function toggleActiveSymbolLinkGroup(group) {
+    if (activeSymbolLinkGroup === group) {
+      clearActiveSymbolLinkGroup();
+      return;
+    }
+    setActiveSymbolLinkGroup(group);
   }
 
   function setActiveInfoChip(chip) {
@@ -317,20 +349,44 @@
     });
   });
 
+  symbolLinkGroups.forEach(function (group) {
+    setSymbolLinkExpanded(group, false);
+    const toggleButton = group.querySelector("[data-symbol-link-toggle]");
+    if (!toggleButton) return;
+    toggleButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleActiveSymbolLinkGroup(group);
+    });
+  });
+
   document.addEventListener("click", function (event) {
     if (!activeInfoChip) return;
     if (event.target.closest(".info-chip") === activeInfoChip) return;
     clearActiveInfoChip();
   });
 
+  document.addEventListener("click", function (event) {
+    if (!activeSymbolLinkGroup) return;
+    if (event.target.closest("[data-symbol-link-group]") === activeSymbolLinkGroup) return;
+    clearActiveSymbolLinkGroup();
+  });
+
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
       clearActiveInfoChip();
+      clearActiveSymbolLinkGroup();
     }
   });
 
-  window.addEventListener("resize", clearActiveInfoChip);
-  window.addEventListener("scroll", clearActiveInfoChip, true);
+  window.addEventListener("resize", function () {
+    clearActiveInfoChip();
+    clearActiveSymbolLinkGroup();
+  });
+  window.addEventListener("scroll", function () {
+    clearActiveInfoChip();
+    clearActiveSymbolLinkGroup();
+  }, true);
 
   if (window.Chart && payload.holdingsChart && payload.holdingsChart.labels && payload.holdingsChart.labels.length) {
     const holdingsCanvas = document.getElementById("holdingsChart");
