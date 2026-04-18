@@ -51,6 +51,7 @@ def main():
         f"Imported {len(holdings)} holdings from {resolved_source_type} "
         f"into canonical JSON."
     )
+    print("Updated generated portfolio metrics at data/portfolio_metrics.json.")
 
     if args.build_output:
         from portfolio_app.web import write_static_output

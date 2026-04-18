@@ -2,7 +2,11 @@ import json
 import csv
 from pathlib import Path
 
-from .config import HOLDINGS_JSON_PATH, LOCAL_CANONICAL_HOLDINGS_CSV_PATH
+from .config import (
+    HOLDINGS_JSON_PATH,
+    LOCAL_CANONICAL_HOLDINGS_CSV_PATH,
+    PORTFOLIO_METRICS_JSON_PATH,
+)
 from .holdings import (
     HoldingsValidationError,
     convert_holdings_csv_to_data,
@@ -43,6 +47,31 @@ class HoldingsImportError(ValueError):
     """Raised when a local holdings source cannot be imported."""
 
 
+def default_portfolio_metrics() -> dict:
+    """Return the canonical generated portfolio metrics payload."""
+    return {
+        "realized_pl": None,
+        "realized_return_pct": None,
+    }
+
+
+def write_portfolio_metrics(
+    metrics: dict,
+    metrics_path: Path = PORTFOLIO_METRICS_JSON_PATH,
+) -> dict:
+    """Write generated portfolio metrics JSON to disk."""
+    payload = default_portfolio_metrics()
+    payload.update(
+        {
+            "realized_pl": metrics.get("realized_pl"),
+            "realized_return_pct": metrics.get("realized_return_pct"),
+        }
+    )
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    metrics_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return payload
+
+
 def _parse_number(raw_value: object, field_name: str) -> float:
     value = str("" if raw_value is None else raw_value).strip().replace(",", "").replace("$", "")
     if not value:
@@ -75,7 +104,7 @@ def _detect_csv_source_type(source_path: Path) -> str:
     )
 
 
-def _normalize_firstrade_holdings(source_path: Path) -> list[dict]:
+def _normalize_firstrade_holdings(source_path: Path) -> tuple[list[dict], dict]:
     with source_path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         if not reader.fieldnames:
@@ -88,6 +117,8 @@ def _normalize_firstrade_holdings(source_path: Path) -> list[dict]:
             )
 
         positions = {}
+        realized_pl_total = 0.0
+        realized_cost_basis_total = 0.0
         for row_number, row in enumerate(reader, start=2):
             record_type = str(row.get("RecordType", "")).strip()
             if record_type != "Trade":
@@ -140,8 +171,12 @@ def _normalize_firstrade_holdings(source_path: Path) -> list[dict]:
                 if position["shares"]
                 else 0.0
             )
+            realized_cost_basis = average_cost * quantity
+            net_proceeds = (quantity * price) - commission - fee
+            realized_pl_total += net_proceeds - realized_cost_basis
+            realized_cost_basis_total += realized_cost_basis
             position["shares"] -= quantity
-            position["total_cost"] -= average_cost * quantity
+            position["total_cost"] -= realized_cost_basis
 
             if abs(position["shares"]) < 1e-9:
                 position["shares"] = 0.0
@@ -161,7 +196,16 @@ def _normalize_firstrade_holdings(source_path: Path) -> list[dict]:
             }
         )
 
-    return validate_holdings_data(holdings)
+    normalized_holdings = validate_holdings_data(holdings)
+    realized_return_pct = (
+        (realized_pl_total / realized_cost_basis_total) * 100
+        if realized_cost_basis_total
+        else None
+    )
+    return normalized_holdings, {
+        "realized_pl": realized_pl_total,
+        "realized_return_pct": realized_return_pct,
+    }
 
 
 def detect_holdings_source_type(source_path: Path) -> str:
@@ -179,7 +223,7 @@ def detect_holdings_source_type(source_path: Path) -> str:
 
 def normalize_holdings_source(
     source_path: Path, source_type: str = AUTO_SOURCE_TYPE
-) -> tuple[list[dict], str]:
+) -> tuple[list[dict], str, dict]:
     """Load a supported local source file and normalize it to canonical holdings."""
     resolved_source_type = (
         detect_holdings_source_type(source_path)
@@ -195,7 +239,7 @@ def normalize_holdings_source(
 
     if resolved_source_type == CANONICAL_CSV_SOURCE:
         holdings = convert_holdings_csv_to_data(source_path)
-        return holdings, resolved_source_type
+        return holdings, resolved_source_type, default_portfolio_metrics()
 
     if resolved_source_type == CANONICAL_JSON_SOURCE:
         try:
@@ -205,11 +249,11 @@ def normalize_holdings_source(
                 f"Invalid JSON in source file '{source_path}'."
             ) from exc
         holdings = validate_holdings_data(data)
-        return holdings, resolved_source_type
+        return holdings, resolved_source_type, default_portfolio_metrics()
 
     if resolved_source_type == FIRSTRADE_CSV_SOURCE:
-        holdings = _normalize_firstrade_holdings(source_path)
-        return holdings, resolved_source_type
+        holdings, metrics = _normalize_firstrade_holdings(source_path)
+        return holdings, resolved_source_type, metrics
 
     raise HoldingsImportError(
         f"Source type '{resolved_source_type}' is not implemented yet."
@@ -220,11 +264,13 @@ def import_holdings_source(
     source_path: Path = LOCAL_CANONICAL_HOLDINGS_CSV_PATH,
     source_type: str = AUTO_SOURCE_TYPE,
     json_path: Path = HOLDINGS_JSON_PATH,
+    metrics_path: Path = PORTFOLIO_METRICS_JSON_PATH,
 ) -> tuple[list[dict], str]:
     """Import a local source file into the canonical holdings JSON file."""
-    holdings, resolved_source_type = normalize_holdings_source(
+    holdings, resolved_source_type, metrics = normalize_holdings_source(
         source_path=source_path,
         source_type=source_type,
     )
     normalized_holdings = write_holdings_data(holdings, json_path=json_path)
+    write_portfolio_metrics(metrics, metrics_path=metrics_path)
     return normalized_holdings, resolved_source_type

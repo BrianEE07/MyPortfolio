@@ -34,6 +34,25 @@
 
   const tabButtons = Array.from(document.querySelectorAll("[data-tab-target]"));
   const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+  let holdingsChartInstance = null;
+  let fearGreedChartInstance = null;
+  let chartRelayoutTimeoutId = null;
+
+  function syncChartLayout(chart) {
+    if (!chart) return;
+    chart.resize();
+    chart.update("resize");
+  }
+
+  function scheduleChartRelayout() {
+    if (chartRelayoutTimeoutId) {
+      window.clearTimeout(chartRelayoutTimeoutId);
+    }
+    chartRelayoutTimeoutId = window.setTimeout(function () {
+      syncChartLayout(holdingsChartInstance);
+      syncChartLayout(fearGreedChartInstance);
+    }, 120);
+  }
 
   function activateTab(tabId) {
     clearActiveInfoChip();
@@ -46,6 +65,7 @@
     tabPanels.forEach(function (panel) {
       panel.classList.toggle("is-active", panel.getAttribute("data-tab-panel") === tabId);
     });
+    scheduleChartRelayout();
   }
 
   tabButtons.forEach(function (button) {
@@ -382,16 +402,27 @@
   window.addEventListener("resize", function () {
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
+    scheduleChartRelayout();
   });
   window.addEventListener("scroll", function () {
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
   }, true);
+  window.addEventListener("orientationchange", scheduleChartRelayout);
+  window.addEventListener("pageshow", scheduleChartRelayout);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+      scheduleChartRelayout();
+    }
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleChartRelayout);
+  }
 
   if (window.Chart && payload.holdingsChart && payload.holdingsChart.labels && payload.holdingsChart.labels.length) {
     const holdingsCanvas = document.getElementById("holdingsChart");
     if (holdingsCanvas) {
-      new Chart(holdingsCanvas, {
+      holdingsChartInstance = new Chart(holdingsCanvas, {
         type: "doughnut",
         data: {
           labels: payload.holdingsChart.labels,
@@ -423,7 +454,7 @@
   if (window.Chart && payload.fearGreedChart && payload.fearGreedChart.labels && payload.fearGreedChart.labels.length) {
     const fearGreedCanvas = document.getElementById("fearGreedChart");
     if (fearGreedCanvas) {
-      new Chart(fearGreedCanvas, {
+      fearGreedChartInstance = new Chart(fearGreedCanvas, {
         type: "line",
         data: {
           labels: payload.fearGreedChart.labels,
@@ -462,4 +493,6 @@
       });
     }
   }
+
+  scheduleChartRelayout();
 }());

@@ -316,11 +316,17 @@ def fetch_portfolio_metrics(holdings):
         )
 
         return {
+            "sharpe": float(sharpe_ratio),
+            "beta": float(beta),
+            "alpha": float(alpha),
+            "portfolio_ytd_ret": float(annual_portfolio_return),
+            "sp500_ytd_ret": float(annual_sp500_return),
             "sharpe_str": f"{sharpe_ratio:.2f}",
             "beta_str": f"{beta:.2f}",
             "alpha_str": f"{alpha:.4f}",
-            "sp500_ytd_ret_str": f"{annual_sp500_return * 100:.2f}%",
-            "portfolio_ytd_ret_str": f"{annual_portfolio_return * 100:.2f}%",
+            "alpha_pct_str": f"{alpha * 100:+.2f}%",
+            "sp500_ytd_ret_str": f"{annual_sp500_return * 100:+.2f}%",
+            "portfolio_ytd_ret_str": f"{annual_portfolio_return * 100:+.2f}%",
         }
     except Exception as exc:
         print(f"Error calculating portfolio metrics: {exc}")
@@ -340,9 +346,15 @@ def cached_portfolio_metrics(holdings, ttl=3600):
     if entry and entry["data"] is not None:
         return entry["data"]
     return {
+        "sharpe": None,
+        "beta": None,
+        "alpha": None,
+        "portfolio_ytd_ret": None,
+        "sp500_ytd_ret": None,
         "sharpe_str": "N/A",
         "beta_str": "N/A",
         "alpha_str": "N/A",
+        "alpha_pct_str": "N/A",
         "sp500_ytd_ret_str": "N/A",
         "portfolio_ytd_ret_str": "N/A",
     }

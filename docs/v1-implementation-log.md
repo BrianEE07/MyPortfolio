@@ -5,6 +5,8 @@ This file is now the entry index for split version notes.
 Small releases are recorded under [docs/version-notes/](./version-notes/) so each version can be reviewed on its own without reopening one long running log.
 
 ## Timeline
+- [v1.2.0](./version-notes/v1.2.0.md)
+  Holdings Overview refresh with hero cards, Firstrade-generated realized P/L, and Top 10 concentration chips.
 - [v1.1.6](./version-notes/v1.1.6.md)
   Stock Details mobile polish, sticky `P&L`, symbol outbound-link reveal, subtitle orientation fix, and version-log split.
 - [v1.1.5](./version-notes/v1.1.5.md)

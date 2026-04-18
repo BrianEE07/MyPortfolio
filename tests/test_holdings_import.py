@@ -13,10 +13,12 @@ def test_imports_canonical_csv_into_json(tmp_path):
         encoding="utf-8",
     )
     output_path = tmp_path / "holdings.json"
+    metrics_path = tmp_path / "portfolio_metrics.json"
 
     holdings, resolved_source_type = import_holdings_source(
         source_path=source_path,
         json_path=output_path,
+        metrics_path=metrics_path,
     )
 
     assert resolved_source_type == "canonical_csv"
@@ -25,6 +27,10 @@ def test_imports_canonical_csv_into_json(tmp_path):
         {"symbol": "NVDA", "shares": 2.0, "cost_basis": 120.00},
     ]
     assert json.loads(output_path.read_text(encoding="utf-8")) == holdings
+    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
+        "realized_pl": None,
+        "realized_return_pct": None,
+    }
 
 
 def test_imports_canonical_json_into_json(tmp_path):
@@ -39,11 +45,13 @@ def test_imports_canonical_json_into_json(tmp_path):
         encoding="utf-8",
     )
     output_path = tmp_path / "canonical.json"
+    metrics_path = tmp_path / "portfolio_metrics.json"
 
     holdings, resolved_source_type = import_holdings_source(
         source_path=source_path,
         source_type="canonical_json",
         json_path=output_path,
+        metrics_path=metrics_path,
     )
 
     assert resolved_source_type == "canonical_json"
@@ -52,6 +60,35 @@ def test_imports_canonical_json_into_json(tmp_path):
         {"symbol": "CRM", "shares": 2.0, "cost_basis": 250.25},
     ]
     assert json.loads(output_path.read_text(encoding="utf-8")) == holdings
+    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
+        "realized_pl": None,
+        "realized_return_pct": None,
+    }
+
+
+def test_canonical_import_resets_existing_generated_metrics(tmp_path):
+    source_path = tmp_path / "holdings.csv"
+    source_path.write_text(
+        "symbol,shares,cost_basis\nmsft,1.5,$425.10\n",
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "holdings.json"
+    metrics_path = tmp_path / "portfolio_metrics.json"
+    metrics_path.write_text(
+        json.dumps({"realized_pl": 999.0, "realized_return_pct": 88.8}),
+        encoding="utf-8",
+    )
+
+    import_holdings_source(
+        source_path=source_path,
+        json_path=output_path,
+        metrics_path=metrics_path,
+    )
+
+    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
+        "realized_pl": None,
+        "realized_return_pct": None,
+    }
 
 
 def test_invalid_csv_does_not_overwrite_existing_json(tmp_path):
@@ -105,11 +142,13 @@ def test_imports_firstrade_csv_into_canonical_holdings(tmp_path):
         encoding="utf-8",
     )
     output_path = tmp_path / "holdings.json"
+    metrics_path = tmp_path / "portfolio_metrics.json"
 
     holdings, resolved_source_type = import_holdings_source(
         source_path=source_path,
         source_type="firstrade_csv",
         json_path=output_path,
+        metrics_path=metrics_path,
     )
 
     assert resolved_source_type == "firstrade_csv"
@@ -118,6 +157,10 @@ def test_imports_firstrade_csv_into_canonical_holdings(tmp_path):
     assert holdings[0]["cost_basis"] == pytest.approx(110.66666666666666)
     assert holdings[1] == {"symbol": "MSFT", "shares": 3.0, "cost_basis": 50.0}
     assert json.loads(output_path.read_text(encoding="utf-8")) == holdings
+    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
+        "realized_pl": pytest.approx(29.333333333333343),
+        "realized_return_pct": pytest.approx(26.506024096385553),
+    }
 
 
 def test_firstrade_import_fails_on_unsupported_trade_action(tmp_path):
@@ -156,11 +199,13 @@ def test_imports_firstrade_csv_with_negative_sell_quantity(tmp_path):
         encoding="utf-8",
     )
     output_path = tmp_path / "holdings.json"
+    metrics_path = tmp_path / "portfolio_metrics.json"
 
     holdings, resolved_source_type = import_holdings_source(
         source_path=source_path,
         source_type="firstrade_csv",
         json_path=output_path,
+        metrics_path=metrics_path,
     )
 
     assert resolved_source_type == "firstrade_csv"
@@ -171,3 +216,7 @@ def test_imports_firstrade_csv_with_negative_sell_quantity(tmp_path):
             "cost_basis": pytest.approx(351.19),
         }
     ]
+    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
+        "realized_pl": pytest.approx(3.912946699999999),
+        "realized_return_pct": pytest.approx(24.343380015671674),
+    }

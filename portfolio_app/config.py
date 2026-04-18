@@ -5,6 +5,7 @@ DATA_DIR = BASE_DIR / "data"
 IMPORTS_DIR = BASE_DIR / "imports"
 LOCAL_CANONICAL_HOLDINGS_CSV_PATH = IMPORTS_DIR / "holdings.csv"
 HOLDINGS_JSON_PATH = DATA_DIR / "holdings.json"
+PORTFOLIO_METRICS_JSON_PATH = DATA_DIR / "portfolio_metrics.json"
 
 SITE_TITLE = "Wei's Portfolio"
 TIMEZONE_NAME = "Asia/Taipei"

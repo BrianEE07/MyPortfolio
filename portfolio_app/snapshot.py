@@ -6,6 +6,7 @@ from pytz import timezone
 from .config import (
     DEFAULT_TABS,
     FIRST_US_STOCK_PURCHASE_DATE,
+    PORTFOLIO_METRICS_JSON_PATH,
     SITE_TITLE,
     TIMEZONE_NAME,
     WEALTH_GOAL_USD,
@@ -51,6 +52,12 @@ def _format_percent(value, signed=False):
     if value is None:
         return "N/A"
     return f"{value:+.2f}%" if signed else f"{value:.2f}%"
+
+
+def _format_percent_from_ratio(value, signed=False):
+    if value is None:
+        return "N/A"
+    return _format_percent(value * 100, signed=signed)
 
 
 def _format_detail_percent(value):
@@ -107,6 +114,109 @@ def _trend_label(is_below_ma250):
     if is_below_ma250:
         return "Below 250D"
     return "Above 250D"
+
+
+def _coerce_number(value):
+    if value in (None, "", "N/A"):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    normalized = str(value).strip().replace(",", "").replace("%", "")
+    if not normalized:
+        return None
+
+    try:
+        return float(normalized)
+    except ValueError:
+        return None
+
+
+def _load_portfolio_metrics(metrics_path=None):
+    metrics_path = metrics_path or PORTFOLIO_METRICS_JSON_PATH
+    empty_metrics = {"realized_pl": None, "realized_return_pct": None}
+
+    try:
+        if not metrics_path.exists():
+            return empty_metrics
+        payload = json.loads(metrics_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return empty_metrics
+
+    if not isinstance(payload, dict):
+        return empty_metrics
+
+    return {
+        "realized_pl": _coerce_number(payload.get("realized_pl")),
+        "realized_return_pct": _coerce_number(payload.get("realized_return_pct")),
+    }
+
+
+def _build_summary_primary_card(
+    label_zh,
+    label_en,
+    value,
+    tone=None,
+    accent_value=None,
+    accent_tone=None,
+    label_en_compact=None,
+):
+    return {
+        "label_zh": label_zh,
+        "label_en": label_en,
+        "label_text": f"{label_zh} / {label_en}",
+        "label_text_compact": f"{label_zh} / {label_en_compact or label_en}",
+        "value": value,
+        "tone": tone,
+        "accent_value": accent_value,
+        "accent_tone": accent_tone,
+    }
+
+
+def _build_summary_secondary_card(
+    label_zh,
+    label_en,
+    value,
+    tone=None,
+    tooltip_zh="",
+    tooltip_en="",
+    label_en_compact=None,
+):
+    return {
+        "label_zh": label_zh,
+        "label_en": label_en,
+        "label_text": f"{label_zh} / {label_en}",
+        "label_text_compact": f"{label_zh} / {label_en_compact or label_en}",
+        "value": value,
+        "tone": tone,
+        "tooltip_zh": tooltip_zh,
+        "tooltip_en": tooltip_en,
+    }
+
+
+def _build_concentration_cards(rows):
+    concentration_rows = (
+        ("Top 3", 3),
+        ("Top 5", 5),
+        ("Top 10", 10),
+    )
+    total_sort_value = sum(row["sort_value"] for row in rows)
+    cards = []
+
+    for label, limit in concentration_rows:
+        share_ratio = (
+            sum(row["sort_value"] for row in rows[:limit]) / total_sort_value
+            if total_sort_value
+            else None
+        )
+        cards.append(
+            {
+                "label": label,
+                "value": _format_percent_from_ratio(share_ratio),
+            }
+        )
+
+    return cards
 
 
 def _build_site_subtitle(current_market_value, current_datetime):
@@ -246,9 +356,11 @@ def build_portfolio_snapshot():
     site_subtitle = _build_site_subtitle(total_market_value_value, current_datetime)
 
     portfolio_metrics = cached_portfolio_metrics(holdings)
+    stored_portfolio_metrics = _load_portfolio_metrics()
     top_holdings = rows[:10]
     chart_labels = [row["symbol"] for row in top_holdings]
     chart_data = [round(row["sort_value"], 2) for row in top_holdings]
+    holdings_concentration_cards = _build_concentration_cards(rows)
 
     fear_greed = cached_fear_greed()
     fear_greed_score = fear_greed.get("score")
@@ -264,63 +376,70 @@ def build_portfolio_snapshot():
     finra_margin = cached_finra_margin() or {}
     sp500_historical = cached_sp500_historical() or {}
 
-    summary_cards = [
-        {
-            "label_zh": "持股總市值",
-            "label_en": "Market Value",
-            "value": _format_currency(total_market_value_value),
-            "tone": _tone_for_number(total_profit_value),
-            "meta": "Live pricing / 即時報價" if total_market_value_value is not None else "Unavailable / 暫不可用",
-        },
-        {
-            "label_zh": "持股總成本",
-            "label_en": "Total Cost",
-            "value": _format_currency(total_cost),
-            "tone": "muted",
-            "meta": "Average cost basis / 平均成本",
-        },
-        {
-            "label_zh": "總報酬金額",
-            "label_en": "Unrealized P/L",
-            "value": _format_currency(total_profit_value),
-            "tone": _tone_for_number(total_profit_value),
-            "meta": "Open positions / 未實現損益",
-        },
-        {
-            "label_zh": "總報酬率",
-            "label_en": "Unrealized Return",
-            "value": _format_percent(total_profit_pct_value, signed=True),
-            "tone": _tone_for_number(total_profit_pct_value),
-            "meta": "vs total cost / 相對總成本",
-        },
-        {
-            "label_zh": "持倉 YTD 報酬",
-            "label_en": "Portfolio YTD",
-            "value": portfolio_metrics["portfolio_ytd_ret_str"],
-            "tone": "muted" if portfolio_metrics["portfolio_ytd_ret_str"] == "N/A" else None,
-            "meta": "YTD return / 年初至今",
-        },
-        {
-            "label_zh": "大盤 YTD 報酬",
-            "label_en": "S&P 500 YTD",
-            "value": portfolio_metrics["sp500_ytd_ret_str"],
-            "tone": "muted" if portfolio_metrics["sp500_ytd_ret_str"] == "N/A" else None,
-            "meta": "Benchmark / 基準報酬",
-        },
-        {
-            "label_zh": "夏普值",
-            "label_en": "Sharpe Ratio",
-            "value": portfolio_metrics["sharpe_str"],
-            "tone": "muted",
-            "meta": "Risk adjusted / 風險調整",
-        },
-        {
-            "label_zh": "貝塔值",
-            "label_en": "Beta",
-            "value": portfolio_metrics["beta_str"],
-            "tone": "muted",
-            "meta": "vs S&P 500 / 相對大盤",
-        },
+    summary_primary_cards = [
+        _build_summary_primary_card(
+            "總市值",
+            "Total Value",
+            _format_currency(total_market_value_value),
+        ),
+        _build_summary_primary_card(
+            "總成本",
+            "Total Cost",
+            _format_currency(total_cost),
+        ),
+        _build_summary_primary_card(
+            "未實現損益",
+            "Unrealized P/L",
+            _format_currency(total_profit_value),
+            tone=_tone_for_number(total_profit_value),
+            accent_value=_format_percent(total_profit_pct_value, signed=True),
+            accent_tone=_tone_for_number(total_profit_pct_value),
+            label_en_compact="Unreal. P/L",
+        ),
+        _build_summary_primary_card(
+            "已實現損益",
+            "Realized P/L",
+            _format_currency(stored_portfolio_metrics["realized_pl"]),
+            tone=_tone_for_number(stored_portfolio_metrics["realized_pl"]),
+            accent_value=_format_percent(
+                stored_portfolio_metrics["realized_return_pct"],
+                signed=True,
+            ),
+            accent_tone=_tone_for_number(stored_portfolio_metrics["realized_return_pct"]),
+            label_en_compact="Real. P/L",
+        ),
+    ]
+
+    summary_secondary_cards = [
+        _build_summary_secondary_card(
+            "持倉 YTD",
+            "Portfolio YTD",
+            portfolio_metrics["portfolio_ytd_ret_str"],
+            tooltip_zh=f"投資組合今年以來的報酬率，對照 S&P 500 為 {portfolio_metrics['sp500_ytd_ret_str']}。",
+            tooltip_en=f"Portfolio return year to date. S&P 500 YTD is {portfolio_metrics['sp500_ytd_ret_str']}.",
+            label_en_compact="Port. YTD",
+        ),
+        _build_summary_secondary_card(
+            "夏普值",
+            "Sharpe Ratio",
+            portfolio_metrics["sharpe_str"],
+            tooltip_zh="每承擔一單位波動風險，投資組合換回多少超額報酬。通常越高越好。",
+            tooltip_en="Shows how much excess return the portfolio earns per unit of volatility. Higher is generally better.",
+        ),
+        _build_summary_secondary_card(
+            "貝塔值",
+            "Beta",
+            portfolio_metrics["beta_str"],
+            tooltip_zh="衡量投資組合相對 S&P 500 的波動敏感度。1.0 約等於跟大盤同步。",
+            tooltip_en="Measures how sensitive the portfolio is to S&P 500 moves. Around 1.0 means market-like swings.",
+        ),
+        _build_summary_secondary_card(
+            "阿爾法值",
+            "Alpha",
+            portfolio_metrics["alpha_pct_str"],
+            tooltip_zh="扣除市場波動影響後，相對 S&P 500 的超額報酬。正值通常代表跑贏基準。",
+            tooltip_en="Measures excess return beyond what market exposure would imply versus the S&P 500. Positive values generally indicate outperformance.",
+        ),
     ]
 
     macro_cards = [
@@ -363,7 +482,6 @@ def build_portfolio_snapshot():
         "holdingsChart": {
             "labels": chart_labels,
             "data": chart_data,
-            "usesCostFallback": not all_prices_available,
         },
         "fearGreedChart": {
             "labels": fear_greed.get("chart_labels", []),
@@ -378,14 +496,11 @@ def build_portfolio_snapshot():
         "site_subtitle_parts": site_subtitle,
         "updated_at": updated_at,
         "tabs": DEFAULT_TABS,
-        "summary_cards": summary_cards,
+        "summary_primary_cards": summary_primary_cards,
+        "summary_secondary_cards": summary_secondary_cards,
         "holdings_rows": rows,
         "has_holdings": bool(rows),
-        "holdings_chart_note": (
-            "Using cost basis where live prices are unavailable / 若即時報價不可用，圖表暫以成本估算"
-            if not all_prices_available
-            else ""
-        ),
+        "holdings_concentration_cards": holdings_concentration_cards,
         "fear_greed": {
             "score_str": fear_greed.get("score_str", "N/A"),
             "rating": fear_greed.get("rating", "N/A"),

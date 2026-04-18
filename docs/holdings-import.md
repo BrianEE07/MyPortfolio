@@ -5,6 +5,7 @@ v1.1.0 uses a local import flow to update holdings without putting broker creden
 
 ## Source Of Truth
 - `data/holdings.json` is the only canonical holdings file used by the app
+- `data/portfolio_metrics.json` is the generated companion file for realized-performance metrics
 - `imports/` is a local-only input area for manual source files
 - files under `imports/` are ignored by git and are not part of deployment
 
@@ -51,16 +52,24 @@ Import a Firstrade Account History / Transactions CSV into canonical holdings:
 python3 scripts/import_holdings.py imports/firstrade/FT_CSV_91323853.csv --source-type firstrade_csv
 ```
 
+Each successful import also refreshes `data/portfolio_metrics.json`.
+
 ## Validation Rules
 - `symbol` is required and normalized to uppercase
 - `shares` must be numeric
 - `cost_basis` must be numeric and may include `$`
 - Firstrade import currently supports `RecordType=Trade` rows with `BUY` and `SELL`
 - Non-trade financial rows such as wire transfers are ignored during holdings reconstruction
+- Firstrade import also calculates:
+  - `realized_pl`
+  - `realized_return_pct`
+- Realized return is calculated as cumulative realized P/L divided by the cumulative cost basis of sold shares
+- Sell-side commission and fee reduce realized results
+- Canonical CSV and canonical JSON imports reset generated realized metrics to `null`
 - invalid rows fail the entire import
-- invalid imports do not overwrite the existing canonical JSON file
+- invalid imports do not overwrite the existing canonical JSON or generated metrics files
 
 ## Security Notes
 - Keep local source files under `imports/`
 - Do not commit `.env`, API keys, certificates, or raw account exports
-- Only `data/holdings.json` should be treated as the public canonical holdings file
+- Only generated files under `data/` should be treated as canonical runtime data
