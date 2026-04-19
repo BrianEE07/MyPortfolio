@@ -5,6 +5,8 @@ This file is now the entry index for split version notes.
 Small releases are recorded under [docs/version-notes/](./version-notes/) so each version can be reviewed on its own without reopening one long running log.
 
 ## Timeline
+- [v1.2.1](./version-notes/v1.2.1.md)
+  Fixed Top 10 Holdings chart disappearance and overflow after tab switches or orientation changes, and stabilized overview stat labels across phone and tablet orientations.
 - [v1.2.0](./version-notes/v1.2.0.md)
   Holdings Overview refresh with hero cards, Firstrade-generated realized P/L, and Top 10 concentration chips.
 - [v1.1.6](./version-notes/v1.1.6.md)

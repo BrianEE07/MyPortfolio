@@ -164,6 +164,7 @@ def _build_summary_primary_card(
     return {
         "label_zh": label_zh,
         "label_en": label_en,
+        "label_en_compact": label_en_compact or label_en,
         "label_text": f"{label_zh} / {label_en}",
         "label_text_compact": f"{label_zh} / {label_en_compact or label_en}",
         "value": value,
@@ -185,6 +186,7 @@ def _build_summary_secondary_card(
     return {
         "label_zh": label_zh,
         "label_en": label_en,
+        "label_en_compact": label_en_compact or label_en,
         "label_text": f"{label_zh} / {label_en}",
         "label_text_compact": f"{label_zh} / {label_en_compact or label_en}",
         "value": value,
@@ -425,6 +427,7 @@ def build_portfolio_snapshot():
             portfolio_metrics["sharpe_str"],
             tooltip_zh="每承擔一單位波動風險，投資組合換回多少超額報酬。通常越高越好。",
             tooltip_en="Shows how much excess return the portfolio earns per unit of volatility. Higher is generally better.",
+            label_en_compact="Sharpe",
         ),
         _build_summary_secondary_card(
             "貝塔值",

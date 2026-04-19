@@ -1,6 +1,8 @@
 (function () {
   const payloadElement = document.getElementById("app-payload");
   const payload = payloadElement ? JSON.parse(payloadElement.textContent || "{}") : {};
+  const holdingsCanvas = document.getElementById("holdingsChart");
+  const fearGreedCanvas = document.getElementById("fearGreedChart");
 
   function updateThemeToggleState(theme) {
     const toggleButton = document.getElementById("themeToggle");
@@ -34,24 +36,184 @@
 
   const tabButtons = Array.from(document.querySelectorAll("[data-tab-target]"));
   const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+  const summaryCardLabelElements = Array.from(
+    document.querySelectorAll(".summary-card-label-en[data-label-full]")
+  );
   let holdingsChartInstance = null;
   let fearGreedChartInstance = null;
   let chartRelayoutTimeoutId = null;
+  let chartRelayoutNeedsRebuild = false;
 
-  function syncChartLayout(chart) {
-    if (!chart) return;
-    chart.resize();
-    chart.update("resize");
+  function shouldUseCompactSummaryLabels() {
+    return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches
+      || window.matchMedia("(max-width: 1024px) and (orientation: landscape)").matches
+      || window.matchMedia("(max-width: 900px)").matches;
   }
 
-  function scheduleChartRelayout() {
+  function updateSummaryCardLabels() {
+    const useCompactLabels = shouldUseCompactSummaryLabels();
+
+    summaryCardLabelElements.forEach(function (element) {
+      const fullLabel = element.dataset.labelFull || "";
+      const compactLabel = element.dataset.labelCompact || fullLabel;
+      element.textContent = useCompactLabels ? compactLabel : fullLabel;
+    });
+  }
+
+  function hasChartData(chartPayload) {
+    return Boolean(
+      window.Chart
+      && chartPayload
+      && chartPayload.labels
+      && chartPayload.labels.length
+    );
+  }
+
+  function isCanvasRenderable(canvas) {
+    return Boolean(
+      canvas
+      && canvas.isConnected
+      && canvas.getClientRects().length
+      && canvas.parentElement
+      && canvas.parentElement.clientWidth > 0
+      && canvas.parentElement.clientHeight > 0
+    );
+  }
+
+  function destroyChart(chart) {
+    if (!chart) return null;
+    chart.destroy();
+    return null;
+  }
+
+  function createHoldingsChart() {
+    if (!hasChartData(payload.holdingsChart) || !isCanvasRenderable(holdingsCanvas)) {
+      return null;
+    }
+
+    return new Chart(holdingsCanvas, {
+      type: "doughnut",
+      data: {
+        labels: payload.holdingsChart.labels,
+        datasets: [
+          {
+            data: payload.holdingsChart.data,
+            backgroundColor: ["#b86a17", "#d08a3e", "#e6b780", "#cfc7b8", "#7b8591", "#5d6773", "#a8927d", "#cab39c", "#91550f", "#dfc6a9"],
+            borderWidth: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              boxWidth: 12,
+              padding: 18
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function createFearGreedChart() {
+    if (!hasChartData(payload.fearGreedChart) || !isCanvasRenderable(fearGreedCanvas)) {
+      return null;
+    }
+
+    return new Chart(fearGreedCanvas, {
+      type: "line",
+      data: {
+        labels: payload.fearGreedChart.labels,
+        datasets: [
+          {
+            label: "Fear & Greed",
+            data: payload.fearGreedChart.data,
+            borderColor: "#b86a17",
+            backgroundColor: "rgba(184, 106, 23, 0.16)",
+            fill: true,
+            tension: 0.25,
+            pointRadius: 0,
+            pointHoverRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: "index",
+          intersect: false
+        },
+        scales: {
+          y: {
+            min: 0,
+            max: 100
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  }
+
+  function refreshChart(chart, canvas, createChart) {
+    if (!hasChartData(canvas === holdingsCanvas ? payload.holdingsChart : payload.fearGreedChart)) {
+      return null;
+    }
+    if (!isCanvasRenderable(canvas)) {
+      return chart;
+    }
+
+    if (!chart || chartRelayoutNeedsRebuild) {
+      return createChart();
+    }
+
+    chart.resize();
+    chart.update("resize");
+    if (!chart.chartArea || chart.chartArea.width <= 0 || chart.chartArea.height <= 0) {
+      chart.destroy();
+      return createChart();
+    }
+    return chart;
+  }
+
+  function rebuildOrRefreshCharts() {
+    if (chartRelayoutNeedsRebuild) {
+      holdingsChartInstance = destroyChart(holdingsChartInstance);
+      fearGreedChartInstance = destroyChart(fearGreedChartInstance);
+    }
+
+    holdingsChartInstance = refreshChart(
+      holdingsChartInstance,
+      holdingsCanvas,
+      createHoldingsChart
+    );
+    fearGreedChartInstance = refreshChart(
+      fearGreedChartInstance,
+      fearGreedCanvas,
+      createFearGreedChart
+    );
+    chartRelayoutNeedsRebuild = false;
+  }
+
+  function scheduleChartRelayout(forceRebuild) {
+    chartRelayoutNeedsRebuild = chartRelayoutNeedsRebuild || Boolean(forceRebuild);
     if (chartRelayoutTimeoutId) {
       window.clearTimeout(chartRelayoutTimeoutId);
     }
-    chartRelayoutTimeoutId = window.setTimeout(function () {
-      syncChartLayout(holdingsChartInstance);
-      syncChartLayout(fearGreedChartInstance);
-    }, 120);
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        rebuildOrRefreshCharts();
+      });
+    });
+    chartRelayoutTimeoutId = window.setTimeout(rebuildOrRefreshCharts, 160);
   }
 
   function activateTab(tabId) {
@@ -65,7 +227,7 @@
     tabPanels.forEach(function (panel) {
       panel.classList.toggle("is-active", panel.getAttribute("data-tab-panel") === tabId);
     });
-    scheduleChartRelayout();
+    scheduleChartRelayout(true);
   }
 
   tabButtons.forEach(function (button) {
@@ -183,6 +345,7 @@
   }
 
   activateTab("overview");
+  updateSummaryCardLabels();
 
   function updateRankBadges(shouldHighlightTopHoldings) {
     if (!detailTableBody) return;
@@ -400,99 +563,35 @@
   });
 
   window.addEventListener("resize", function () {
+    updateSummaryCardLabels();
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
-    scheduleChartRelayout();
+    scheduleChartRelayout(true);
   });
   window.addEventListener("scroll", function () {
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
   }, true);
-  window.addEventListener("orientationchange", scheduleChartRelayout);
-  window.addEventListener("pageshow", scheduleChartRelayout);
+  window.addEventListener("orientationchange", function () {
+    updateSummaryCardLabels();
+    scheduleChartRelayout(true);
+  });
+  window.addEventListener("pageshow", function () {
+    updateSummaryCardLabels();
+    scheduleChartRelayout(true);
+  });
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) {
-      scheduleChartRelayout();
+      updateSummaryCardLabels();
+      scheduleChartRelayout(true);
     }
   });
   if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", scheduleChartRelayout);
+    window.visualViewport.addEventListener("resize", function () {
+      updateSummaryCardLabels();
+      scheduleChartRelayout(true);
+    });
   }
 
-  if (window.Chart && payload.holdingsChart && payload.holdingsChart.labels && payload.holdingsChart.labels.length) {
-    const holdingsCanvas = document.getElementById("holdingsChart");
-    if (holdingsCanvas) {
-      holdingsChartInstance = new Chart(holdingsCanvas, {
-        type: "doughnut",
-        data: {
-          labels: payload.holdingsChart.labels,
-          datasets: [
-            {
-              data: payload.holdingsChart.data,
-              backgroundColor: ["#b86a17", "#d08a3e", "#e6b780", "#cfc7b8", "#7b8591", "#5d6773", "#a8927d", "#cab39c", "#91550f", "#dfc6a9"],
-              borderWidth: 0
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                boxWidth: 12,
-                padding: 18
-              }
-            }
-          }
-        }
-      });
-    }
-  }
-
-  if (window.Chart && payload.fearGreedChart && payload.fearGreedChart.labels && payload.fearGreedChart.labels.length) {
-    const fearGreedCanvas = document.getElementById("fearGreedChart");
-    if (fearGreedCanvas) {
-      fearGreedChartInstance = new Chart(fearGreedCanvas, {
-        type: "line",
-        data: {
-          labels: payload.fearGreedChart.labels,
-          datasets: [
-            {
-              label: "Fear & Greed",
-              data: payload.fearGreedChart.data,
-              borderColor: "#b86a17",
-              backgroundColor: "rgba(184, 106, 23, 0.16)",
-              fill: true,
-              tension: 0.25,
-              pointRadius: 0,
-              pointHoverRadius: 4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            mode: "index",
-            intersect: false
-          },
-          scales: {
-            y: {
-              min: 0,
-              max: 100
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            }
-          }
-        }
-      });
-    }
-  }
-
-  scheduleChartRelayout();
+  scheduleChartRelayout(true);
 }());

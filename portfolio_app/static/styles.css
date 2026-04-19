@@ -490,8 +490,18 @@ textarea {
   min-width: 0;
 }
 
-.summary-card-label-copy-compact {
-  display: none;
+.summary-card-label-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.summary-card-label-zh,
+.summary-card-label-en {
+  display: inline-block;
+  min-width: 0;
 }
 
 .summary-card-value {
@@ -570,10 +580,22 @@ textarea {
   grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
   gap: 18px;
   align-items: center;
+  min-width: 0;
 }
 
 .holdings-chart-panel {
-  min-height: 280px;
+  width: min(100%, 320px);
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  justify-self: center;
+}
+
+.holdings-chart-panel canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .concentration-card-title {
@@ -1394,6 +1416,26 @@ tbody tr:last-child td {
     font-size: 0.72rem;
   }
 
+  .summary-card-label-copy {
+    min-height: calc(2 * 1.15em);
+  }
+
+  .summary-card-label-line {
+    display: grid;
+    align-items: start;
+    gap: 2px;
+    white-space: normal;
+  }
+
+  .summary-card-label-separator {
+    display: none;
+  }
+
+  .summary-card-label-zh,
+  .summary-card-label-en {
+    white-space: nowrap;
+  }
+
   .summary-card-primary .summary-card-value {
     font-size: 1.22rem;
   }
@@ -1438,12 +1480,8 @@ tbody tr:last-child td {
     margin-top: 1px;
   }
 
-  .summary-card-label-copy {
-    display: none;
-  }
-
-  .summary-card-label-copy-compact {
-    display: block;
+  .summary-card-label-en {
+    display: inline-block;
   }
 
   .site-subtitle {
@@ -1494,6 +1532,12 @@ tbody tr:last-child td {
   }
 }
 
+@media (max-width: 1024px) and (orientation: landscape) {
+}
+
+@media (max-width: 900px) {
+}
+
 @media (max-width: 932px) and (max-height: 520px) and (orientation: landscape) {
   .summary-layout {
     grid-template-columns: minmax(0, 1.18fr) minmax(220px, 0.88fr);
@@ -1540,6 +1584,10 @@ tbody tr:last-child td {
   .holdings-share-layout {
     grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
     align-items: center;
+  }
+
+  .holdings-chart-panel {
+    width: min(100%, 280px);
   }
 }
 

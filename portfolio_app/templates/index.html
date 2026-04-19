@@ -92,8 +92,17 @@
                     {% for card in summary_primary_cards %}
                     <article class="summary-card summary-card-primary">
                         <p class="summary-card-label">
-                            <span class="summary-card-label-copy">{{ card.label_text }}</span>
-                            <span class="summary-card-label-copy summary-card-label-copy-compact">{{ card.label_text_compact }}</span>
+                            <span class="summary-card-label-copy">
+                                <span class="summary-card-label-line">
+                                    <span class="summary-card-label-zh">{{ card.label_zh }}</span>
+                                    <span class="summary-card-label-separator" aria-hidden="true">/</span>
+                                    <span
+                                        class="summary-card-label-en"
+                                        data-label-full="{{ card.label_en }}"
+                                        data-label-compact="{{ card.label_en_compact }}"
+                                    >{{ card.label_en }}</span>
+                                </span>
+                            </span>
                         </p>
                         <div class="summary-card-value-row">
                             <p class="summary-card-value{% if card.tone %} is-{{ card.tone }}{% endif %}">{{ card.value }}</p>
@@ -109,8 +118,17 @@
                     {% for card in summary_secondary_cards %}
                     <article class="summary-card summary-card-secondary summary-stat">
                         <p class="summary-card-label">
-                            <span class="summary-card-label-copy">{{ card.label_text }}</span>
-                            <span class="summary-card-label-copy summary-card-label-copy-compact">{{ card.label_text_compact }}</span>
+                            <span class="summary-card-label-copy">
+                                <span class="summary-card-label-line">
+                                    <span class="summary-card-label-zh">{{ card.label_zh }}</span>
+                                    <span class="summary-card-label-separator" aria-hidden="true">/</span>
+                                    <span
+                                        class="summary-card-label-en"
+                                        data-label-full="{{ card.label_en }}"
+                                        data-label-compact="{{ card.label_en_compact }}"
+                                    >{{ card.label_en }}</span>
+                                </span>
+                            </span>
                             {% if card.tooltip_zh %}
                             <span class="info-chip" tabindex="0" aria-label="{{ card.label_en }} help" data-tooltip-zh="{{ card.tooltip_zh }}" data-tooltip-en="{{ card.tooltip_en }}">?</span>
                             {% endif %}
