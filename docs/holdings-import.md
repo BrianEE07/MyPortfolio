@@ -1,7 +1,7 @@
 # Holdings Import
 
 ## Purpose
-v1.1.0 uses a local import flow to update holdings without putting broker credentials or raw export files into the public site or deployment workflow.
+This project uses a local import flow to update holdings without putting broker credentials or raw export files into the public site or deployment workflow.
 
 ## Source Of Truth
 - `data/holdings.json` is the only canonical holdings file used by the app
@@ -53,6 +53,12 @@ python3 scripts/import_holdings.py imports/firstrade/FT_CSV_91323853.csv --sourc
 ```
 
 Each successful import also refreshes `data/portfolio_metrics.json`.
+
+Run the focused automated checks after import-related changes:
+
+```bash
+PYTHONPATH=. .venv/bin/pytest
+```
 
 ## Validation Rules
 - `symbol` is required and normalized to uppercase

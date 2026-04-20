@@ -90,27 +90,27 @@ def test_build_portfolio_snapshot_uses_generated_realized_metrics(tmp_path, monk
     assert [card["label_en"] for card in result["summary_primary_cards"]] == [
         "Total Value",
         "Total Cost",
-        "Unrealized P/L",
-        "Realized P/L",
+        "Unrealized P&L",
+        "Realized P&L",
     ]
     assert [card["label_en"] for card in result["summary_secondary_cards"]] == [
         "Portfolio YTD",
         "Sharpe Ratio",
-        "Beta",
         "Alpha",
+        "Beta",
     ]
-    assert result["summary_primary_cards"][2]["value"] == "$50.00"
+    assert result["summary_primary_cards"][2]["value"] == "+$50.00"
     assert result["summary_primary_cards"][2]["accent_value"] == "+25.00%"
     assert result["summary_primary_cards"][2]["accent_tone"] == "gain"
-    assert result["summary_primary_cards"][3]["value"] == "$12,345.67"
+    assert result["summary_primary_cards"][3]["value"] == "+$12,345.67"
     assert result["summary_primary_cards"][3]["accent_value"] == "+18.40%"
     assert result["summary_primary_cards"][3]["accent_tone"] == "gain"
     assert result["summary_secondary_cards"][0]["value"] == "+16.25%"
     assert result["summary_secondary_cards"][0]["tooltip_zh"] == (
         "投資組合今年以來的報酬率，對照 S&P 500 為 +9.75%。"
     )
-    assert result["summary_secondary_cards"][3]["value"] == "+3.45%"
-    assert result["summary_secondary_cards"][3]["tone"] is None
+    assert result["summary_secondary_cards"][2]["value"] == "+3.45%"
+    assert result["summary_secondary_cards"][2]["tone"] is None
     assert all("tooltip_zh" in card for card in result["summary_secondary_cards"])
     assert result["holdings_concentration_cards"] == [
         {"label": "Top 3", "value": "100.00%"},

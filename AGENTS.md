@@ -29,7 +29,8 @@ Current implementation work should also support the approved v1.1.0 holdings upd
 ## Project Context
 - The current project uses `portfolio.py` as a thin wrapper around the modular `portfolio_app/` package.
 - `portfolio_app/` separates holdings validation, local import flow, market data access, snapshot assembly, Flask routing, templates, and static assets.
-- `data/holdings.json` is the only canonical holdings data file used at runtime.
+- `data/holdings.json` is the canonical holdings data file used at runtime.
+- `data/portfolio_metrics.json` is a generated companion runtime file used for realized-performance metrics.
 - `imports/` is the local-only input area for manual CSV and broker export files.
 - Runtime dependencies live in `requirements.txt`.
 - Deployment-related files include `Procfile` and `.github/workflows/deploy-pages.yml`.
@@ -94,7 +95,7 @@ Current implementation work should also support the approved v1.1.0 holdings upd
 - Prefer leaving a clear written implementation trail for each completed version rather than relying only on commit history.
 
 ## Testing And Verification
-- There is no committed automated test suite yet, so verification must be intentional.
+- The repo now includes focused automated tests for holdings import and snapshot assembly, but verification should still be intentional for user-visible changes.
 - For syntax validation, use:
 
 ```bash
@@ -110,6 +111,12 @@ pip install -r requirements.txt
 python3 portfolio.py --serve
 ```
 
+- To review on a specific localhost port, use:
+
+```bash
+PORT=5002 python3 portfolio.py --serve
+```
+
 - For static output validation, use:
 
 ```bash
@@ -123,7 +130,7 @@ python3 scripts/import_holdings.py imports/holdings.csv
 python3 scripts/import_holdings.py data/holdings.json --source-type canonical_json
 python3 scripts/import_holdings.py imports/firstrade/FT_CSV_91323853.csv --source-type firstrade_csv
 python3 scripts/import_holdings.py imports/holdings.csv --build-output /tmp/portfolio-preview/index.html
-pytest
+PYTHONPATH=. .venv/bin/pytest
 ```
 
 - If a change affects rendering or data assembly, verify both `/` and `/health`, and confirm static export still works.

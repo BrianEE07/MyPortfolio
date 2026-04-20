@@ -1,66 +1,75 @@
 # Codebase Review
 
 ## Project Overview
-This repository is now a modular Flask application that supports two runtime paths:
+This repository is a modular Flask application with two supported runtime paths:
 
-- local serving through Flask
-- static HTML export for GitHub Pages deployment
+- local serving through Flask for interactive review
+- static HTML export under `docs/` for GitHub Pages deployment
 
-v1.0.0 already separated the original prototype into clearer modules. The current v1.1.0 direction is to keep the UI and snapshot layer stable while making holdings updates easier and safer through local import flows.
+The original refactor goals from `v1.0.0` and `v1.1.0` have largely landed. The current codebase centers on a canonical holdings source, a generated companion metrics file, and a snapshot-driven UI with responsive overview and details tabs.
 
 ## Current Architecture
-The current structure is organized around four main layers:
+The main responsibilities are now separated into these layers:
 
-- `portfolio_app/holdings.py` for canonical holdings schema validation and persistence
-- `portfolio_app/market_data.py` for external market data access and caching
+- `portfolio_app/holdings.py` for canonical holdings schema validation, normalization, and persistence
+- `portfolio_app/holdings_import.py` for local source import flows and broker-specific normalization
+- `portfolio_app/market_data.py` for external market data access and cache-oriented helpers
 - `portfolio_app/snapshot.py` for portfolio calculations and view-model assembly
-- `portfolio_app/web.py` plus templates and static assets for Flask routes and rendering
+- `portfolio_app/web.py` plus templates and static assets for Flask routes, static export, and frontend rendering
 
-`portfolio.py` is now a thin wrapper that preserves the existing serve and static-export entrypoints.
+`portfolio.py` remains a thin wrapper around the modular app package so the repo keeps a stable CLI surface for serve and export workflows.
 
 ## Main Files And Responsibilities
 ### `portfolio.py`
-Thin CLI and application entry wrapper.
+Thin CLI entrypoint for local serving and static export.
 
 ### `portfolio_app/config.py`
-Shared paths and site-level constants.
+Shared paths, runtime constants, tab definitions, and site-level defaults.
 
 ### `portfolio_app/holdings.py`
-Canonical holdings schema validation, optional local canonical CSV parsing, JSON loading, and JSON persistence.
+Canonical holdings schema validation, JSON persistence, and canonical CSV conversion.
 
 ### `portfolio_app/holdings_import.py`
-Local source import entrypoint for supported holdings source types. This layer is the main extension point for future broker-specific adapters and now includes the first conservative Firstrade CSV adapter.
+Local source import entrypoint for canonical CSV, canonical JSON, and Firstrade transaction CSV inputs. This module also writes generated realized-performance metrics to `data/portfolio_metrics.json`.
 
 ### `portfolio_app/snapshot.py`
-Builds the snapshot used by the template from canonical holdings and external market data.
+Builds the snapshot used by templates and static export, including overview cards, holdings detail rows, chart payloads, and footer metadata.
 
 ### `portfolio_app/market_data.py`
-Fetches and caches prices, valuation data, and macro indicators.
+Fetches and formats market prices, technical indicators, benchmark metrics, and macro sentiment inputs.
 
 ### `portfolio_app/web.py`
-Defines Flask routes and static export behavior.
+Defines Flask routes, asset versioning, and static export behavior.
 
 ### `scripts/import_holdings.py`
-Local CLI for importing manual source files under `imports/` into canonical JSON and optionally rebuilding static output.
+CLI wrapper for local holdings imports and optional post-import static rebuilds.
+
+### `tests/test_holdings_import.py`
+Focused coverage for canonical imports, Firstrade normalization, realized-metrics generation, and failure safety.
+
+### `tests/test_snapshot.py`
+Focused coverage for overview snapshot assembly and generated metrics fallbacks.
+
+## Runtime Data Boundaries
+- `data/holdings.json` is the canonical holdings file used at runtime
+- `data/portfolio_metrics.json` is a generated companion file for realized-performance metrics
+- `imports/` is a local-only source area for raw files and should stay outside deployment concerns
+
+This keeps the public runtime model minimal while still allowing richer local ingestion logic.
 
 ## Current Technical Debt
-- `portfolio_app/market_data.py` still carries many responsibilities and multiple upstream integrations in one file
-- The import layer is intentionally minimal and currently supports only canonical CSV and canonical JSON
-- There is still no broker-specific adapter contract beyond the local source type boundary
-- The repo only has focused import tests today; market data and snapshot logic still rely mostly on smoke verification
+- `portfolio_app/market_data.py` still concentrates multiple upstream integrations and parsing strategies in one module
+- `portfolio_app/snapshot.py` has become the highest-coupling assembly layer and will keep growing unless future UI sections extract smaller view-model helpers
+- Frontend behavior in `portfolio_app/static/app.js` now coordinates tabs, tooltips, sorting, symbol-link reveals, and chart relayout, which is practical today but increasingly dense
+- Static output under `docs/` remains necessary for deployment, but it also creates review noise whenever UI changes are rebuilt
 
 ## Maintainability Risks
-- Future broker exports will drift in column names and formatting unless adapter-specific normalization stays isolated from the canonical schema layer
-- `snapshot.py` still assumes canonical `data/holdings.json` is always present locally; future multi-source or scheduled ingestion must keep that boundary explicit
-- Generated static output under `docs/` can create review noise if rebuilds are mixed into unrelated code changes
+- Broker exports will continue to drift in format, so adapter-specific normalization should stay isolated inside the import layer instead of leaking into snapshot or template logic
+- Responsive UI fixes can regress quietly because some issues only appear during tab switches, orientation changes, or device-specific viewport behavior
+- Generated runtime data in `data/` can become stale if local import flows and manual edits are mixed without a clear operating habit
 
-## v1.1.0 Focus
-The recommended low-risk path remains:
-
-- keep one canonical holdings schema
-- keep `data/holdings.json` as the single runtime source of truth
-- import external files locally, not through the public website
-- fail fast on invalid data and avoid partial writes
-- keep broker credentials, raw exports, and local-only config outside the repo
-
-This keeps the codebase easy to reason about while leaving room for future FT or 永豐專用 adapters without forcing a backend rewrite.
+## Recommended Near-Term Maintenance Focus
+- Keep one canonical holdings schema and continue treating `data/holdings.json` as the single runtime source of truth
+- Preserve `data/portfolio_metrics.json` as a generated companion output rather than expanding the canonical holdings schema
+- Add small, focused tests whenever overview card behavior, import normalization, or responsive rendering logic changes
+- Prefer updating version notes and operational docs alongside implementation changes so release behavior stays traceable without relying only on commit history
