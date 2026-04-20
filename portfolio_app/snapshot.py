@@ -73,7 +73,8 @@ def _format_detail_percent(value):
 def _format_signed_currency(value):
     if value is None:
         return "N/A"
-    return f"{value:+,.2f}"
+    sign = "+" if value > 0 else "-" if value < 0 else ""
+    return sign + _format_currency(abs(value))
 
 
 def _tone_for_number(value):
@@ -391,24 +392,24 @@ def build_portfolio_snapshot():
         ),
         _build_summary_primary_card(
             "未實現損益",
-            "Unrealized P/L",
-            _format_currency(total_profit_value),
+            "Unrealized P&L",
+            _format_signed_currency(total_profit_value),
             tone=_tone_for_number(total_profit_value),
             accent_value=_format_percent(total_profit_pct_value, signed=True),
             accent_tone=_tone_for_number(total_profit_pct_value),
-            label_en_compact="Unreal. P/L",
+            label_en_compact="Unreal. P&L",
         ),
         _build_summary_primary_card(
             "已實現損益",
-            "Realized P/L",
-            _format_currency(stored_portfolio_metrics["realized_pl"]),
+            "Realized P&L",
+            _format_signed_currency(stored_portfolio_metrics["realized_pl"]),
             tone=_tone_for_number(stored_portfolio_metrics["realized_pl"]),
             accent_value=_format_percent(
                 stored_portfolio_metrics["realized_return_pct"],
                 signed=True,
             ),
             accent_tone=_tone_for_number(stored_portfolio_metrics["realized_return_pct"]),
-            label_en_compact="Real. P/L",
+            label_en_compact="Real. P&L",
         ),
     ]
 
@@ -430,18 +431,18 @@ def build_portfolio_snapshot():
             label_en_compact="Sharpe",
         ),
         _build_summary_secondary_card(
-            "貝塔值",
-            "Beta",
-            portfolio_metrics["beta_str"],
-            tooltip_zh="衡量投資組合相對 S&P 500 的波動敏感度。1.0 約等於跟大盤同步。",
-            tooltip_en="Measures how sensitive the portfolio is to S&P 500 moves. Around 1.0 means market-like swings.",
-        ),
-        _build_summary_secondary_card(
             "阿爾法值",
             "Alpha",
             portfolio_metrics["alpha_pct_str"],
             tooltip_zh="扣除市場波動影響後，相對 S&P 500 的超額報酬。正值通常代表跑贏基準。",
             tooltip_en="Measures excess return beyond what market exposure would imply versus the S&P 500. Positive values generally indicate outperformance.",
+        ),
+        _build_summary_secondary_card(
+            "貝塔值",
+            "Beta",
+            portfolio_metrics["beta_str"],
+            tooltip_zh="衡量投資組合相對 S&P 500 的波動敏感度。1.0 約等於跟大盤同步。",
+            tooltip_en="Measures how sensitive the portfolio is to S&P 500 moves. Around 1.0 means market-like swings.",
         ),
     ]
 

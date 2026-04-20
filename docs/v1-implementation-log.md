@@ -5,6 +5,8 @@ This file is now the entry index for split version notes.
 Small releases are recorded under [docs/version-notes/](./version-notes/) so each version can be reviewed on its own without reopening one long running log.
 
 ## Timeline
+- [v1.2.2](./version-notes/v1.2.2.md)
+  Added signed overview P&L amounts, renamed overview P/L labels to P&L, and swapped the Alpha/Beta card order.
 - [v1.2.1](./version-notes/v1.2.1.md)
   Fixed Top 10 Holdings chart disappearance and overflow after tab switches or orientation changes, and stabilized overview stat labels across phone and tablet orientations.
 - [v1.2.0](./version-notes/v1.2.0.md)
