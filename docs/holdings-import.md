@@ -54,6 +54,14 @@ python3 scripts/import_holdings.py imports/firstrade/FT_CSV_91323853.csv --sourc
 
 Each successful import also refreshes `data/portfolio_metrics.json`.
 
+Preview the app with local-only holdings or metrics files without replacing the canonical runtime data:
+
+```bash
+PORTFOLIO_HOLDINGS_PATH=/private/tmp/preview-holdings.json \
+PORTFOLIO_METRICS_PATH=/private/tmp/preview-portfolio-metrics.json \
+PORT=5002 python3 portfolio.py --serve
+```
+
 Run the focused automated checks after import-related changes:
 
 ```bash

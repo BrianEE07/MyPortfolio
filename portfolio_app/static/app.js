@@ -2,7 +2,9 @@
   const payloadElement = document.getElementById("app-payload");
   const payload = payloadElement ? JSON.parse(payloadElement.textContent || "{}") : {};
   const holdingsCanvas = document.getElementById("holdingsChart");
+  const holdingsLegend = document.getElementById("holdingsChartLegend");
   const fearGreedCanvas = document.getElementById("fearGreedChart");
+  const sp500TrendCanvas = document.getElementById("sp500TrendChart");
 
   function updateThemeToggleState(theme) {
     const toggleButton = document.getElementById("themeToggle");
@@ -39,10 +41,20 @@
   const summaryCardLabelElements = Array.from(
     document.querySelectorAll(".summary-card-label-en[data-label-full]")
   );
+  const tooltipTriggers = Array.from(
+    document.querySelectorAll("[data-tooltip-zh][data-tooltip-en]")
+  );
+  const categoryFiltersContainer = document.querySelector(".holdings-category-filters");
+  const categoryFilterButtons = Array.from(
+    document.querySelectorAll(".holdings-category-filter[data-category-filter], .holdings-category-track-segment[data-category-filter]")
+  );
   let holdingsChartInstance = null;
   let fearGreedChartInstance = null;
+  let sp500TrendChartInstance = null;
   let chartRelayoutTimeoutId = null;
   let chartRelayoutNeedsRebuild = false;
+  let activeCategoryFilter = "all";
+  let activeTabId = "overview";
 
   function shouldUseCompactSummaryLabels() {
     return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches
@@ -69,6 +81,13 @@
     );
   }
 
+  function getChartPayload(chartName) {
+    if (chartName === "holdings") return payload.holdingsChart;
+    if (chartName === "fearGreed") return payload.fearGreedChart;
+    if (chartName === "sp500Trend") return payload.sp500TrendChart;
+    return null;
+  }
+
   function isCanvasRenderable(canvas) {
     return Boolean(
       canvas
@@ -86,10 +105,54 @@
     return null;
   }
 
+  function clearHoldingsLegend() {
+    if (!holdingsLegend) return;
+    holdingsLegend.replaceChildren();
+  }
+
+  function renderHoldingsLegend(chartPayload) {
+    if (!holdingsLegend) return;
+    if (!chartPayload || !chartPayload.labels || !chartPayload.labels.length) {
+      clearHoldingsLegend();
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    chartPayload.labels.forEach(function (label, index) {
+      const legendItem = document.createElement("span");
+      legendItem.className = "holdings-chart-legend-item";
+
+      const swatch = document.createElement("span");
+      swatch.className = "holdings-chart-legend-swatch";
+      swatch.style.setProperty(
+        "--legend-color",
+        (chartPayload.colors || [])[index] || "#b86a17"
+      );
+      legendItem.appendChild(swatch);
+
+      const text = document.createElement("span");
+      text.textContent = label;
+      const companyName = (chartPayload.companyNames || [])[index] || "";
+      if (companyName && companyName !== label) {
+        legendItem.title = label + " · " + companyName;
+      }
+      legendItem.appendChild(text);
+      fragment.appendChild(legendItem);
+    });
+
+    holdingsLegend.replaceChildren(fragment);
+  }
+
   function createHoldingsChart() {
     if (!hasChartData(payload.holdingsChart) || !isCanvasRenderable(holdingsCanvas)) {
+      clearHoldingsLegend();
       return null;
     }
+
+    const totalValue = (payload.holdingsChart.data || []).reduce(function (sum, item) {
+      return sum + Number(item || 0);
+    }, 0);
+    renderHoldingsLegend(payload.holdingsChart);
 
     return new Chart(holdingsCanvas, {
       type: "doughnut",
@@ -98,8 +161,9 @@
         datasets: [
           {
             data: payload.holdingsChart.data,
-            backgroundColor: ["#b86a17", "#d08a3e", "#e6b780", "#cfc7b8", "#7b8591", "#5d6773", "#a8927d", "#cab39c", "#91550f", "#dfc6a9"],
-            borderWidth: 0
+            backgroundColor: payload.holdingsChart.colors || ["#b86a17", "#d08a3e", "#e6b780"],
+            borderWidth: 0,
+            radius: "88%"
           }
         ]
       },
@@ -108,10 +172,33 @@
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: "bottom",
-            labels: {
-              boxWidth: 12,
-              padding: 18
+            display: false
+          },
+          tooltip: {
+            boxPadding: 3,
+            callbacks: {
+              title: function (context) {
+                const firstItem = context && context[0];
+                if (!firstItem) return "";
+
+                const dataIndex = firstItem.dataIndex;
+                const symbol = (payload.holdingsChart.labels || [])[dataIndex] || "";
+                const companyName = (payload.holdingsChart.companyNames || [])[dataIndex] || "";
+
+                if (companyName && companyName !== symbol) {
+                  return symbol + " · " + companyName;
+                }
+
+                return companyName || symbol;
+              },
+              label: function (context) {
+                const numericValue = Number(context.raw || 0);
+                const share = totalValue > 0 ? (numericValue / totalValue) * 100 : 0;
+                return "$" + numericValue.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                }) + " (" + share.toFixed(1) + "%)";
+              }
             }
           }
         }
@@ -163,8 +250,65 @@
     });
   }
 
-  function refreshChart(chart, canvas, createChart) {
-    if (!hasChartData(canvas === holdingsCanvas ? payload.holdingsChart : payload.fearGreedChart)) {
+  function createSp500TrendChart() {
+    if (!hasChartData(payload.sp500TrendChart) || !isCanvasRenderable(sp500TrendCanvas)) {
+      return null;
+    }
+
+    return new Chart(sp500TrendCanvas, {
+      type: "line",
+      data: {
+        labels: payload.sp500TrendChart.labels,
+        datasets: [
+          {
+            data: payload.sp500TrendChart.data,
+            borderColor: "#34d399",
+            backgroundColor: "rgba(52, 211, 153, 0.14)",
+            fill: true,
+            tension: 0.22,
+            pointRadius: 0,
+            pointHoverRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: "index",
+          intersect: false
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              maxTicksLimit: 6
+            }
+          },
+          y: {
+            ticks: {
+              callback: function (value) {
+                return Number(value).toLocaleString();
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  }
+
+  function refreshChart(chart, canvas, createChart, chartName) {
+    if (!hasChartData(getChartPayload(chartName))) {
+      if (chartName === "holdings") {
+        clearHoldingsLegend();
+      }
       return null;
     }
     if (!isCanvasRenderable(canvas)) {
@@ -188,17 +332,26 @@
     if (chartRelayoutNeedsRebuild) {
       holdingsChartInstance = destroyChart(holdingsChartInstance);
       fearGreedChartInstance = destroyChart(fearGreedChartInstance);
+      sp500TrendChartInstance = destroyChart(sp500TrendChartInstance);
     }
 
     holdingsChartInstance = refreshChart(
       holdingsChartInstance,
       holdingsCanvas,
-      createHoldingsChart
+      createHoldingsChart,
+      "holdings"
     );
     fearGreedChartInstance = refreshChart(
       fearGreedChartInstance,
       fearGreedCanvas,
-      createFearGreedChart
+      createFearGreedChart,
+      "fearGreed"
+    );
+    sp500TrendChartInstance = refreshChart(
+      sp500TrendChartInstance,
+      sp500TrendCanvas,
+      createSp500TrendChart,
+      "sp500Trend"
     );
     chartRelayoutNeedsRebuild = false;
   }
@@ -217,6 +370,10 @@
   }
 
   function activateTab(tabId) {
+    if (activeTabId === "details" && tabId !== "details") {
+      applyCategoryFilter("all", true, true, "auto");
+    }
+
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
     tabButtons.forEach(function (button) {
@@ -227,6 +384,7 @@
     tabPanels.forEach(function (panel) {
       panel.classList.toggle("is-active", panel.getAttribute("data-tab-panel") === tabId);
     });
+    activeTabId = tabId;
     scheduleChartRelayout(true);
   }
 
@@ -241,7 +399,6 @@
   const sortButtons = detailTable
     ? Array.from(detailTable.querySelectorAll(".sort-button[data-sort-key]"))
     : [];
-  const infoChips = Array.from(document.querySelectorAll(".info-chip[data-tooltip-zh]"));
   const symbolLinkGroups = Array.from(document.querySelectorAll("[data-symbol-link-group]"));
   const defaultSortKey = detailTableBody
     ? (detailTableBody.dataset.sortDefaultKey || "market-value")
@@ -255,13 +412,13 @@
   let activeInfoChip = null;
   let activeSymbolLinkGroup = null;
 
-  function setInfoChipExpanded(chip, isExpanded) {
-    if (!chip) return;
-    chip.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  function setTooltipTriggerExpanded(trigger, isExpanded) {
+    if (!trigger || !trigger.classList.contains("info-chip")) return;
+    trigger.setAttribute("aria-expanded", isExpanded ? "true" : "false");
   }
 
-  function positionInfoTooltip(chip) {
-    const chipRect = chip.getBoundingClientRect();
+  function positionInfoTooltip(trigger) {
+    const chipRect = trigger.getBoundingClientRect();
     const tooltipRect = tooltipElement.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const tooltipLeft = Math.min(
@@ -277,15 +434,15 @@
     tooltipElement.style.top = tooltipTop + "px";
   }
 
-  function showInfoTooltip(chip) {
-    const tooltipText = [chip.dataset.tooltipZh, chip.dataset.tooltipEn]
+  function showInfoTooltip(trigger) {
+    const tooltipText = [trigger.dataset.tooltipZh, trigger.dataset.tooltipEn]
       .filter(Boolean)
       .join("\n");
     if (!tooltipText) return;
 
     tooltipElement.textContent = tooltipText;
     tooltipElement.classList.add("is-visible");
-    positionInfoTooltip(chip);
+    positionInfoTooltip(trigger);
   }
 
   function hideInfoTooltip() {
@@ -293,7 +450,7 @@
   }
 
   function clearActiveInfoChip() {
-    setInfoChipExpanded(activeInfoChip, false);
+    setTooltipTriggerExpanded(activeInfoChip, false);
     activeInfoChip = null;
     hideInfoTooltip();
   }
@@ -329,10 +486,10 @@
 
   function setActiveInfoChip(chip) {
     if (activeInfoChip && activeInfoChip !== chip) {
-      setInfoChipExpanded(activeInfoChip, false);
+      setTooltipTriggerExpanded(activeInfoChip, false);
     }
     activeInfoChip = chip;
-    setInfoChipExpanded(activeInfoChip, true);
+    setTooltipTriggerExpanded(activeInfoChip, true);
     showInfoTooltip(activeInfoChip);
   }
 
@@ -350,15 +507,18 @@
   function updateRankBadges(shouldHighlightTopHoldings) {
     if (!detailTableBody) return;
     const rows = Array.from(detailTableBody.querySelectorAll("tr"));
-    rows.forEach(function (row, index) {
+    let visibleIndex = 0;
+    rows.forEach(function (row) {
       const rankElement = row.querySelector(".symbol-rank");
       if (!rankElement) return;
-      rankElement.textContent = String(index + 1);
       rankElement.classList.remove("is-top-1", "is-top-2", "is-top-3");
+      if (row.hidden) return;
+      visibleIndex += 1;
+      rankElement.textContent = String(visibleIndex);
       if (!shouldHighlightTopHoldings) return;
-      if (index === 0) rankElement.classList.add("is-top-1");
-      if (index === 1) rankElement.classList.add("is-top-2");
-      if (index === 2) rankElement.classList.add("is-top-3");
+      if (visibleIndex === 1) rankElement.classList.add("is-top-1");
+      if (visibleIndex === 2) rankElement.classList.add("is-top-2");
+      if (visibleIndex === 3) rankElement.classList.add("is-top-3");
     });
   }
 
@@ -430,7 +590,80 @@
       detailTableBody.appendChild(row);
     });
     updateSortState(activeButton, direction);
-    updateRankBadges(sortKey === defaultSortKey && direction === defaultSortDirection);
+    applyCategoryFilter(activeCategoryFilter, false, false);
+  }
+
+  function updateCategoryFilterState(activeFilter) {
+    categoryFilterButtons.forEach(function (button) {
+      button.classList.toggle("is-active", button.dataset.categoryFilter === activeFilter);
+    });
+  }
+
+  function scrollCategoryFilterChipIntoView(categoryId, behavior) {
+    if (!categoryFiltersContainer) return;
+
+    if (categoryId === "all") {
+      categoryFiltersContainer.scrollTo({
+        left: 0,
+        behavior: behavior || "smooth"
+      });
+      return;
+    }
+
+    const activeChip = categoryFiltersContainer.querySelector(
+      '.holdings-category-filter[data-category-filter="' + categoryId + '"]'
+    );
+    if (!activeChip) return;
+
+    const containerRect = categoryFiltersContainer.getBoundingClientRect();
+    const chipRect = activeChip.getBoundingClientRect();
+    const chipIsFullyVisible = (
+      chipRect.left >= containerRect.left
+      && chipRect.right <= containerRect.right
+    );
+    if (chipIsFullyVisible) return;
+
+    const targetScrollLeft = categoryFiltersContainer.scrollLeft
+      + (chipRect.left - containerRect.left)
+      - Math.max(8, (containerRect.width - chipRect.width) / 2);
+
+    categoryFiltersContainer.scrollTo({
+      left: Math.max(0, targetScrollLeft),
+      behavior: behavior || "smooth"
+    });
+  }
+
+  function applyCategoryFilter(categoryId, updateControls, shouldScrollIntoView, scrollBehavior) {
+    if (!detailTableBody) return;
+    activeCategoryFilter = categoryId || "all";
+    const rows = Array.from(detailTableBody.querySelectorAll("tr"));
+    rows.forEach(function (row) {
+      const shouldShow = activeCategoryFilter === "all"
+        || row.dataset.category === activeCategoryFilter;
+      row.hidden = !shouldShow;
+      row.classList.toggle("is-filtered-out", !shouldShow);
+    });
+
+    if (updateControls !== false) {
+      updateCategoryFilterState(activeCategoryFilter);
+    }
+
+    if (shouldScrollIntoView !== false) {
+      scrollCategoryFilterChipIntoView(activeCategoryFilter, scrollBehavior);
+    }
+
+    const activeSortButton = sortButtons.find(function (button) {
+      return button.classList.contains("is-active");
+    });
+    const activeDirection = activeSortButton
+      ? (activeSortButton.dataset.sortDirection || activeSortButton.dataset.defaultDirection || defaultSortDirection)
+      : defaultSortDirection;
+    const shouldHighlight = Boolean(
+      activeSortButton
+      && activeSortButton.dataset.sortKey === defaultSortKey
+      && activeDirection === defaultSortDirection
+    );
+    updateRankBadges(shouldHighlight);
   }
 
   sortButtons.forEach(function (button) {
@@ -496,39 +729,50 @@
     updateRankBadges(false);
   }
 
-  infoChips.forEach(function (chip) {
-    setInfoChipExpanded(chip, false);
-    chip.addEventListener("click", function (event) {
+  updateCategoryFilterState(activeCategoryFilter);
+
+  tooltipTriggers.forEach(function (trigger) {
+    setTooltipTriggerExpanded(trigger, false);
+    trigger.addEventListener("click", function (event) {
+      if (trigger.classList.contains("panel-source-link")) return;
       event.preventDefault();
       event.stopPropagation();
-      toggleActiveInfoChip(chip);
+      toggleActiveInfoChip(trigger);
     });
-    chip.addEventListener("mousedown", function (event) {
+    trigger.addEventListener("mousedown", function (event) {
+      if (trigger.classList.contains("panel-source-link")) return;
       event.preventDefault();
       event.stopPropagation();
     });
-    chip.addEventListener("keydown", function (event) {
+    trigger.addEventListener("keydown", function (event) {
       if (event.key === "Enter" || event.key === " ") {
+        if (trigger.classList.contains("panel-source-link")) return;
         event.preventDefault();
         event.stopPropagation();
-        toggleActiveInfoChip(chip);
+        toggleActiveInfoChip(trigger);
       }
     });
-    chip.addEventListener("mouseenter", function () {
-      if (activeInfoChip && activeInfoChip !== chip) return;
-      showInfoTooltip(chip);
+    trigger.addEventListener("mouseenter", function () {
+      if (activeInfoChip && activeInfoChip !== trigger) return;
+      showInfoTooltip(trigger);
     });
-    chip.addEventListener("mouseleave", function () {
-      if (activeInfoChip === chip) return;
+    trigger.addEventListener("mouseleave", function () {
+      if (activeInfoChip === trigger) return;
       hideInfoTooltip();
     });
-    chip.addEventListener("focus", function () {
-      if (activeInfoChip && activeInfoChip !== chip) return;
-      showInfoTooltip(chip);
+    trigger.addEventListener("focus", function () {
+      if (activeInfoChip && activeInfoChip !== trigger) return;
+      showInfoTooltip(trigger);
     });
-    chip.addEventListener("blur", function () {
-      if (activeInfoChip === chip) return;
+    trigger.addEventListener("blur", function () {
+      if (activeInfoChip === trigger) return;
       hideInfoTooltip();
+    });
+  });
+
+  categoryFilterButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      applyCategoryFilter(button.dataset.categoryFilter || "all");
     });
   });
 

@@ -2,7 +2,10 @@ import json
 import re
 import threading
 import time
+import zipfile
 from datetime import datetime, timedelta
+from io import BytesIO
+from xml.etree import ElementTree
 
 import numpy as np
 import pandas as pd
@@ -32,6 +35,17 @@ CNN_FNG_BASE_URL = "https://production.dataviz.cnn.io/index/fearandgreed/graphda
 SP500_TRAILING_URL = "https://www.multpl.com/s-p-500-pe-ratio/table/by-month"
 SP500_SHILLER_URL = "https://www.multpl.com/shiller-pe/table/by-month"
 SP500_TRAILING_SOURCE_URL = "https://www.multpl.com/s-p-500-pe-ratio"
+SP500_YAHOO_SOURCE_URL = "https://finance.yahoo.com/quote/%5EGSPC/"
+FINRA_MARGIN_URL = "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
+FINRA_MARGIN_DOWNLOAD_URL = (
+    "https://www.finra.org/sites/default/files/2022-05/debitbalances.xlsx"
+)
+FINRA_MARGIN_FALLBACK_ROWS = (
+    ("Mar-26", 1220922),
+    ("Feb-26", 1253192),
+    ("Jan-26", 1279042),
+    ("Dec-25", 1225597),
+)
 
 
 def _now() -> float:
@@ -224,6 +238,35 @@ def cached_stock_technicals(symbol, ttl=_TTL_NORMAL):
     if entry and entry["data"] is not None:
         return entry["data"]
     return None
+
+
+def fetch_stock_profile(symbol):
+    try:
+        info = yf.Ticker(symbol).info
+        return {
+            "company_name": (
+                info.get("longName")
+                or info.get("shortName")
+                or info.get("displayName")
+                or symbol
+            ),
+            "sector": info.get("sectorDisp") or info.get("sector"),
+            "industry": info.get("industryDisp") or info.get("industry"),
+        }
+    except Exception as exc:
+        print(f"Error fetching profile for {symbol}: {exc}")
+        return {"company_name": symbol, "sector": None, "industry": None}
+
+
+def cached_stock_profile(symbol, ttl=3600):
+    key = ("profile", symbol)
+    entry = _get_cache(key)
+    now = _now()
+    if entry and (now - entry["ts"] < ttl):
+        return entry["data"]
+    data = fetch_stock_profile(symbol)
+    _set_cache(key, {"ts": now, "data": data})
+    return data
 
 
 def _portfolio_cache_key(holdings):
@@ -545,43 +588,196 @@ def cached_shiller_pe(ttl=_TTL_NORMAL):
     return data
 
 
+def _parse_finra_margin_rows(response_text):
+    rows = re.findall(
+        r"([A-Z][a-z]{2}-\d{2})\s+([\d,]+)\s+[\d,]+\s+[\d,]+",
+        response_text,
+    )
+    parsed_rows = []
+    seen_months = set()
+    for month, value_text in rows:
+        if month in seen_months:
+            continue
+        try:
+            parsed_rows.append((month, int(value_text.replace(",", ""))))
+            seen_months.add(month)
+        except ValueError:
+            continue
+    return sorted(
+        parsed_rows,
+        key=lambda item: datetime.strptime(item[0], "%b-%y"),
+        reverse=True,
+    )
+
+
+def _extract_finra_download_url(response_text):
+    match = re.search(r'href="([^"]+debitbalances\.xlsx[^"]*)"', response_text, flags=re.IGNORECASE)
+    if not match:
+        return FINRA_MARGIN_DOWNLOAD_URL
+
+    download_url = match.group(1)
+    if download_url.startswith("http://") or download_url.startswith("https://"):
+        return download_url
+    return f"https://www.finra.org{download_url}"
+
+
+def _read_xlsx_shared_strings(workbook_archive):
+    try:
+        shared_strings_xml = workbook_archive.read("xl/sharedStrings.xml")
+    except KeyError:
+        return []
+
+    namespace = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    root = ElementTree.fromstring(shared_strings_xml)
+    values = []
+    for string_item in root.findall("main:si", namespace):
+        text_fragments = [
+            text_node.text or ""
+            for text_node in string_item.findall(".//main:t", namespace)
+        ]
+        values.append("".join(text_fragments))
+    return values
+
+
+def _parse_xlsx_cell_value(cell, shared_strings, namespace):
+    cell_type = cell.attrib.get("t")
+    if cell_type == "inlineStr":
+        return "".join(
+            text_node.text or ""
+            for text_node in cell.findall(".//main:t", namespace)
+        )
+
+    value_node = cell.find("main:v", namespace)
+    if value_node is None or value_node.text is None:
+        return ""
+
+    raw_value = value_node.text.strip()
+    if cell_type == "s":
+        try:
+            return shared_strings[int(raw_value)]
+        except (IndexError, ValueError):
+            return ""
+    return raw_value
+
+
+def _iter_xlsx_row_values(workbook_bytes):
+    namespace = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    with zipfile.ZipFile(BytesIO(workbook_bytes)) as workbook_archive:
+        shared_strings = _read_xlsx_shared_strings(workbook_archive)
+        worksheet_paths = sorted(
+            path_name
+            for path_name in workbook_archive.namelist()
+            if path_name.startswith("xl/worksheets/") and path_name.endswith(".xml")
+        )
+        for worksheet_path in worksheet_paths:
+            worksheet_root = ElementTree.fromstring(workbook_archive.read(worksheet_path))
+            for row in worksheet_root.findall(".//main:sheetData/main:row", namespace):
+                yield [
+                    _parse_xlsx_cell_value(cell, shared_strings, namespace)
+                    for cell in row.findall("main:c", namespace)
+                ]
+
+
+def _parse_finra_margin_rows_from_xlsx_bytes(workbook_bytes):
+    parsed_rows = []
+    seen_months = set()
+
+    try:
+        row_values_iter = _iter_xlsx_row_values(workbook_bytes)
+    except (ElementTree.ParseError, KeyError, zipfile.BadZipFile):
+        return []
+
+    for row_values in row_values_iter:
+        normalized_values = [str(value).strip() for value in row_values if str(value).strip()]
+        month = next(
+            (
+                value
+                for value in normalized_values
+                if re.fullmatch(r"[A-Z][a-z]{2}-\d{2}", value)
+            ),
+            None,
+        )
+        if not month or month in seen_months:
+            continue
+
+        numeric_values = []
+        for value in normalized_values:
+            cleaned_value = value.replace(",", "")
+            if re.fullmatch(r"\d+(?:\.\d+)?", cleaned_value):
+                numeric_values.append(cleaned_value)
+
+        if not numeric_values:
+            continue
+
+        try:
+            parsed_rows.append((month, int(float(numeric_values[0]))))
+            seen_months.add(month)
+        except ValueError:
+            continue
+
+    return sorted(
+        parsed_rows,
+        key=lambda item: datetime.strptime(item[0], "%b-%y"),
+        reverse=True,
+    )
+
+
+def _build_finra_margin_payload(rows, source_status="live"):
+    if len(rows) < 2:
+        return None
+
+    latest_month, latest_value = rows[0]
+    previous_month, previous_value = rows[1]
+    month_over_month = (
+        ((latest_value - previous_value) / previous_value * 100)
+        if previous_value
+        else None
+    )
+    return {
+        "latest_month": latest_month,
+        "latest_value": latest_value,
+        "value_str": f"{latest_value:,}",
+        "previous_month": previous_month,
+        "previous_value": previous_value,
+        "mom_pct": month_over_month,
+        "mom_str": f"{month_over_month:+.2f}%" if month_over_month is not None else "N/A",
+        "source_status": source_status,
+    }
+
+
 def fetch_finra_margin():
+    download_url = FINRA_MARGIN_DOWNLOAD_URL
+
     try:
         response = requests.get(
-            "https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics",
+            FINRA_MARGIN_URL,
             headers=HEADERS,
             timeout=15,
         )
-        match = re.search(r"<tbody>(.*?)</tbody>", response.text, re.DOTALL)
-        if not match:
-            return None
-
-        data = []
-        rows = re.findall(r"<tr>(.*?)</tr>", match.group(1))
-        for row in rows:
-            cells = re.findall(r"<td>(.*?)</td>", row)
-            if len(cells) < 2:
-                continue
-            month = cells[0].strip()
-            value = int(cells[1].strip().replace(",", ""))
-            data.append((month, value))
-
-        if len(data) >= 2:
-            latest_month, latest_value = data[0]
-            previous_month, previous_value = data[1]
-            month_over_month = (latest_value - previous_value) / previous_value * 100
-            return {
-                "latest_month": latest_month,
-                "latest_value": latest_value,
-                "value_str": f"{latest_value:,}",
-                "previous_month": previous_month,
-                "previous_value": previous_value,
-                "mom_pct": month_over_month,
-                "mom_str": f"{month_over_month:+.2f}%",
-            }
+        response.raise_for_status()
+        download_url = _extract_finra_download_url(response.text)
+        data = _parse_finra_margin_rows(response.text)
+        payload = _build_finra_margin_payload(data)
+        if payload:
+            return payload
     except Exception as exc:
-        print(f"Error fetching FINRA margin data: {exc}")
-    return None
+        print(f"Error fetching FINRA margin HTML: {exc}")
+
+    try:
+        response = requests.get(
+            download_url,
+            headers=HEADERS,
+            timeout=15,
+        )
+        response.raise_for_status()
+        data = _parse_finra_margin_rows_from_xlsx_bytes(response.content)
+        payload = _build_finra_margin_payload(data, source_status="download")
+        if payload:
+            return payload
+    except Exception as exc:
+        print(f"Error fetching FINRA margin download, using fallback: {exc}")
+
+    return _build_finra_margin_payload(FINRA_MARGIN_FALLBACK_ROWS, source_status="fallback")
 
 
 def cached_finra_margin(ttl=_TTL_NORMAL):

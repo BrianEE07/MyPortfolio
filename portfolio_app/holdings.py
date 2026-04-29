@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -112,7 +113,19 @@ def write_holdings_data(
     return normalized_holdings
 
 
-def load_holdings(json_path: Path = HOLDINGS_JSON_PATH) -> list[dict]:
+def _resolve_holdings_json_path(json_path: Optional[Path]) -> Path:
+    if json_path is not None:
+        return json_path
+
+    override_path = os.environ.get("PORTFOLIO_HOLDINGS_PATH")
+    if not override_path:
+        return HOLDINGS_JSON_PATH
+
+    return Path(override_path).expanduser()
+
+
+def load_holdings(json_path: Optional[Path] = None) -> list[dict]:
     """Load holdings from canonical JSON and validate the stored schema."""
+    json_path = _resolve_holdings_json_path(json_path)
     data = json.loads(json_path.read_text(encoding="utf-8"))
     return validate_holdings_data(data)

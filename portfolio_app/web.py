@@ -21,6 +21,13 @@ def _asset_url(asset_name: str, static_mode: bool = False) -> str:
     return url_for("static", filename=asset_name, v=version)
 
 
+def _optional_asset_url(asset_name: str, static_mode: bool = False):
+    asset_path = Path(app.static_folder) / asset_name
+    if not asset_path.exists():
+        return None
+    return _asset_url(asset_name, static_mode=static_mode)
+
+
 def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -32,6 +39,8 @@ def create_app():
             styles_url=_asset_url("styles.css"),
             app_js_url=_asset_url("app.js"),
             chart_js_url=CHART_JS_URL,
+            favicon_url=_optional_asset_url("favicon.png"),
+            apple_touch_icon_url=_optional_asset_url("apple-touch-icon.png"),
         )
 
     @app.get("/health")
@@ -52,6 +61,8 @@ def render_portfolio_html(static_mode=False):
             styles_url=_asset_url("styles.css", static_mode=static_mode),
             app_js_url=_asset_url("app.js", static_mode=static_mode),
             chart_js_url=CHART_JS_URL,
+            favicon_url=_optional_asset_url("favicon.png", static_mode=static_mode),
+            apple_touch_icon_url=_optional_asset_url("apple-touch-icon.png", static_mode=static_mode),
         )
 
 
@@ -59,8 +70,11 @@ def _copy_static_assets(destination_directory: Path):
     static_directory = Path(app.static_folder)
     output_static_directory = destination_directory / "static"
     output_static_directory.mkdir(parents=True, exist_ok=True)
-    for asset_name in ("styles.css", "app.js"):
-        shutil.copy2(static_directory / asset_name, output_static_directory / asset_name)
+    asset_names = ["styles.css", "app.js", "favicon.png", "apple-touch-icon.png"]
+    for asset_name in asset_names:
+        asset_path = static_directory / asset_name
+        if asset_path.exists():
+            shutil.copy2(asset_path, output_static_directory / asset_name)
 
 
 def write_static_output(output_path: Path):

@@ -15,6 +15,15 @@ def _stub_snapshot_dependencies(monkeypatch):
     )
     monkeypatch.setattr(
         snapshot,
+        "cached_stock_profile",
+        lambda symbol: {
+            "company_name": "Apple Inc.",
+            "sector": "Technology",
+            "industry": "Consumer Electronics",
+        },
+    )
+    monkeypatch.setattr(
+        snapshot,
         "cached_stock_technicals",
         lambda symbol: {"drawdown": -12.5, "price": 125.0, "ma250": 110.0},
     )
@@ -39,19 +48,19 @@ def _stub_snapshot_dependencies(monkeypatch):
         snapshot,
         "cached_fear_greed",
         lambda: {
-            "score": None,
-            "score_str": "N/A",
-            "rating": "N/A",
-            "previous_close": None,
-            "previous_close_str": "N/A",
-            "previous_close_rating": "N/A",
-            "week_ago": {"score_str": "N/A", "rating": "N/A"},
-            "month_ago": {"score_str": "N/A", "rating": "N/A"},
-            "year_ago": {"score_str": "N/A", "rating": "N/A"},
-            "chart_labels": [],
-            "chart_data": [],
-            "vix_str": "N/A",
-            "pcr_str": "N/A",
+            "score": 66.0,
+            "score_str": "66",
+            "rating": "Greed / 貪婪",
+            "previous_close": 61.0,
+            "previous_close_str": "61",
+            "previous_close_rating": "Greed / 貪婪",
+            "week_ago": {"score_str": "58", "rating": "Greed / 貪婪"},
+            "month_ago": {"score_str": "44", "rating": "Fear / 恐懼"},
+            "year_ago": {"score_str": "72", "rating": "Greed / 貪婪"},
+            "chart_labels": ["04/01", "04/02"],
+            "chart_data": [58.0, 66.0],
+            "vix_str": "17.80",
+            "pcr_str": "0.91",
         },
     )
     monkeypatch.setattr(
@@ -70,10 +79,30 @@ def _stub_snapshot_dependencies(monkeypatch):
     monkeypatch.setattr(
         snapshot,
         "cached_shiller_pe",
-        lambda: {"value_str": "N/A", "valuation": "N/A"},
+        lambda: {"value_str": "31.40", "valuation": "Bubble Zone / 泡沫高估區"},
     )
-    monkeypatch.setattr(snapshot, "cached_finra_margin", lambda: {})
-    monkeypatch.setattr(snapshot, "cached_sp500_historical", lambda: {})
+    monkeypatch.setattr(
+        snapshot,
+        "cached_finra_margin",
+        lambda: {"value_str": "1,225,597", "latest_month": "Dec-25", "mom_str": "+0.93%"},
+    )
+    monkeypatch.setattr(
+        snapshot,
+        "cached_sp500_historical",
+        lambda: {
+            "price_str": "7165.08",
+            "ma20_str": "6834.03",
+            "ma60_str": "6812.12",
+            "ma250_str": "6551.31",
+            "ma1250_str": "5044.10",
+            "broken_20": False,
+            "broken_60": False,
+            "broken_250": False,
+            "broken_1250": False,
+            "chart_labels": ["25/04/28", "25/04/29"],
+            "chart_points": [7010.12, 7165.08],
+        },
+    )
 
 
 def test_build_portfolio_snapshot_uses_generated_realized_metrics(tmp_path, monkeypatch):
@@ -117,6 +146,57 @@ def test_build_portfolio_snapshot_uses_generated_realized_metrics(tmp_path, monk
         {"label": "Top 5", "value": "100.00%"},
         {"label": "Top 10", "value": "100.00%"},
     ]
+    assert result["holdings_category_segments"][0]["id"] == "technology"
+    assert result["market_sentiment"]["score_str"] == "66"
+    assert result["market_sentiment"]["delta_direction"] == "up"
+    assert result["market_trend"]["price_str"] == "7165.08"
+    assert result["dip_signals"][2]["value"] == "1,225,597"
+    assert result["frontend_payload"]["sp500TrendChart"]["data"] == [7010.12, 7165.08]
+    assert result["frontend_payload"]["holdingsChart"]["colors"] == ["#de8b5f"]
+
+
+def test_build_portfolio_snapshot_includes_holdings_chart_company_names(monkeypatch):
+    _stub_snapshot_dependencies(monkeypatch)
+
+    result = snapshot.build_portfolio_snapshot()
+
+    assert result["holdings_rows"][0]["company_name"] == "Apple Inc."
+    assert result["frontend_payload"]["holdingsChart"]["labels"] == ["AAPL"]
+    assert result["frontend_payload"]["holdingsChart"]["companyNames"] == ["Apple Inc."]
+
+
+def test_build_portfolio_snapshot_prefers_yahoo_sector_and_industry_for_categories(monkeypatch, tmp_path):
+    holdings = [
+        {"symbol": "GOOG", "shares": 1.0, "cost_basis": 150.0},
+        {"symbol": "NVDA", "shares": 1.0, "cost_basis": 100.0},
+    ]
+    close_map = {"GOOG": 180.0, "NVDA": 220.0}
+    profile_map = {
+        "GOOG": {
+            "company_name": "Alphabet Inc.",
+            "sector": "Communication Services",
+            "industry": "Internet Content & Information",
+        },
+        "NVDA": {
+            "company_name": "NVIDIA Corporation",
+            "sector": "Technology",
+            "industry": "Semiconductors",
+        },
+    }
+
+    _stub_snapshot_dependencies(monkeypatch)
+    monkeypatch.setattr(snapshot, "load_holdings", lambda: holdings)
+    monkeypatch.setattr(snapshot, "cached_close", lambda symbol: close_map[symbol])
+    monkeypatch.setattr(snapshot, "cached_stock_profile", lambda symbol: profile_map[symbol])
+    monkeypatch.setattr(snapshot, "PORTFOLIO_METRICS_JSON_PATH", tmp_path / "missing.json")
+
+    result = snapshot.build_portfolio_snapshot()
+
+    rows_by_symbol = {row["symbol"]: row for row in result["holdings_rows"]}
+
+    assert rows_by_symbol["GOOG"]["category_id"] == "communication-services"
+    assert rows_by_symbol["GOOG"]["category_label_en"] == "Communication Services"
+    assert rows_by_symbol["NVDA"]["category_id"] == "technology"
 
 
 def test_build_portfolio_snapshot_handles_missing_generated_realized_metrics(tmp_path, monkeypatch):
@@ -130,3 +210,95 @@ def test_build_portfolio_snapshot_handles_missing_generated_realized_metrics(tmp
     assert realized_card["value"] == "N/A"
     assert realized_card["tone"] == "muted"
     assert realized_card["accent_value"] == "N/A"
+
+
+def test_build_portfolio_snapshot_uses_metrics_env_override(tmp_path, monkeypatch):
+    _stub_snapshot_dependencies(monkeypatch)
+    metrics_path = tmp_path / "preview-portfolio-metrics.json"
+    metrics_path.write_text(
+        '{"realized_pl": 4321.0, "realized_return_pct": 11.2}',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(snapshot, "PORTFOLIO_METRICS_JSON_PATH", tmp_path / "missing.json")
+    monkeypatch.setenv("PORTFOLIO_METRICS_PATH", str(metrics_path))
+
+    result = snapshot.build_portfolio_snapshot()
+
+    realized_card = result["summary_primary_cards"][3]
+
+    assert realized_card["value"] == "+$4,321.00"
+    assert realized_card["accent_value"] == "+11.20%"
+
+
+def test_build_portfolio_snapshot_groups_other_holdings_and_breaks_down_categories(monkeypatch, tmp_path):
+    holdings = [
+        {"symbol": f"SYM{i:02d}", "shares": 1.0, "cost_basis": 50.0}
+        for i in range(1, 12)
+    ]
+    close_map = {holding["symbol"]: 120.0 - index * 5 for index, holding in enumerate(holdings)}
+    profile_map = {
+        "SYM01": {"sector": "Technology", "industry": "Semiconductors"},
+        "SYM02": {"sector": "Technology", "industry": "Software"},
+        "SYM03": {"sector": "Healthcare", "industry": "Biotechnology"},
+        "SYM04": {"sector": "Healthcare", "industry": "Biotechnology"},
+        "SYM05": {"sector": "Financial Services", "industry": "Asset Management"},
+        "SYM06": {"sector": "Technology", "industry": "Hardware"},
+        "SYM07": {"sector": "Communication Services", "industry": "Internet Content"},
+        "SYM08": {"sector": "Technology", "industry": "Semiconductors"},
+        "SYM09": {"sector": "Consumer Defensive", "industry": "Beverages"},
+        "SYM10": {"sector": "Technology", "industry": "Semiconductors"},
+        "SYM11": {"sector": "Energy", "industry": "Oil & Gas"},
+    }
+
+    _stub_snapshot_dependencies(monkeypatch)
+    monkeypatch.setattr(snapshot, "load_holdings", lambda: holdings)
+    monkeypatch.setattr(snapshot, "cached_close", lambda symbol: close_map[symbol])
+    monkeypatch.setattr(snapshot, "cached_stock_profile", lambda symbol: profile_map[symbol])
+    monkeypatch.setattr(snapshot, "PORTFOLIO_METRICS_JSON_PATH", tmp_path / "missing.json")
+
+    result = snapshot.build_portfolio_snapshot()
+
+    assert result["top_holdings_chart"]["has_other_bucket"] is True
+    assert result["top_holdings_chart"]["other_count"] == 1
+    assert result["frontend_payload"]["holdingsChart"]["labels"][-1] == "Others"
+    assert result["frontend_payload"]["holdingsChart"]["data"][-1] == 70.0
+
+    category_ids = [segment["id"] for segment in result["holdings_category_segments"]]
+    assert category_ids[:3] == ["technology", "healthcare", "financial-services"]
+    assert result["holdings_category_segments"][0]["share_ratio_str"] == "46.89%"
+    assert result["holdings_rows"][0]["category_id"] == "technology"
+    assert {row["category_id"] for row in result["holdings_rows"]} >= {
+        "technology",
+        "healthcare",
+        "financial-services",
+        "communication-services",
+        "consumer-defensive",
+        "energy",
+    }
+
+
+def test_build_portfolio_snapshot_groups_all_holdings_after_top_ten(monkeypatch, tmp_path):
+    holdings = [
+        {"symbol": f"SYM{i:02d}", "shares": 1.0, "cost_basis": 40.0}
+        for i in range(1, 14)
+    ]
+    close_map = {holding["symbol"]: 130.0 - index * 5 for index, holding in enumerate(holdings)}
+
+    _stub_snapshot_dependencies(monkeypatch)
+    monkeypatch.setattr(snapshot, "load_holdings", lambda: holdings)
+    monkeypatch.setattr(snapshot, "cached_close", lambda symbol: close_map[symbol])
+    monkeypatch.setattr(
+        snapshot,
+        "cached_stock_profile",
+        lambda symbol: {"sector": "Technology", "industry": "Semiconductors"},
+    )
+    monkeypatch.setattr(snapshot, "PORTFOLIO_METRICS_JSON_PATH", tmp_path / "missing.json")
+
+    result = snapshot.build_portfolio_snapshot()
+
+    assert result["top_holdings_chart"]["has_other_bucket"] is True
+    assert result["top_holdings_chart"]["other_count"] == 3
+    assert result["frontend_payload"]["holdingsChart"]["labels"][-1] == "Others"
+    assert result["frontend_payload"]["holdingsChart"]["data"][-1] == 225.0
+    assert result["frontend_payload"]["holdingsChart"]["colors"][-1] == "#b2a8a0"
+    assert len(result["frontend_payload"]["holdingsChart"]["labels"]) == 11

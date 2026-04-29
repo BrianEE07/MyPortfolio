@@ -1,8 +1,11 @@
 import json
+import os
 from datetime import datetime
+from pathlib import Path
 
 from pytz import timezone
 
+from .categories import resolve_holding_category
 from .config import (
     DEFAULT_TABS,
     FIRST_US_STOCK_PURCHASE_DATE,
@@ -21,6 +24,7 @@ from .market_data import (
     cached_sp500_historical,
     cached_sp500_trailing_pe,
     cached_stock_pe,
+    cached_stock_profile,
     cached_stock_technicals,
 )
 
@@ -87,6 +91,16 @@ def _tone_for_number(value):
     return "muted"
 
 
+def _direction_for_number(value):
+    if value is None:
+        return "flat"
+    if value > 0:
+        return "up"
+    if value < 0:
+        return "down"
+    return "flat"
+
+
 def _format_detail_shares(value):
     if value is None:
         return "N/A"
@@ -134,7 +148,7 @@ def _coerce_number(value):
 
 
 def _load_portfolio_metrics(metrics_path=None):
-    metrics_path = metrics_path or PORTFOLIO_METRICS_JSON_PATH
+    metrics_path = _resolve_portfolio_metrics_path(metrics_path)
     empty_metrics = {"realized_pl": None, "realized_return_pct": None}
 
     try:
@@ -151,6 +165,17 @@ def _load_portfolio_metrics(metrics_path=None):
         "realized_pl": _coerce_number(payload.get("realized_pl")),
         "realized_return_pct": _coerce_number(payload.get("realized_return_pct")),
     }
+
+
+def _resolve_portfolio_metrics_path(metrics_path=None):
+    if metrics_path is not None:
+        return metrics_path
+
+    override_path = os.environ.get("PORTFOLIO_METRICS_PATH")
+    if not override_path:
+        return PORTFOLIO_METRICS_JSON_PATH
+
+    return Path(override_path).expanduser()
 
 
 def _build_summary_primary_card(
@@ -222,6 +247,119 @@ def _build_concentration_cards(rows):
     return cards
 
 
+def _build_top_holdings_chart(rows):
+    top_holdings = rows[:10]
+    chart_rows = list(top_holdings)
+    other_count = max(len(rows) - 10, 0)
+
+    if other_count:
+        other_value = sum(row["sort_value"] for row in rows[10:])
+        chart_rows.append(
+            {
+                "symbol": "Others",
+                "chart_label": "Others",
+                "company_name": "Others",
+                "sort_value": other_value,
+                "is_other_bucket": True,
+            }
+        )
+
+    chart_labels = [row.get("chart_label", row["symbol"]) for row in chart_rows]
+    chart_company_names = [row.get("company_name") or row["symbol"] for row in chart_rows]
+    chart_data = [round(row["sort_value"], 2) for row in chart_rows]
+    chart_colors = [
+        "#de8b5f",
+        "#97b79d",
+        "#81a3ca",
+        "#dfbe76",
+        "#ad98c8",
+        "#8abac1",
+        "#d79ca1",
+        "#d9aa7d",
+        "#9bb1df",
+        "#9fc3a6",
+        "#b2a8a0",
+    ][: len(chart_rows)]
+
+    return {
+        "labels": chart_labels,
+        "company_names": chart_company_names,
+        "data": chart_data,
+        "colors": chart_colors,
+        "has_other_bucket": bool(other_count),
+        "other_count": other_count,
+    }
+
+
+def _build_holdings_category_breakdown(rows):
+    total_value = sum(row["sort_value"] for row in rows)
+    grouped = {}
+
+    for row in rows:
+        category_id = row["category"]["id"]
+        bucket = grouped.setdefault(
+            category_id,
+            {
+                "category": row["category"],
+                "market_value": 0.0,
+                "count": 0,
+            },
+        )
+        bucket["market_value"] += row["sort_value"]
+        bucket["count"] += 1
+
+    segments = []
+    for category_id, bucket in grouped.items():
+        share_ratio = (bucket["market_value"] / total_value) if total_value else None
+        category = bucket["category"]
+        segments.append(
+            {
+                "id": category_id,
+                "label_zh": category["label_zh"],
+                "label_en": category["label_en"],
+                "label": f"{category['label_zh']} {_format_percent_from_ratio(share_ratio)}",
+                "color": category["color"],
+                "market_value": bucket["market_value"],
+                "market_value_str": _format_currency(bucket["market_value"]),
+                "share_ratio": share_ratio,
+                "share_ratio_str": _format_percent_from_ratio(share_ratio),
+                "count": bucket["count"],
+            }
+        )
+
+    segments.sort(key=lambda item: item["market_value"], reverse=True)
+    return segments
+
+
+def _build_fear_greed_history_cards(fear_greed):
+    return [
+        {
+            "label_en": "Previous close",
+            "label_zh": "前一日",
+            "score_str": fear_greed.get("previous_close_str", "N/A"),
+            "rating": fear_greed.get("previous_close_rating", "N/A"),
+        },
+        {
+            "label_en": "1 week ago",
+            "label_zh": "一週前",
+            "score_str": fear_greed.get("week_ago", {}).get("score_str", "N/A"),
+            "rating": fear_greed.get("week_ago", {}).get("rating", "N/A"),
+        },
+        {
+            "label_en": "1 month ago",
+            "label_zh": "一月前",
+            "score_str": fear_greed.get("month_ago", {}).get("score_str", "N/A"),
+            "rating": fear_greed.get("month_ago", {}).get("rating", "N/A"),
+        },
+        {
+            "label_en": "1 year ago",
+            "label_zh": "一年前",
+            "score_str": fear_greed.get("year_ago", {}).get("score_str", "N/A"),
+            "rating": fear_greed.get("year_ago", {}).get("rating", "N/A"),
+        },
+    ]
+
+
 def _build_site_subtitle(current_market_value, current_datetime):
     start_date = datetime.strptime(FIRST_US_STOCK_PURCHASE_DATE, "%Y-%m-%d").date()
     current_date = current_datetime.date()
@@ -268,7 +406,13 @@ def build_portfolio_snapshot():
 
         live_price = cached_close(symbol)
         pe_data = cached_stock_pe(symbol)
+        profile_data = cached_stock_profile(symbol) or {}
         technicals = cached_stock_technicals(symbol) or {}
+        category = resolve_holding_category(
+            symbol,
+            sector=profile_data.get("sector"),
+            industry=profile_data.get("industry"),
+        )
         market_value = live_price * shares if live_price is not None else None
         profit = market_value - cost_total if market_value is not None else None
         profit_pct = ((profit / cost_total) * 100) if (profit is not None and cost_total) else None
@@ -288,6 +432,7 @@ def build_portfolio_snapshot():
         rows.append(
             {
                 "symbol": symbol,
+                "company_name": profile_data.get("company_name") or symbol,
                 "shares": shares,
                 "shares_str": _format_detail_shares(shares),
                 "cost_basis": cost_basis,
@@ -337,6 +482,11 @@ def build_portfolio_snapshot():
                     if pe_data and pe_data.get("forward_pe") is not None
                     else "N/A"
                 ),
+                "category": category,
+                "category_id": category["id"],
+                "category_label_zh": category["label_zh"],
+                "category_label_en": category["label_en"],
+                "category_color": category["color"],
                 "trend_label": _trend_label(broken_250),
                 "trend_tone": "loss" if broken_250 else "gain",
                 "sort_value": fallback_sort_value,
@@ -360,10 +510,9 @@ def build_portfolio_snapshot():
 
     portfolio_metrics = cached_portfolio_metrics(holdings)
     stored_portfolio_metrics = _load_portfolio_metrics()
-    top_holdings = rows[:10]
-    chart_labels = [row["symbol"] for row in top_holdings]
-    chart_data = [round(row["sort_value"], 2) for row in top_holdings]
+    top_holdings_chart = _build_top_holdings_chart(rows)
     holdings_concentration_cards = _build_concentration_cards(rows)
+    holdings_category_segments = _build_holdings_category_breakdown(rows)
 
     fear_greed = cached_fear_greed()
     fear_greed_score = fear_greed.get("score")
@@ -378,6 +527,108 @@ def build_portfolio_snapshot():
     shiller_pe = cached_shiller_pe()
     finra_margin = cached_finra_margin() or {}
     sp500_historical = cached_sp500_historical() or {}
+
+    fear_greed_history_cards = _build_fear_greed_history_cards(fear_greed)
+
+    market_sentiment = {
+        "score": fear_greed_score,
+        "score_str": fear_greed.get("score_str", "N/A"),
+        "rating": fear_greed.get("rating", "N/A"),
+        "delta_tone": _tone_for_number(fear_greed_delta),
+        "delta_direction": _direction_for_number(fear_greed_delta),
+        "gauge_rotation_deg": (
+            round((fear_greed_score * 1.8) - 90, 2)
+            if fear_greed_score is not None
+            else -90
+        ),
+        "history_cards": fear_greed_history_cards,
+        "source_url": "https://edition.cnn.com/markets/fear-and-greed",
+        "source_tooltip_zh": "CNN Fear & Greed Index",
+        "source_tooltip_en": "Open CNN Fear & Greed Index",
+    }
+
+    market_trend_signals = [
+        {
+            "label_zh": "月線",
+            "label_en": "20MA",
+            "value": sp500_historical.get("ma20_str", "N/A"),
+            "status": "跌破" if sp500_historical.get("broken_20") else "有守",
+            "tone": "loss" if sp500_historical.get("broken_20") else "gain",
+        },
+        {
+            "label_zh": "季線",
+            "label_en": "60MA",
+            "value": sp500_historical.get("ma60_str", "N/A"),
+            "status": "跌破" if sp500_historical.get("broken_60") else "有守",
+            "tone": "loss" if sp500_historical.get("broken_60") else "gain",
+        },
+        {
+            "label_zh": "年線",
+            "label_en": "250MA",
+            "value": sp500_historical.get("ma250_str", "N/A"),
+            "status": "跌破" if sp500_historical.get("broken_250") else "有守",
+            "tone": "loss" if sp500_historical.get("broken_250") else "gain",
+        },
+        {
+            "label_zh": "五年線",
+            "label_en": "1250MA",
+            "value": sp500_historical.get("ma1250_str", "N/A"),
+            "status": "跌破" if sp500_historical.get("broken_1250") else "有守",
+            "tone": "loss" if sp500_historical.get("broken_1250") else "gain",
+        },
+    ]
+
+    market_trend = {
+        "price_str": sp500_historical.get("price_str", "N/A"),
+        "signals": market_trend_signals,
+        "trailing_pe": {
+            "value_str": sp500_trailing_pe.get("value_str", "N/A"),
+            "prev_value_str": sp500_trailing_pe.get("prev_value_str", "N/A"),
+            "delta_str": sp500_trailing_pe.get("delta_str", "N/A"),
+            "date": sp500_trailing_pe.get("date", "N/A"),
+            "valuation": sp500_trailing_pe.get("valuation", "N/A"),
+        },
+        "source_url": "https://finance.yahoo.com/quote/%5EGSPC/",
+        "source_tooltip_zh": "Yahoo Finance S&P 500 + Multpl Trailing P/E",
+        "source_tooltip_en": "Open Yahoo Finance S&P 500 quote",
+    }
+
+    dip_signals = [
+        {
+            "title_zh": "波動率指數",
+            "title_en": "VIX",
+            "value": fear_greed.get("vix_str", "N/A"),
+            "tooltip_zh": "CNN Fear & Greed 的市場波動子指標。數字越高，市場越偏向避險。",
+            "tooltip_en": "CNN volatility component. Higher readings usually mean risk-off sentiment.",
+        },
+        {
+            "title_zh": "賣權買權比",
+            "title_en": "Put / Call",
+            "value": fear_greed.get("pcr_str", "N/A"),
+            "tooltip_zh": "CNN Fear & Greed 的選擇權情緒子指標。數字偏高通常代表避險需求上升。",
+            "tooltip_en": "CNN options positioning component. Higher readings often imply more hedging demand.",
+        },
+        {
+            "title_zh": "融資餘額",
+            "title_en": "Margin Debt",
+            "value": finra_margin.get("value_str", "N/A"),
+            "tooltip_zh": (
+                f"FINRA 最新月份 {finra_margin.get('latest_month', 'N/A')}，"
+                f"月變動 {finra_margin.get('mom_str', 'N/A')}。"
+            ),
+            "tooltip_en": (
+                f"FINRA latest month {finra_margin.get('latest_month', 'N/A')}, "
+                f"month-over-month {finra_margin.get('mom_str', 'N/A')}."
+            ),
+        },
+        {
+            "title_zh": "席勒本益比",
+            "title_en": "Shiller P/E",
+            "value": shiller_pe.get("value_str", "N/A"),
+            "tooltip_zh": f"Multpl 十年平滑本益比，目前估值區間為 {shiller_pe.get('valuation', 'N/A')}。",
+            "tooltip_en": f"Multpl cyclically adjusted valuation. Current zone: {shiller_pe.get('valuation', 'N/A')}.",
+        },
+    ]
 
     summary_primary_cards = [
         _build_summary_primary_card(
@@ -446,50 +697,20 @@ def build_portfolio_snapshot():
         ),
     ]
 
-    macro_cards = [
-        {
-            "title_zh": "波動率指數",
-            "title_en": "VIX",
-            "value": fear_greed.get("vix_str", "N/A"),
-            "description": "Volatility gauge / 市場波動觀察",
-        },
-        {
-            "title_zh": "賣權買權比",
-            "title_en": "Put / Call Ratio",
-            "value": fear_greed.get("pcr_str", "N/A"),
-            "description": "Options positioning / 期權情緒",
-        },
-        {
-            "title_zh": "融資餘額",
-            "title_en": "FINRA Margin Debt",
-            "value": finra_margin.get("value_str", "N/A"),
-            "description": (
-                f"MoM {finra_margin.get('mom_str', 'N/A')} / 資料月份 {finra_margin.get('latest_month', 'N/A')}"
-            ),
-        },
-        {
-            "title_zh": "席勒本益比",
-            "title_en": "Shiller P/E",
-            "value": shiller_pe.get("value_str", "N/A"),
-            "description": shiller_pe.get("valuation", "N/A"),
-        },
-    ]
-
-    sp500_snapshot_cards = [
-        {"label_zh": "現價", "label_en": "Price", "value": sp500_historical.get("price_str", "N/A")},
-        {"label_zh": "20 日均線", "label_en": "MA20", "value": sp500_historical.get("ma20_str", "N/A")},
-        {"label_zh": "60 日均線", "label_en": "MA60", "value": sp500_historical.get("ma60_str", "N/A")},
-        {"label_zh": "250 日均線", "label_en": "MA250", "value": sp500_historical.get("ma250_str", "N/A")},
-    ]
-
     frontend_payload = {
         "holdingsChart": {
-            "labels": chart_labels,
-            "data": chart_data,
+            "labels": top_holdings_chart["labels"],
+            "companyNames": top_holdings_chart["company_names"],
+            "data": top_holdings_chart["data"],
+            "colors": top_holdings_chart["colors"],
         },
         "fearGreedChart": {
             "labels": fear_greed.get("chart_labels", []),
             "data": fear_greed.get("chart_data", []),
+        },
+        "sp500TrendChart": {
+            "labels": sp500_historical.get("chart_labels", []),
+            "data": sp500_historical.get("chart_points", []),
         },
         "tabs": [tab["id"] for tab in DEFAULT_TABS],
     }
@@ -505,6 +726,8 @@ def build_portfolio_snapshot():
         "holdings_rows": rows,
         "has_holdings": bool(rows),
         "holdings_concentration_cards": holdings_concentration_cards,
+        "holdings_category_segments": holdings_category_segments,
+        "top_holdings_chart": top_holdings_chart,
         "fear_greed": {
             "score_str": fear_greed.get("score_str", "N/A"),
             "rating": fear_greed.get("rating", "N/A"),
@@ -516,8 +739,9 @@ def build_portfolio_snapshot():
             "month_ago": fear_greed.get("month_ago", {"score_str": "N/A", "rating": "N/A"}),
             "year_ago": fear_greed.get("year_ago", {"score_str": "N/A", "rating": "N/A"}),
         },
+        "market_sentiment": market_sentiment,
+        "market_trend": market_trend,
+        "dip_signals": dip_signals,
         "sp500_trailing_pe": sp500_trailing_pe,
-        "macro_cards": macro_cards,
-        "sp500_snapshot_cards": sp500_snapshot_cards,
         "frontend_payload": frontend_payload,
     }
