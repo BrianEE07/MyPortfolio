@@ -493,27 +493,50 @@
                                 </svg>
                             </a>
                         </div>
-                        {% set delta_symbol = '↑' if market_sentiment.delta_direction == 'up' else '↓' if market_sentiment.delta_direction == 'down' else '•' %}
+                        {% set delta_symbol = '↑' if market_sentiment.delta_direction == 'up' else '↓' if market_sentiment.delta_direction == 'down' else '−' %}
                         <div class="market-sentiment-layout">
-                            <div class="sentiment-gauge-card">
+                            <div class="sentiment-score-card">
                                 <div class="sentiment-score-copy">
                                     <div class="sentiment-score-row">
                                         <span class="score-value">{{ market_sentiment.score_str }}</span>
                                         <span class="score-delta-badge is-{{ market_sentiment.delta_tone }}">{{ delta_symbol }}</span>
+                                        <span class="score-label">{{ market_sentiment.rating_zh }} / {{ market_sentiment.rating_en }}</span>
                                     </div>
-                                    <div class="score-label">{{ market_sentiment.rating }}</div>
                                 </div>
+                            </div>
+                            <div class="sentiment-gauge-card">
                                 <div class="fear-greed-gauge" style="--gauge-rotation: {{ market_sentiment.gauge_rotation_deg }}deg;">
-                                    <div class="fear-greed-gauge-arc"></div>
-                                    <div class="fear-greed-gauge-pointer"></div>
-                                    <div class="fear-greed-gauge-hub"></div>
+                                    <svg viewBox="0 0 320 178" role="img" aria-label="Fear and Greed gauge">
+                                        <path class="fear-greed-segment is-extreme-fear{% if market_sentiment.gauge_level == 'extreme-fear' %} is-active{% endif %}" d="M34 156 A126 126 0 0 1 70.9 66.9"></path>
+                                        <path class="fear-greed-segment is-fear{% if market_sentiment.gauge_level == 'fear' %} is-active{% endif %}" d="M70.9 66.9 A126 126 0 0 1 140.3 31.6"></path>
+                                        <path class="fear-greed-segment is-neutral{% if market_sentiment.gauge_level == 'neutral' %} is-active{% endif %}" d="M140.3 31.6 A126 126 0 0 1 179.7 31.6"></path>
+                                        <path class="fear-greed-segment is-greed{% if market_sentiment.gauge_level == 'greed' %} is-active{% endif %}" d="M179.7 31.6 A126 126 0 0 1 249.1 66.9"></path>
+                                        <path class="fear-greed-segment is-extreme-greed{% if market_sentiment.gauge_level == 'extreme-greed' %} is-active{% endif %}" d="M249.1 66.9 A126 126 0 0 1 286 156"></path>
+                                        <line class="fear-greed-gauge-pointer" x1="160" y1="150" x2="160" y2="44"></line>
+                                        <circle class="fear-greed-gauge-hub" cx="160" cy="150" r="10"></circle>
+                                    </svg>
                                 </div>
-                                <div class="fear-greed-scale" aria-hidden="true">
-                                    <div><span>Extreme Fear</span><strong>極度恐懼</strong></div>
-                                    <div><span>Fear</span><strong>恐懼</strong></div>
-                                    <div><span>Neutral</span><strong>中性</strong></div>
-                                    <div><span>Greed</span><strong>貪婪</strong></div>
-                                    <div><span>Extreme Greed</span><strong>極度貪婪</strong></div>
+                                <div class="fear-greed-ranges" aria-hidden="true">
+                                    <div class="{% if market_sentiment.gauge_level == 'extreme-fear' %}is-active{% endif %}">
+                                        <span>0-24</span>
+                                        <strong>極度恐懼</strong>
+                                    </div>
+                                    <div class="{% if market_sentiment.gauge_level == 'fear' %}is-active{% endif %}">
+                                        <span>25-44</span>
+                                        <strong>恐懼</strong>
+                                    </div>
+                                    <div class="{% if market_sentiment.gauge_level == 'neutral' %}is-active{% endif %}">
+                                        <span>45-55</span>
+                                        <strong>中性</strong>
+                                    </div>
+                                    <div class="{% if market_sentiment.gauge_level == 'greed' %}is-active{% endif %}">
+                                        <span>56-75</span>
+                                        <strong>貪婪</strong>
+                                    </div>
+                                    <div class="{% if market_sentiment.gauge_level == 'extreme-greed' %}is-active{% endif %}">
+                                        <span>76-100</span>
+                                        <strong>極度貪婪</strong>
+                                    </div>
                                 </div>
                             </div>
                             <div class="chart-panel market-chart-panel market-chart-panel-sentiment">
@@ -521,10 +544,12 @@
                             </div>
                             <div class="sentiment-history-grid">
                                 {% for item in market_sentiment.history_cards %}
-                                <article class="sentiment-history-card">
-                                    <p class="sentiment-history-label">{{ item.label_en }}</p>
-                                    <strong class="sentiment-history-score">{{ item.score_str }}</strong>
-                                    <p class="sentiment-history-rating">{{ item.rating }}</p>
+                                <article class="sentiment-history-card is-{{ item.level }}">
+                                    <p class="sentiment-history-label">{{ item.label_zh }}</p>
+                                    <div class="sentiment-history-value-row">
+                                        <strong class="sentiment-history-score">{{ item.score_str }}</strong>
+                                        <p class="sentiment-history-rating">{{ item.rating_zh }}</p>
+                                    </div>
                                 </article>
                                 {% endfor %}
                             </div>

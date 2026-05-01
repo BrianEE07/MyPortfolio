@@ -5,6 +5,8 @@ This file is now the entry index for split version notes.
 Small releases are recorded under [docs/version-notes/](./version-notes/) so each version can be reviewed on its own without reopening one long running log.
 
 ## Timeline
+- [v1.3.4](./version-notes/v1.3.4.md)
+  Market Sentiment gauge, day-over-day badge, chart tick density, and compact history comparison UI.
 - [v1.3.3](./version-notes/v1.3.3.md)
   Rebuilt favicon and Apple touch icon assets without dark rounded-corner canvases, and added standard favicon/manifest entries.
 - [v1.3.2](./version-notes/v1.3.2.md)

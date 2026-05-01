@@ -16,7 +16,7 @@
             }
         }());
     </script>
-    <link rel="stylesheet" href="static/styles.css?v=3d354de299">
+    <link rel="stylesheet" href="static/styles.css?v=10351d91c9">
 
     <link rel="icon" href="static/favicon.ico?v=e3c187e350" sizes="any">
 
@@ -37,7 +37,7 @@
 
     <meta name="theme-color" content="#f7fbff">
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script defer src="static/app.js?v=98ed74706d"></script>
+    <script defer src="static/app.js?v=34de7ad8d7"></script>
 </head>
 <body>
     <div class="site-shell">
@@ -60,7 +60,7 @@
                     <span class="updated-at-label">Last updated</span>
                     <time class="updated-at-value">
                         <span class="updated-at-date">2026-05-01</span>
-                        <span class="updated-at-time">13:24 (Taipei)</span>
+                        <span class="updated-at-time">16:11 (Taipei)</span>
                     </time>
                 </p>
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
@@ -866,25 +866,48 @@
                         </div>
                         
                         <div class="market-sentiment-layout">
-                            <div class="sentiment-gauge-card">
+                            <div class="sentiment-score-card">
                                 <div class="sentiment-score-copy">
                                     <div class="sentiment-score-row">
                                         <span class="score-value">N/A</span>
-                                        <span class="score-delta-badge is-muted">•</span>
+                                        <span class="score-delta-badge is-muted">−</span>
+                                        <span class="score-label">N/A / N/A</span>
                                     </div>
-                                    <div class="score-label">N/A</div>
                                 </div>
+                            </div>
+                            <div class="sentiment-gauge-card">
                                 <div class="fear-greed-gauge" style="--gauge-rotation: -90deg;">
-                                    <div class="fear-greed-gauge-arc"></div>
-                                    <div class="fear-greed-gauge-pointer"></div>
-                                    <div class="fear-greed-gauge-hub"></div>
+                                    <svg viewBox="0 0 320 178" role="img" aria-label="Fear and Greed gauge">
+                                        <path class="fear-greed-segment is-extreme-fear" d="M34 156 A126 126 0 0 1 70.9 66.9"></path>
+                                        <path class="fear-greed-segment is-fear" d="M70.9 66.9 A126 126 0 0 1 140.3 31.6"></path>
+                                        <path class="fear-greed-segment is-neutral is-active" d="M140.3 31.6 A126 126 0 0 1 179.7 31.6"></path>
+                                        <path class="fear-greed-segment is-greed" d="M179.7 31.6 A126 126 0 0 1 249.1 66.9"></path>
+                                        <path class="fear-greed-segment is-extreme-greed" d="M249.1 66.9 A126 126 0 0 1 286 156"></path>
+                                        <line class="fear-greed-gauge-pointer" x1="160" y1="150" x2="160" y2="44"></line>
+                                        <circle class="fear-greed-gauge-hub" cx="160" cy="150" r="10"></circle>
+                                    </svg>
                                 </div>
-                                <div class="fear-greed-scale" aria-hidden="true">
-                                    <div><span>Extreme Fear</span><strong>極度恐懼</strong></div>
-                                    <div><span>Fear</span><strong>恐懼</strong></div>
-                                    <div><span>Neutral</span><strong>中性</strong></div>
-                                    <div><span>Greed</span><strong>貪婪</strong></div>
-                                    <div><span>Extreme Greed</span><strong>極度貪婪</strong></div>
+                                <div class="fear-greed-ranges" aria-hidden="true">
+                                    <div class="">
+                                        <span>0-24</span>
+                                        <strong>極度恐懼</strong>
+                                    </div>
+                                    <div class="">
+                                        <span>25-44</span>
+                                        <strong>恐懼</strong>
+                                    </div>
+                                    <div class="is-active">
+                                        <span>45-55</span>
+                                        <strong>中性</strong>
+                                    </div>
+                                    <div class="">
+                                        <span>56-75</span>
+                                        <strong>貪婪</strong>
+                                    </div>
+                                    <div class="">
+                                        <span>76-100</span>
+                                        <strong>極度貪婪</strong>
+                                    </div>
                                 </div>
                             </div>
                             <div class="chart-panel market-chart-panel market-chart-panel-sentiment">
@@ -892,28 +915,36 @@
                             </div>
                             <div class="sentiment-history-grid">
                                 
-                                <article class="sentiment-history-card">
-                                    <p class="sentiment-history-label">Previous close</p>
-                                    <strong class="sentiment-history-score">N/A</strong>
-                                    <p class="sentiment-history-rating">N/A</p>
+                                <article class="sentiment-history-card is-neutral">
+                                    <p class="sentiment-history-label">前收盤</p>
+                                    <div class="sentiment-history-value-row">
+                                        <strong class="sentiment-history-score">N/A</strong>
+                                        <p class="sentiment-history-rating">N/A</p>
+                                    </div>
                                 </article>
                                 
-                                <article class="sentiment-history-card">
-                                    <p class="sentiment-history-label">1 week ago</p>
-                                    <strong class="sentiment-history-score">N/A</strong>
-                                    <p class="sentiment-history-rating">N/A</p>
+                                <article class="sentiment-history-card is-neutral">
+                                    <p class="sentiment-history-label">一週前</p>
+                                    <div class="sentiment-history-value-row">
+                                        <strong class="sentiment-history-score">N/A</strong>
+                                        <p class="sentiment-history-rating">N/A</p>
+                                    </div>
                                 </article>
                                 
-                                <article class="sentiment-history-card">
-                                    <p class="sentiment-history-label">1 month ago</p>
-                                    <strong class="sentiment-history-score">N/A</strong>
-                                    <p class="sentiment-history-rating">N/A</p>
+                                <article class="sentiment-history-card is-neutral">
+                                    <p class="sentiment-history-label">一月前</p>
+                                    <div class="sentiment-history-value-row">
+                                        <strong class="sentiment-history-score">N/A</strong>
+                                        <p class="sentiment-history-rating">N/A</p>
+                                    </div>
                                 </article>
                                 
-                                <article class="sentiment-history-card">
-                                    <p class="sentiment-history-label">1 year ago</p>
-                                    <strong class="sentiment-history-score">N/A</strong>
-                                    <p class="sentiment-history-rating">N/A</p>
+                                <article class="sentiment-history-card is-neutral">
+                                    <p class="sentiment-history-label">一年前</p>
+                                    <div class="sentiment-history-value-row">
+                                        <strong class="sentiment-history-score">N/A</strong>
+                                        <p class="sentiment-history-rating">N/A</p>
+                                    </div>
                                 </article>
                                 
                             </div>

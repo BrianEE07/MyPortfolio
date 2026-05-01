@@ -1295,39 +1295,58 @@ tbody tr:last-child td {
 }
 
 .score-value {
-  font-size: clamp(2.8rem, 5vw, 4rem);
+  font-size: clamp(2.7rem, 4.4vw, 4rem);
   font-weight: 800;
   letter-spacing: -0.05em;
 }
 
 .score-label {
   color: var(--accent-strong);
+  font-size: 0.95rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .market-sentiment-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(0, 1.2fr) minmax(240px, 300px);
-  gap: 18px;
-  align-items: start;
+  grid-template-areas:
+    "score gauge chart"
+    "history gauge chart";
+  grid-template-columns: minmax(250px, 280px) minmax(260px, 2fr) minmax(390px, 3fr);
+  gap: 14px 18px;
+  align-items: stretch;
+}
+
+.sentiment-score-card {
+  grid-area: score;
+  align-self: start;
 }
 
 .sentiment-gauge-card {
+  grid-area: gauge;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  justify-content: flex-end;
+  gap: 10px;
+  min-height: 250px;
 }
 
 .sentiment-score-copy {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 
 .sentiment-score-row {
-  display: inline-flex;
+  display: inline-grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
+}
+
+.sentiment-score-row .score-label {
+  min-width: 0;
+  white-space: normal;
 }
 
 .score-delta-badge {
@@ -1357,83 +1376,112 @@ tbody tr:last-child td {
   background: var(--surface-muted);
 }
 
-.fear-greed-gauge {
-  position: relative;
-  width: min(100%, 280px);
-  height: 152px;
-  margin: 0 auto;
-  overflow: hidden;
+.score-delta-badge.is-flat {
+  color: #9a6b00;
+  background: color-mix(in srgb, #f3cf64 34%, var(--surface) 66%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #c9981e 26%, transparent);
 }
 
-.fear-greed-gauge-arc {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  transform: translateX(-50%);
-  background:
-    radial-gradient(circle at center, transparent 59%, var(--surface) 60%, var(--surface) 65%, transparent 66%),
-    conic-gradient(
-      from 180deg,
-      #e96a5b 0deg 43.2deg,
-      #f0a560 43.2deg 79.2deg,
-      #f0d36d 79.2deg 99deg,
-      #9bd688 99deg 133.2deg,
-      #55c07e 133.2deg 180deg,
-      transparent 180deg 360deg
-    );
+.fear-greed-gauge {
+  position: relative;
+  width: min(100%, 300px);
+  height: auto;
+  margin: 0 auto;
+}
+
+.fear-greed-gauge svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.fear-greed-segment {
+  fill: none;
+  opacity: 0.16;
+  stroke-width: 28;
+  stroke-linecap: round;
+  filter: drop-shadow(0 8px 14px rgba(27, 20, 10, 0.08));
+  transition: opacity 160ms ease;
+}
+
+.fear-greed-segment.is-active {
+  opacity: 1;
+}
+
+.fear-greed-segment.is-extreme-fear {
+  stroke: #e86b5c;
+}
+
+.fear-greed-segment.is-fear {
+  stroke: #eea45f;
+}
+
+.fear-greed-segment.is-neutral {
+  stroke: #efd66b;
+}
+
+.fear-greed-segment.is-greed {
+  stroke: #98ce82;
+}
+
+.fear-greed-segment.is-extreme-greed {
+  stroke: #55bd7b;
 }
 
 .fear-greed-gauge-pointer {
-  position: absolute;
-  left: 50%;
-  bottom: 18px;
-  width: 4px;
-  height: 116px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--text) 86%, var(--surface) 14%);
-  transform: translateX(-50%) rotate(var(--gauge-rotation, -90deg));
-  transform-origin: bottom center;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14);
+  stroke: color-mix(in srgb, var(--text) 82%, var(--surface) 18%);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transform: rotate(var(--gauge-rotation, -90deg));
+  transform-origin: 160px 150px;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.18));
 }
 
 .fear-greed-gauge-hub {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  transform: translateX(-50%);
-  background: color-mix(in srgb, var(--surface) 82%, var(--text) 18%);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 20%, transparent);
+  fill: color-mix(in srgb, var(--surface) 86%, var(--text) 14%);
+  stroke: color-mix(in srgb, var(--text) 24%, transparent);
+  stroke-width: 2;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.16));
 }
 
-.fear-greed-scale {
+.fear-greed-ranges {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.fear-greed-scale div {
-  min-width: 0;
-}
-
-.fear-greed-scale span {
-  display: block;
+  gap: 6px;
+  width: min(100%, 300px);
+  margin: -4px auto 0;
   color: var(--text-muted);
-  font-size: 0.64rem;
+  font-size: 0.68rem;
+  font-weight: 700;
   line-height: 1.2;
-  text-transform: uppercase;
+  text-align: center;
 }
 
-.fear-greed-scale strong {
+.fear-greed-ranges div {
+  opacity: 0.38;
+  transition: opacity 160ms ease;
+}
+
+.fear-greed-ranges div.is-active {
+  opacity: 1;
+}
+
+.fear-greed-ranges span {
   display: block;
-  margin-top: 4px;
-  font-size: 0.74rem;
-  line-height: 1.25;
+  min-width: 0;
+  color: color-mix(in srgb, var(--text) 74%, var(--text-muted) 26%);
+  font-size: 0.68rem;
+}
+
+.fear-greed-ranges strong {
+  display: block;
+  margin-top: 3px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.15;
 }
 
 .market-chart-panel {
@@ -1448,7 +1496,11 @@ tbody tr:last-child td {
 }
 
 .market-chart-panel-sentiment {
-  min-height: 240px;
+  grid-area: chart;
+  justify-self: end;
+  width: 100%;
+  max-width: 620px;
+  min-height: 280px;
 }
 
 .market-chart-panel-trend {
@@ -1457,34 +1509,84 @@ tbody tr:last-child td {
 
 .sentiment-history-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-area: history;
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface) 28%);
 }
 
 .sentiment-history-card {
-  padding: 14px 15px;
-  border-radius: 18px;
-  background: var(--surface-muted);
+  display: grid;
+  grid-template-columns: minmax(3.1rem, auto) minmax(2.2rem, 1fr) 4.25rem;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 5px 8px;
+  border-right: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.sentiment-history-card:last-child {
+  border-bottom: 0;
 }
 
 .sentiment-history-label {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .sentiment-history-score {
-  display: block;
-  margin-top: 10px;
-  font-size: 1.56rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  width: 31px;
+  height: 31px;
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.9rem;
   font-weight: 800;
+  line-height: 1;
+}
+
+.sentiment-history-card.is-extreme-fear .sentiment-history-score {
+  background: color-mix(in srgb, #e86b5c 30%, var(--surface) 70%);
+}
+
+.sentiment-history-card.is-fear .sentiment-history-score {
+  background: color-mix(in srgb, #eea45f 32%, var(--surface) 68%);
+}
+
+.sentiment-history-card.is-neutral .sentiment-history-score {
+  background: color-mix(in srgb, #efd66b 34%, var(--surface) 66%);
+}
+
+.sentiment-history-card.is-greed .sentiment-history-score {
+  background: color-mix(in srgb, #98ce82 36%, var(--surface) 64%);
+}
+
+.sentiment-history-card.is-extreme-greed .sentiment-history-score {
+  background: color-mix(in srgb, #55bd7b 36%, var(--surface) 64%);
+}
+
+.sentiment-history-value-row {
+  display: contents;
 }
 
 .sentiment-history-rating {
-  margin: 6px 0 0;
+  justify-self: end;
+  margin: 0;
   color: color-mix(in srgb, var(--text) 84%, var(--text-muted) 16%);
-  font-size: 0.84rem;
-  line-height: 1.35;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: right;
 }
 
 .market-valuation-strip {
@@ -1640,6 +1742,40 @@ tbody tr:last-child td {
   margin-right: 0.35rem;
 }
 
+@media (max-width: 1100px) {
+  .market-sentiment-layout {
+    grid-template-areas:
+      "score chart"
+      "gauge chart"
+      "history history";
+    grid-template-columns: minmax(260px, 2fr) minmax(390px, 3fr);
+    align-items: end;
+  }
+
+  .sentiment-gauge-card {
+    min-height: 220px;
+  }
+
+  .market-chart-panel-sentiment {
+    justify-self: stretch;
+    max-width: none;
+    min-height: 250px;
+  }
+
+  .sentiment-history-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .sentiment-history-card {
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+  }
+
+  .sentiment-history-card:last-child {
+    border-right: 0;
+  }
+}
+
 @media (max-width: 900px) {
   .site-header {
     gap: 18px;
@@ -1681,8 +1817,39 @@ tbody tr:last-child td {
     grid-template-columns: 1fr;
   }
 
+  .market-sentiment-layout {
+    grid-template-areas:
+      "score score"
+      "gauge chart"
+      "history history";
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: end;
+  }
+
+  .sentiment-gauge-card {
+    min-height: auto;
+  }
+
+  .market-chart-panel-sentiment {
+    justify-self: stretch;
+    max-width: none;
+  }
+
   .sentiment-history-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sentiment-history-card {
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+  }
+
+  .sentiment-history-card:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .sentiment-history-card:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
   }
 
   .market-chart-panel-sentiment {
@@ -1930,20 +2097,55 @@ tbody tr:last-child td {
     height: 28px;
   }
 
-  .fear-greed-scale {
-    gap: 6px;
+  .fear-greed-ranges {
+    font-size: 0.62rem;
+    gap: 4px;
   }
 
-  .fear-greed-scale span {
-    font-size: 0.58rem;
-  }
-
-  .fear-greed-scale strong {
-    font-size: 0.68rem;
+  .market-sentiment-layout {
+    grid-template-areas:
+      "score"
+      "gauge"
+      "chart"
+      "history";
+    grid-template-columns: 1fr;
   }
 
   .sentiment-history-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sentiment-history-card:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .sentiment-history-card:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 520px) {
+  .sentiment-history-grid {
     grid-template-columns: 1fr;
+    padding: 5px 6px;
+  }
+
+  .sentiment-history-card,
+  .sentiment-history-card:nth-child(2n),
+  .sentiment-history-card:nth-child(n + 3) {
+    grid-template-columns: minmax(3.6rem, auto) minmax(2.2rem, 1fr) 4.25rem;
+    padding: 5px 8px;
+    border-right: 0;
+    border-top: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sentiment-history-card:last-child {
+    border-bottom: 0;
+  }
+
+  .sentiment-history-rating {
+    white-space: nowrap;
   }
 }
 
@@ -2100,7 +2302,11 @@ tbody tr:last-child td {
   }
 
   .market-sentiment-layout {
-    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    grid-template-areas:
+      "score score"
+      "gauge chart"
+      "history history";
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   }
 
   .sentiment-history-grid {

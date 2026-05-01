@@ -73,9 +73,15 @@ def _format_fg_block(block):
     score = float(score)
     return {
         "score": score,
-        "score_str": f"{score:.0f}",
+        "score_str": _format_fg_score(score),
         "rating": fear_greed_label(score),
     }
+
+
+def _format_fg_score(score):
+    if score is None:
+        return "N/A"
+    return str(int(float(score)))
 
 
 def _nearest_historical_value(chart_points, target_dt):
@@ -820,29 +826,36 @@ def fetch_cnn_fear_greed(days=370):
         if previous_close is None and len(chart_points) >= 2:
             previous_close = chart_points[-2]["value"]
 
-        week_block = _format_fg_block(data.get("fear_and_greed_week_ago", {}))
-        month_block = _format_fg_block(data.get("fear_and_greed_month_ago", {}))
-        year_block = _format_fg_block(data.get("fear_and_greed_year_ago", {}))
+        week_block = _format_fg_block({"score": current_block.get("previous_1_week")})
+        month_block = _format_fg_block({"score": current_block.get("previous_1_month")})
+        year_block = _format_fg_block({"score": current_block.get("previous_1_year")})
+
+        if week_block["score"] is None:
+            week_block = _format_fg_block(data.get("fear_and_greed_week_ago", {}))
+        if month_block["score"] is None:
+            month_block = _format_fg_block(data.get("fear_and_greed_month_ago", {}))
+        if year_block["score"] is None:
+            year_block = _format_fg_block(data.get("fear_and_greed_year_ago", {}))
 
         if week_block["score"] is None:
             week_score = _nearest_historical_value(chart_points, now_local - timedelta(days=7))
             week_block = {
                 "score": week_score,
-                "score_str": f"{week_score:.0f}" if week_score is not None else "N/A",
+                "score_str": _format_fg_score(week_score),
                 "rating": fear_greed_label(week_score) if week_score is not None else "N/A",
             }
         if month_block["score"] is None:
             month_score = _nearest_historical_value(chart_points, now_local - timedelta(days=30))
             month_block = {
                 "score": month_score,
-                "score_str": f"{month_score:.0f}" if month_score is not None else "N/A",
+                "score_str": _format_fg_score(month_score),
                 "rating": fear_greed_label(month_score) if month_score is not None else "N/A",
             }
         if year_block["score"] is None:
             year_score = _nearest_historical_value(chart_points, now_local - timedelta(days=365))
             year_block = {
                 "score": year_score,
-                "score_str": f"{year_score:.0f}" if year_score is not None else "N/A",
+                "score_str": _format_fg_score(year_score),
                 "rating": fear_greed_label(year_score) if year_score is not None else "N/A",
             }
 
@@ -854,10 +867,10 @@ def fetch_cnn_fear_greed(days=370):
 
         return {
             "score": float(current_value) if current_value is not None else None,
-            "score_str": f"{float(current_value):.0f}" if current_value is not None else "N/A",
+            "score_str": _format_fg_score(current_value),
             "rating": fear_greed_label(float(current_value)) if current_value is not None else "N/A",
             "previous_close": float(previous_close) if previous_close is not None else None,
-            "previous_close_str": f"{float(previous_close):.0f}" if previous_close is not None else "N/A",
+            "previous_close_str": _format_fg_score(previous_close),
             "previous_close_rating": fear_greed_label(previous_close) if previous_close is not None else "N/A",
             "week_ago": week_block,
             "month_ago": month_block,

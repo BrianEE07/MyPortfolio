@@ -149,10 +149,70 @@ def test_build_portfolio_snapshot_uses_generated_realized_metrics(tmp_path, monk
     assert result["holdings_category_segments"][0]["id"] == "technology"
     assert result["market_sentiment"]["score_str"] == "66"
     assert result["market_sentiment"]["delta_direction"] == "up"
+    assert result["market_sentiment"]["gauge_level"] == "greed"
+    assert result["market_sentiment"]["history_cards"][0]["label_zh"] == "前收盤"
     assert result["market_trend"]["price_str"] == "7165.08"
     assert result["dip_signals"][2]["value"] == "1,225,597"
     assert result["frontend_payload"]["sp500TrendChart"]["data"] == [7010.12, 7165.08]
     assert result["frontend_payload"]["holdingsChart"]["colors"] == ["#de8b5f"]
+
+
+def test_build_portfolio_snapshot_treats_matching_truncated_fear_greed_score_as_flat(monkeypatch):
+    _stub_snapshot_dependencies(monkeypatch)
+
+    monkeypatch.setattr(
+        snapshot,
+        "cached_fear_greed",
+        lambda: {
+            "score": 66.2,
+            "score_str": "66",
+            "rating": "Greed / 貪婪",
+            "previous_close": 66.9,
+            "previous_close_str": "66",
+            "previous_close_rating": "Greed / 貪婪",
+            "week_ago": {"score_str": "58", "rating": "Greed / 貪婪"},
+            "month_ago": {"score_str": "44", "rating": "Fear / 恐懼"},
+            "year_ago": {"score_str": "72", "rating": "Greed / 貪婪"},
+            "chart_labels": ["04/01", "04/02"],
+            "chart_data": [58.0, 66.2],
+            "vix_str": "17.80",
+            "pcr_str": "0.91",
+        },
+    )
+
+    result = snapshot.build_portfolio_snapshot()
+
+    assert result["market_sentiment"]["delta_direction"] == "flat"
+    assert result["market_sentiment"]["delta_tone"] == "flat"
+
+
+def test_build_portfolio_snapshot_compares_truncated_fear_greed_scores(monkeypatch):
+    _stub_snapshot_dependencies(monkeypatch)
+
+    monkeypatch.setattr(
+        snapshot,
+        "cached_fear_greed",
+        lambda: {
+            "score": 66.2,
+            "score_str": "66",
+            "rating": "Greed / 貪婪",
+            "previous_close": 67.1,
+            "previous_close_str": "67",
+            "previous_close_rating": "Greed / 貪婪",
+            "week_ago": {"score_str": "58", "rating": "Greed / 貪婪"},
+            "month_ago": {"score_str": "44", "rating": "Fear / 恐懼"},
+            "year_ago": {"score_str": "72", "rating": "Greed / 貪婪"},
+            "chart_labels": ["04/01", "04/02"],
+            "chart_data": [58.0, 66.2],
+            "vix_str": "17.80",
+            "pcr_str": "0.91",
+        },
+    )
+
+    result = snapshot.build_portfolio_snapshot()
+
+    assert result["market_sentiment"]["delta_direction"] == "down"
+    assert result["market_sentiment"]["delta_tone"] == "loss"
 
 
 def test_build_portfolio_snapshot_includes_holdings_chart_company_names(monkeypatch):

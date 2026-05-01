@@ -101,6 +101,51 @@ def _direction_for_number(value):
     return "flat"
 
 
+def _fear_greed_display_integer(value):
+    if value is None:
+        return None
+    return int(float(value))
+
+
+def _fear_greed_display_delta(current_score, previous_score):
+    if current_score is None or previous_score is None:
+        return None
+    return _fear_greed_display_integer(current_score) - _fear_greed_display_integer(previous_score)
+
+
+def _split_fear_greed_rating(rating):
+    if not rating or rating == "N/A":
+        return {"rating_en": "N/A", "rating_zh": "N/A"}
+    if " / " not in rating:
+        return {"rating_en": rating, "rating_zh": rating}
+    rating_en, rating_zh = rating.split(" / ", 1)
+    return {"rating_en": rating_en, "rating_zh": rating_zh}
+
+
+def _fear_greed_level(score):
+    if score is None:
+        return "neutral"
+    score = float(score)
+    if score <= 24:
+        return "extreme-fear"
+    if score <= 44:
+        return "fear"
+    if score <= 55:
+        return "neutral"
+    if score <= 75:
+        return "greed"
+    return "extreme-greed"
+
+
+def _coerce_score(value):
+    if value is None or value == "N/A":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _format_detail_shares(value):
     if value is None:
         return "N/A"
@@ -332,31 +377,44 @@ def _build_holdings_category_breakdown(rows):
 
 
 def _build_fear_greed_history_cards(fear_greed):
+    def build_card(label_zh, score, score_str, rating):
+        rating_parts = _split_fear_greed_rating(rating)
+        score_value = _coerce_score(score)
+        if score_value is None:
+            score_value = _coerce_score(score_str)
+        return {
+            "label_zh": label_zh,
+            "score_str": score_str,
+            "rating": rating,
+            "rating_zh": rating_parts["rating_zh"],
+            "level": _fear_greed_level(score_value),
+        }
+
     return [
-        {
-            "label_en": "Previous close",
-            "label_zh": "前一日",
-            "score_str": fear_greed.get("previous_close_str", "N/A"),
-            "rating": fear_greed.get("previous_close_rating", "N/A"),
-        },
-        {
-            "label_en": "1 week ago",
-            "label_zh": "一週前",
-            "score_str": fear_greed.get("week_ago", {}).get("score_str", "N/A"),
-            "rating": fear_greed.get("week_ago", {}).get("rating", "N/A"),
-        },
-        {
-            "label_en": "1 month ago",
-            "label_zh": "一月前",
-            "score_str": fear_greed.get("month_ago", {}).get("score_str", "N/A"),
-            "rating": fear_greed.get("month_ago", {}).get("rating", "N/A"),
-        },
-        {
-            "label_en": "1 year ago",
-            "label_zh": "一年前",
-            "score_str": fear_greed.get("year_ago", {}).get("score_str", "N/A"),
-            "rating": fear_greed.get("year_ago", {}).get("rating", "N/A"),
-        },
+        build_card(
+            "前收盤",
+            fear_greed.get("previous_close"),
+            fear_greed.get("previous_close_str", "N/A"),
+            fear_greed.get("previous_close_rating", "N/A"),
+        ),
+        build_card(
+            "一週前",
+            fear_greed.get("week_ago", {}).get("score"),
+            fear_greed.get("week_ago", {}).get("score_str", "N/A"),
+            fear_greed.get("week_ago", {}).get("rating", "N/A"),
+        ),
+        build_card(
+            "一月前",
+            fear_greed.get("month_ago", {}).get("score"),
+            fear_greed.get("month_ago", {}).get("score_str", "N/A"),
+            fear_greed.get("month_ago", {}).get("rating", "N/A"),
+        ),
+        build_card(
+            "一年前",
+            fear_greed.get("year_ago", {}).get("score"),
+            fear_greed.get("year_ago", {}).get("score_str", "N/A"),
+            fear_greed.get("year_ago", {}).get("rating", "N/A"),
+        ),
     ]
 
 
@@ -522,6 +580,7 @@ def build_portfolio_snapshot():
         if fear_greed_score is not None and fear_greed_previous is not None
         else None
     )
+    fear_greed_display_delta = _fear_greed_display_delta(fear_greed_score, fear_greed_previous)
 
     sp500_trailing_pe = cached_sp500_trailing_pe()
     shiller_pe = cached_shiller_pe()
@@ -529,18 +588,22 @@ def build_portfolio_snapshot():
     sp500_historical = cached_sp500_historical() or {}
 
     fear_greed_history_cards = _build_fear_greed_history_cards(fear_greed)
+    fear_greed_rating_parts = _split_fear_greed_rating(fear_greed.get("rating", "N/A"))
 
     market_sentiment = {
         "score": fear_greed_score,
         "score_str": fear_greed.get("score_str", "N/A"),
         "rating": fear_greed.get("rating", "N/A"),
-        "delta_tone": _tone_for_number(fear_greed_delta),
-        "delta_direction": _direction_for_number(fear_greed_delta),
+        "rating_en": fear_greed_rating_parts["rating_en"],
+        "rating_zh": fear_greed_rating_parts["rating_zh"],
+        "delta_tone": "flat" if fear_greed_display_delta == 0 else _tone_for_number(fear_greed_display_delta),
+        "delta_direction": _direction_for_number(fear_greed_display_delta),
         "gauge_rotation_deg": (
             round((fear_greed_score * 1.8) - 90, 2)
             if fear_greed_score is not None
             else -90
         ),
+        "gauge_level": _fear_greed_level(fear_greed_score),
         "history_cards": fear_greed_history_cards,
         "source_url": "https://edition.cnn.com/markets/fear-and-greed",
         "source_tooltip_zh": "CNN Fear & Greed Index",

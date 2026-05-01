@@ -1,4 +1,5 @@
 from io import BytesIO
+from datetime import datetime
 from zipfile import ZipFile
 
 from portfolio_app import market_data
@@ -119,6 +120,50 @@ def test_build_finra_margin_payload_formats_month_over_month():
     assert payload["previous_month"] == "Feb-26"
     assert payload["mom_str"] == "-2.58%"
     assert payload["source_status"] == "live"
+
+
+def test_format_fear_greed_block_uses_truncated_integer_display():
+    payload = market_data._format_fg_block({"score": 66.9})
+
+    assert payload["score"] == 66.9
+    assert payload["score_str"] == "66"
+    assert payload["rating"] == "Greed / 貪婪"
+
+
+def test_fetch_cnn_fear_greed_keeps_historical_chart_values_raw(monkeypatch):
+    class StubResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "fear_and_greed": {
+                    "score": 67.428,
+                    "previous_close": 66.6,
+                    "previous_1_week": 66.028,
+                    "previous_1_month": 13.771,
+                    "previous_1_year": 41.257,
+                },
+                "fear_and_greed_historical": {
+                    "data": [
+                        {"x": int(datetime(2026, 4, 30).timestamp() * 1000), "y": 66.4},
+                        {"x": int(datetime(2026, 5, 1).timestamp() * 1000), "y": 66.4},
+                    ]
+                },
+            }
+
+    monkeypatch.setattr(market_data.requests, "get", lambda *args, **kwargs: StubResponse())
+
+    payload = market_data.fetch_cnn_fear_greed()
+
+    assert payload["score"] == 67.428
+    assert payload["score_str"] == "67"
+    assert payload["previous_close"] == 66.6
+    assert payload["previous_close_str"] == "66"
+    assert payload["week_ago"]["score_str"] == "66"
+    assert payload["month_ago"]["score_str"] == "13"
+    assert payload["year_ago"]["score_str"] == "41"
+    assert payload["chart_data"] == [66.4, 66.4]
 
 
 def test_parse_finra_margin_rows_from_xlsx_bytes_extracts_latest_values():

@@ -59,7 +59,7 @@
   function shouldUseCompactSummaryLabels() {
     return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches
       || window.matchMedia("(max-width: 1024px) and (orientation: landscape)").matches
-      || window.matchMedia("(max-width: 900px)").matches;
+      || window.matchMedia("(max-width: 1024px)").matches;
   }
 
   function updateSummaryCardLabels() {
@@ -211,6 +211,8 @@
       return null;
     }
 
+    const xTickLimit = window.innerWidth < 700 ? 5 : 7;
+
     return new Chart(fearGreedCanvas, {
       type: "line",
       data: {
@@ -236,6 +238,14 @@
           intersect: false
         },
         scales: {
+          x: {
+            ticks: {
+              autoSkip: true,
+              maxTicksLimit: xTickLimit,
+              maxRotation: 0,
+              minRotation: 0
+            }
+          },
           y: {
             min: 0,
             max: 100
