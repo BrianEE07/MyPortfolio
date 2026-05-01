@@ -176,6 +176,104 @@ def _trend_label(is_below_ma250):
     return "Above 250D"
 
 
+def _market_trend_status(sp500_historical):
+    if sp500_historical.get("broken_250"):
+        return {
+            "label_zh": "風險轉弱",
+            "label_en": "Risk-Off",
+            "tone": "loss",
+            "summary_zh": "S&P 500 已跌破年線，先觀察能否重新站回長期趨勢。",
+            "summary_en": "S&P 500 is below its 250-day average; watch whether it can reclaim the long-term trend.",
+        }
+    if sp500_historical.get("broken_60"):
+        return {
+            "label_zh": "趨勢降溫",
+            "label_en": "Cooling",
+            "tone": "warning",
+            "summary_zh": "中期均線失守，但長期趨勢仍未明顯轉弱。",
+            "summary_en": "The medium-term average is under pressure, while the long-term trend has not fully broken.",
+        }
+    if sp500_historical.get("broken_20"):
+        return {
+            "label_zh": "短線整理",
+            "label_en": "Pullback",
+            "tone": "warning",
+            "summary_zh": "短線跌破月線，偏向正常回檔或整理。",
+            "summary_en": "Price is below the 20-day average, suggesting a near-term pullback or consolidation.",
+        }
+    return {
+        "label_zh": "多頭延伸",
+        "label_en": "Bullish",
+        "tone": "gain",
+        "summary_zh": "價格站上主要均線，趨勢仍偏強。",
+        "summary_en": "Price is above the key moving averages, keeping the trend constructive.",
+    }
+
+
+def _format_distance_from_reference(value, reference):
+    value = _coerce_number(value)
+    reference = _coerce_number(reference)
+    if value is None or reference in (None, 0):
+        return "N/A"
+    return _format_percent((value - reference) / reference * 100, signed=True)
+
+
+def _vix_zone(value):
+    value = _coerce_number(value)
+    if value is None:
+        return {"label": "資料不足", "tone": "muted"}
+    if value < 15:
+        return {"label": "平靜", "tone": "gain"}
+    if value < 20:
+        return {"label": "正常", "tone": "gain"}
+    if value < 30:
+        return {"label": "緊張", "tone": "warning"}
+    return {"label": "恐慌", "tone": "loss"}
+
+
+def _put_call_zone(value):
+    value = _coerce_number(value)
+    if value is None:
+        return {"label": "資料不足", "tone": "muted"}
+    if value < 0.75:
+        return {"label": "偏貪婪", "tone": "gain"}
+    if value < 1.0:
+        return {"label": "中性", "tone": "gain"}
+    if value < 1.2:
+        return {"label": "避險升溫", "tone": "warning"}
+    return {"label": "恐懼", "tone": "loss"}
+
+
+def _margin_debt_zone(value):
+    value = _coerce_number(value)
+    if value is None:
+        return {"label": "資料不足", "tone": "muted"}
+    if value > 3:
+        return {"label": "槓桿升溫", "tone": "warning"}
+    if value < -3:
+        return {"label": "去槓桿", "tone": "loss"}
+    return {"label": "溫和", "tone": "gain"}
+
+
+def _valuation_tone(valuation):
+    if not valuation or valuation == "N/A":
+        return "muted"
+    if any(keyword in valuation for keyword in ("Cheap", "便宜", "大底")):
+        return "gain"
+    if any(keyword in valuation for keyword in ("Bubble", "Expensive", "貴", "泡沫")):
+        return "loss"
+    return "warning"
+
+
+def _zh_from_bilingual(value):
+    if not value or value == "N/A":
+        return "N/A"
+    text = str(value)
+    if " / " in text:
+        return text.split(" / ", 1)[1]
+    return text
+
+
 def _coerce_number(value):
     if value in (None, "", "N/A"):
         return None
@@ -606,7 +704,7 @@ def build_portfolio_snapshot():
         "gauge_level": _fear_greed_level(fear_greed_score),
         "history_cards": fear_greed_history_cards,
         "source_url": "https://edition.cnn.com/markets/fear-and-greed",
-        "source_tooltip_zh": "CNN Fear & Greed Index",
+        "source_tooltip_zh": "Open CNN Fear & Greed Index",
         "source_tooltip_en": "Open CNN Fear & Greed Index",
     }
 
@@ -615,6 +713,10 @@ def build_portfolio_snapshot():
             "label_zh": "月線",
             "label_en": "20MA",
             "value": sp500_historical.get("ma20_str", "N/A"),
+            "distance": _format_distance_from_reference(
+                sp500_historical.get("price"),
+                sp500_historical.get("ma20"),
+            ),
             "status": "跌破" if sp500_historical.get("broken_20") else "有守",
             "tone": "loss" if sp500_historical.get("broken_20") else "gain",
         },
@@ -622,6 +724,10 @@ def build_portfolio_snapshot():
             "label_zh": "季線",
             "label_en": "60MA",
             "value": sp500_historical.get("ma60_str", "N/A"),
+            "distance": _format_distance_from_reference(
+                sp500_historical.get("price"),
+                sp500_historical.get("ma60"),
+            ),
             "status": "跌破" if sp500_historical.get("broken_60") else "有守",
             "tone": "loss" if sp500_historical.get("broken_60") else "gain",
         },
@@ -629,6 +735,10 @@ def build_portfolio_snapshot():
             "label_zh": "年線",
             "label_en": "250MA",
             "value": sp500_historical.get("ma250_str", "N/A"),
+            "distance": _format_distance_from_reference(
+                sp500_historical.get("price"),
+                sp500_historical.get("ma250"),
+            ),
             "status": "跌破" if sp500_historical.get("broken_250") else "有守",
             "tone": "loss" if sp500_historical.get("broken_250") else "gain",
         },
@@ -636,13 +746,19 @@ def build_portfolio_snapshot():
             "label_zh": "五年線",
             "label_en": "1250MA",
             "value": sp500_historical.get("ma1250_str", "N/A"),
+            "distance": _format_distance_from_reference(
+                sp500_historical.get("price"),
+                sp500_historical.get("ma1250"),
+            ),
             "status": "跌破" if sp500_historical.get("broken_1250") else "有守",
             "tone": "loss" if sp500_historical.get("broken_1250") else "gain",
         },
     ]
+    market_trend_status = _market_trend_status(sp500_historical)
 
     market_trend = {
         "price_str": sp500_historical.get("price_str", "N/A"),
+        "status": market_trend_status,
         "signals": market_trend_signals,
         "trailing_pe": {
             "value_str": sp500_trailing_pe.get("value_str", "N/A"),
@@ -652,44 +768,105 @@ def build_portfolio_snapshot():
             "valuation": sp500_trailing_pe.get("valuation", "N/A"),
         },
         "source_url": "https://finance.yahoo.com/quote/%5EGSPC/",
-        "source_tooltip_zh": "Yahoo Finance S&P 500 + Multpl Trailing P/E",
-        "source_tooltip_en": "Open Yahoo Finance S&P 500 quote",
+        "source_tooltip_zh": "Open Yahoo Finance S&P 500 Quote",
+        "source_tooltip_en": "Open Yahoo Finance S&P 500 Quote",
     }
+
+    vix_zone = _vix_zone(fear_greed.get("vix") if fear_greed.get("vix") is not None else fear_greed.get("vix_str"))
+    put_call_zone = _put_call_zone(
+        fear_greed.get("pcr") if fear_greed.get("pcr") is not None else fear_greed.get("pcr_str")
+    )
+    margin_debt_zone = _margin_debt_zone(finra_margin.get("mom_str"))
+    shiller_zone_label = _zh_from_bilingual(shiller_pe.get("valuation", "N/A"))
+    shiller_tone = _valuation_tone(shiller_pe.get("valuation", "N/A"))
+    vix_zone_tooltip = "• 低於 15：平靜\n• 15-20：正常\n• 20-30：緊張\n• 30 以上：恐慌"
+    put_call_zone_tooltip = "• 低於 0.75：偏貪婪\n• 0.75-1.0：中性\n• 1.0-1.2：避險升溫\n• 1.2 以上：恐懼"
+    margin_debt_zone_tooltip = "• 高於 +3%：槓桿升溫\n• -3% 到 +3%：溫和\n• 低於 -3%：去槓桿"
+    shiller_zone_tooltip = "• 30 以上：泡沫高估區\n• 25-30：偏貴\n• 20-25：中性偏高\n• 15-20：合理偏便宜\n• 15 以下：十年一遇歷史大底"
 
     dip_signals = [
         {
             "title_zh": "波動率指數",
             "title_en": "VIX",
             "value": fear_greed.get("vix_str", "N/A"),
-            "tooltip_zh": "CNN Fear & Greed 的市場波動子指標。數字越高，市場越偏向避險。",
-            "tooltip_en": "CNN volatility component. Higher readings usually mean risk-off sentiment.",
+            "status_label": vix_zone["label"],
+            "status_tone": vix_zone["tone"],
+            "definition_zh": "衡量市場對未來波動的定價；越高代表避險和恐慌需求越強。",
+            "side_stats": [],
+            "meta": [
+                {
+                    "label": "目前區域",
+                    "value": vix_zone["label"],
+                    "tone": vix_zone["tone"],
+                    "tooltip_zh": vix_zone_tooltip,
+                },
+                {"label": "抄底意義", "value": "高波動才有恐慌折價", "tone": "muted"},
+            ],
+            "tooltip_zh": "衡量市場對未來波動的定價；越高代表避險和恐慌需求越強。",
+            "tooltip_en": "",
         },
         {
             "title_zh": "賣權買權比",
             "title_en": "Put / Call",
             "value": fear_greed.get("pcr_str", "N/A"),
-            "tooltip_zh": "CNN Fear & Greed 的選擇權情緒子指標。數字偏高通常代表避險需求上升。",
-            "tooltip_en": "CNN options positioning component. Higher readings often imply more hedging demand.",
+            "status_label": put_call_zone["label"],
+            "status_tone": put_call_zone["tone"],
+            "definition_zh": "觀察選擇權市場避險需求；數字升高通常代表投資人更想買保護。",
+            "side_stats": [],
+            "meta": [
+                {
+                    "label": "目前區域",
+                    "value": put_call_zone["label"],
+                    "tone": put_call_zone["tone"],
+                    "tooltip_zh": put_call_zone_tooltip,
+                },
+                {"label": "抄底意義", "value": "避險升溫時較有反向訊號", "tone": "muted"},
+            ],
+            "tooltip_zh": "觀察選擇權市場避險需求；數字升高通常代表投資人更想買保護。",
+            "tooltip_en": "",
         },
         {
             "title_zh": "融資餘額",
             "title_en": "Margin Debt",
             "value": finra_margin.get("value_str", "N/A"),
-            "tooltip_zh": (
-                f"FINRA 最新月份 {finra_margin.get('latest_month', 'N/A')}，"
-                f"月變動 {finra_margin.get('mom_str', 'N/A')}。"
-            ),
-            "tooltip_en": (
-                f"FINRA latest month {finra_margin.get('latest_month', 'N/A')}, "
-                f"month-over-month {finra_margin.get('mom_str', 'N/A')}."
-            ),
+            "status_label": margin_debt_zone["label"],
+            "status_tone": margin_debt_zone["tone"],
+            "definition_zh": "追蹤市場槓桿資金規模；快速增加偏熱，急速下降常見於去槓桿壓力。",
+            "side_stats": [
+                {"label": "最新月份", "value": finra_margin.get("latest_month", "N/A"), "tone": "muted"},
+                {"label": "月變動", "value": finra_margin.get("mom_str", "N/A"), "tone": margin_debt_zone["tone"]},
+            ],
+            "meta": [
+                {
+                    "label": "目前區域",
+                    "value": margin_debt_zone["label"],
+                    "tone": margin_debt_zone["tone"],
+                    "tooltip_zh": margin_debt_zone_tooltip,
+                },
+                {"label": "抄底意義", "value": "去槓桿後更接近清洗", "tone": "muted"},
+            ],
+            "tooltip_zh": "追蹤市場槓桿資金規模；快速增加偏熱，急速下降常見於去槓桿壓力。",
+            "tooltip_en": "",
         },
         {
             "title_zh": "席勒本益比",
             "title_en": "Shiller P/E",
             "value": shiller_pe.get("value_str", "N/A"),
-            "tooltip_zh": f"Multpl 十年平滑本益比，目前估值區間為 {shiller_pe.get('valuation', 'N/A')}。",
-            "tooltip_en": f"Multpl cyclically adjusted valuation. Current zone: {shiller_pe.get('valuation', 'N/A')}.",
+            "status_label": shiller_zone_label,
+            "status_tone": shiller_tone,
+            "definition_zh": "用十年平均盈餘平滑景氣循環，判斷大盤長期估值是否昂貴。",
+            "side_stats": [],
+            "meta": [
+                {
+                    "label": "目前區域",
+                    "value": shiller_zone_label,
+                    "tone": shiller_tone,
+                    "tooltip_zh": shiller_zone_tooltip,
+                },
+                {"label": "抄底意義", "value": "估值越低，長期安全邊際越高", "tone": "muted"},
+            ],
+            "tooltip_zh": "用十年平均盈餘平滑景氣循環，判斷大盤長期估值是否昂貴。",
+            "tooltip_en": "",
         },
     ]
 
@@ -774,6 +951,10 @@ def build_portfolio_snapshot():
         "sp500TrendChart": {
             "labels": sp500_historical.get("chart_labels", []),
             "data": sp500_historical.get("chart_points", []),
+            "ma20": sp500_historical.get("chart_ma20_points", []),
+            "ma60": sp500_historical.get("chart_ma60_points", []),
+            "ma250": sp500_historical.get("chart_ma250_points", []),
+            "tone": market_trend_status["tone"],
         },
         "tabs": [tab["id"] for tab in DEFAULT_TABS],
     }

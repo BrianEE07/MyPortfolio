@@ -5,6 +5,7 @@
   const holdingsLegend = document.getElementById("holdingsChartLegend");
   const fearGreedCanvas = document.getElementById("fearGreedChart");
   const sp500TrendCanvas = document.getElementById("sp500TrendChart");
+  const fearGreedGauge = document.querySelector(".fear-greed-gauge");
 
   function updateThemeToggleState(theme) {
     const toggleButton = document.getElementById("themeToggle");
@@ -53,6 +54,8 @@
   let sp500TrendChartInstance = null;
   let chartRelayoutTimeoutId = null;
   let chartRelayoutNeedsRebuild = false;
+  let gaugeNeedleAnimationFrame = null;
+  let chartRelayoutRequestId = 0;
   let activeCategoryFilter = "all";
   let activeTabId = "overview";
 
@@ -105,6 +108,120 @@
     return null;
   }
 
+  function clampNumber(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function easeOutCubic(progress) {
+    return 1 - Math.pow(1 - progress, 3);
+  }
+
+  function scoreToGaugeAngle(score) {
+    return 180 - (score / 100) * 180;
+  }
+
+  function gaugeLevelForScore(score) {
+    if (score < 25) return "extreme-fear";
+    if (score < 45) return "fear";
+    if (score < 56) return "neutral";
+    if (score < 76) return "greed";
+    return "extreme-greed";
+  }
+
+  function updateFearGreedGaugeActiveState(score) {
+    if (!fearGreedGauge) return;
+
+    const activeLevel = gaugeLevelForScore(clampNumber(score, 0, 100));
+    const segments = Array.from(fearGreedGauge.querySelectorAll(".fear-greed-segment"));
+    const ranges = Array.from(
+      fearGreedGauge.parentElement
+        ? fearGreedGauge.parentElement.querySelectorAll(".fear-greed-ranges > div")
+        : []
+    );
+    const levelClasses = [
+      "extreme-fear",
+      "fear",
+      "neutral",
+      "greed",
+      "extreme-greed"
+    ];
+
+    segments.forEach(function (segment) {
+      segment.classList.toggle("is-active", segment.classList.contains("is-" + activeLevel));
+    });
+    ranges.forEach(function (range, index) {
+      range.classList.toggle("is-active", levelClasses[index] === activeLevel);
+    });
+  }
+
+  function animateFearGreedNeedle() {
+    if (!fearGreedGauge) return;
+
+    const pointer = fearGreedGauge.querySelector(".fear-greed-gauge-pointer");
+    const hub = fearGreedGauge.querySelector(".fear-greed-gauge-hub");
+    if (!pointer || !hub) return;
+
+    const rawScore = Number(fearGreedGauge.dataset.score);
+    if (!Number.isFinite(rawScore)) return;
+
+    const score = clampNumber(rawScore, 0, 100);
+    const centerX = Number(hub.getAttribute("cx") || pointer.getAttribute("x1") || 160);
+    const centerY = Number(hub.getAttribute("cy") || pointer.getAttribute("y1") || 150);
+    const initialX2 = Number(pointer.getAttribute("x2") || centerX);
+    const initialY2 = Number(pointer.getAttribute("y2") || centerY - 106);
+    const needleLength = Math.hypot(initialX2 - centerX, initialY2 - centerY) || 106;
+
+    function setNeedleByAngle(angle) {
+      const radian = angle * Math.PI / 180;
+      const x2 = centerX + Math.cos(radian) * needleLength;
+      const y2 = centerY - Math.sin(radian) * needleLength;
+
+      pointer.setAttribute("x1", centerX.toFixed(2));
+      pointer.setAttribute("y1", centerY.toFixed(2));
+      pointer.setAttribute("x2", x2.toFixed(2));
+      pointer.setAttribute("y2", y2.toFixed(2));
+    }
+
+    const startAngle = 180;
+    const targetAngle = scoreToGaugeAngle(score);
+    const durationMs = 1400;
+
+    if (gaugeNeedleAnimationFrame) {
+      window.cancelAnimationFrame(gaugeNeedleAnimationFrame);
+      gaugeNeedleAnimationFrame = null;
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setNeedleByAngle(targetAngle);
+      updateFearGreedGaugeActiveState(score);
+      return;
+    }
+
+    setNeedleByAngle(startAngle);
+    updateFearGreedGaugeActiveState(0);
+    const startTime = window.performance.now();
+
+    function step(now) {
+      const progress = clampNumber((now - startTime) / durationMs, 0, 1);
+      const easedProgress = easeOutCubic(progress);
+      const currentAngle = startAngle + (targetAngle - startAngle) * easedProgress;
+      const currentScore = score * easedProgress;
+      setNeedleByAngle(currentAngle);
+      updateFearGreedGaugeActiveState(currentScore);
+
+      if (progress < 1) {
+        gaugeNeedleAnimationFrame = window.requestAnimationFrame(step);
+        return;
+      }
+
+      gaugeNeedleAnimationFrame = null;
+      setNeedleByAngle(targetAngle);
+      updateFearGreedGaugeActiveState(score);
+    }
+
+    gaugeNeedleAnimationFrame = window.requestAnimationFrame(step);
+  }
+
   function clearHoldingsLegend() {
     if (!holdingsLegend) return;
     holdingsLegend.replaceChildren();
@@ -142,6 +259,36 @@
 
     holdingsLegend.replaceChildren(fragment);
   }
+
+  const verticalHoverLinePlugin = {
+    id: "verticalHoverLine",
+    afterDraw: function (chart, args, pluginOptions) {
+      const activeElements = chart.tooltip && chart.tooltip.getActiveElements
+        ? chart.tooltip.getActiveElements()
+        : [];
+      const activeElement = activeElements[0] || null;
+      const tooltipX = chart.tooltip && typeof chart.tooltip.caretX === "number"
+        ? chart.tooltip.caretX
+        : null;
+      if (!activeElement && tooltipX === null) return;
+
+      const x = activeElement && activeElement.element ? activeElement.element.x : tooltipX;
+      const chartArea = chart.chartArea;
+      if (!chartArea) return;
+
+      const context = chart.ctx;
+      context.save();
+      context.beginPath();
+      context.moveTo(Math.round(x) + 0.5, chartArea.top);
+      context.lineTo(Math.round(x) + 0.5, chartArea.bottom);
+      context.lineWidth = pluginOptions && pluginOptions.lineWidth ? pluginOptions.lineWidth : 1;
+      context.strokeStyle = pluginOptions && pluginOptions.color
+        ? pluginOptions.color
+        : "rgba(84, 73, 61, 0.22)";
+      context.stroke();
+      context.restore();
+    }
+  };
 
   function createHoldingsChart() {
     if (!hasChartData(payload.holdingsChart) || !isCanvasRenderable(holdingsCanvas)) {
@@ -212,15 +359,19 @@
     }
 
     const xTickLimit = window.innerWidth < 700 ? 5 : 7;
+    const chartData = payload.fearGreedChart.data || [];
+    const shouldAnimate = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const initialData = shouldAnimate ? chartData.map(function () { return 0; }) : chartData;
 
-    return new Chart(fearGreedCanvas, {
+    const chart = new Chart(fearGreedCanvas, {
       type: "line",
+      plugins: [verticalHoverLinePlugin],
       data: {
         labels: payload.fearGreedChart.labels,
         datasets: [
           {
             label: "Fear & Greed",
-            data: payload.fearGreedChart.data,
+            data: initialData,
             borderColor: "#b86a17",
             backgroundColor: "rgba(184, 106, 23, 0.16)",
             fill: true,
@@ -233,6 +384,10 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+          duration: 900,
+          easing: "easeOutCubic"
+        },
         interaction: {
           mode: "index",
           intersect: false
@@ -248,16 +403,46 @@
           },
           y: {
             min: 0,
-            max: 100
+            max: 100,
+            ticks: {
+              stepSize: 20
+            }
           }
         },
         plugins: {
+          verticalHoverLine: {
+            color: "rgba(84, 73, 61, 0.22)"
+          },
           legend: {
             display: false
+          },
+          tooltip: {
+            boxPadding: 4,
+            bodySpacing: 4,
+            titleSpacing: 4,
+            padding: 10,
+            callbacks: {
+              title: function (context) {
+                const firstItem = context && context[0];
+                return firstItem ? firstItem.label : "";
+              }
+            }
           }
         }
       }
     });
+
+    if (shouldAnimate) {
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+          if (!chart.canvas || !chart.canvas.isConnected) return;
+          chart.data.datasets[0].data = chartData;
+          chart.update();
+        });
+      });
+    }
+
+    return chart;
   }
 
   function createSp500TrendChart() {
@@ -265,25 +450,72 @@
       return null;
     }
 
+    const trendTone = payload.sp500TrendChart.tone || "gain";
+    const trendColor = trendTone === "loss"
+      ? "#d85f55"
+      : trendTone === "warning"
+        ? "#c89124"
+        : "#2fbf78";
+    const trendFill = trendTone === "loss"
+      ? "rgba(216, 95, 85, 0.12)"
+      : trendTone === "warning"
+        ? "rgba(200, 145, 36, 0.12)"
+        : "rgba(47, 191, 120, 0.12)";
+
     return new Chart(sp500TrendCanvas, {
       type: "line",
+      plugins: [verticalHoverLinePlugin],
       data: {
         labels: payload.sp500TrendChart.labels,
         datasets: [
           {
+            label: "S&P 500",
             data: payload.sp500TrendChart.data,
-            borderColor: "#34d399",
-            backgroundColor: "rgba(52, 211, 153, 0.14)",
+            borderColor: trendColor,
+            backgroundColor: trendFill,
             fill: true,
-            tension: 0.22,
+            tension: 0.2,
             pointRadius: 0,
             pointHoverRadius: 3
+          },
+          {
+            label: "20MA",
+            data: payload.sp500TrendChart.ma20 || [],
+            borderColor: "rgba(200, 145, 36, 0.72)",
+            borderDash: [5, 5],
+            fill: false,
+            tension: 0.18,
+            pointRadius: 0,
+            pointHoverRadius: 0
+          },
+          {
+            label: "60MA",
+            data: payload.sp500TrendChart.ma60 || [],
+            borderColor: "rgba(94, 139, 191, 0.52)",
+            borderDash: [3, 6],
+            fill: false,
+            tension: 0.18,
+            pointRadius: 0,
+            pointHoverRadius: 0
+          },
+          {
+            label: "250MA",
+            data: payload.sp500TrendChart.ma250 || [],
+            borderColor: "rgba(110, 99, 87, 0.42)",
+            fill: false,
+            tension: 0.18,
+            pointRadius: 0,
+            pointHoverRadius: 0
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+          duration: 900,
+          easing: "easeOutCubic"
+        },
         interaction: {
           mode: "index",
           intersect: false
@@ -291,7 +523,7 @@
         scales: {
           x: {
             grid: {
-              display: false
+              color: "rgba(84, 73, 61, 0.14)"
             },
             ticks: {
               maxTicksLimit: 6
@@ -306,8 +538,22 @@
           }
         },
         plugins: {
+          verticalHoverLine: {
+            color: "rgba(84, 73, 61, 0.22)"
+          },
           legend: {
-            display: false
+            display: true,
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            boxPadding: 4,
+            bodySpacing: 4,
+            titleSpacing: 4,
+            padding: 10
           }
         }
       }
@@ -366,17 +612,43 @@
     chartRelayoutNeedsRebuild = false;
   }
 
+  function replayFearGreedNeedleIfPulseVisible() {
+    if (activeTabId !== "pulse") return;
+    if (!fearGreedGauge || !fearGreedGauge.getClientRects().length) return;
+    animateFearGreedNeedle();
+  }
+
+  function runChartRelayout(shouldReplayGauge) {
+    rebuildOrRefreshCharts();
+    if (shouldReplayGauge) {
+      replayFearGreedNeedleIfPulseVisible();
+    }
+  }
+
   function scheduleChartRelayout(forceRebuild) {
+    const shouldReplayGauge = Boolean(forceRebuild);
+    const requestId = chartRelayoutRequestId + 1;
+    chartRelayoutRequestId = requestId;
     chartRelayoutNeedsRebuild = chartRelayoutNeedsRebuild || Boolean(forceRebuild);
     if (chartRelayoutTimeoutId) {
       window.clearTimeout(chartRelayoutTimeoutId);
+      chartRelayoutTimeoutId = null;
     }
     window.requestAnimationFrame(function () {
       window.requestAnimationFrame(function () {
-        rebuildOrRefreshCharts();
+        if (requestId !== chartRelayoutRequestId) return;
+        if (chartRelayoutTimeoutId) {
+          window.clearTimeout(chartRelayoutTimeoutId);
+          chartRelayoutTimeoutId = null;
+        }
+        runChartRelayout(shouldReplayGauge);
       });
     });
-    chartRelayoutTimeoutId = window.setTimeout(rebuildOrRefreshCharts, 160);
+    chartRelayoutTimeoutId = window.setTimeout(function () {
+      if (requestId !== chartRelayoutRequestId) return;
+      chartRelayoutTimeoutId = null;
+      runChartRelayout(shouldReplayGauge);
+    }, 160);
   }
 
   function activateTab(tabId) {
@@ -447,6 +719,9 @@
   function showInfoTooltip(trigger) {
     const tooltipText = [trigger.dataset.tooltipZh, trigger.dataset.tooltipEn]
       .filter(Boolean)
+      .filter(function (text, index, list) {
+        return list.indexOf(text) === index;
+      })
       .join("\n");
     if (!tooltipText) return;
 

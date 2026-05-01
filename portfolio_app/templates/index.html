@@ -475,7 +475,7 @@
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
                             <div>
-                                <h3>市場情緒 / Market Sentiment</h3>
+                                <h3>CNN Fear &amp; Greed Index · 市場情緒</h3>
                             </div>
                             <a
                                 class="panel-source-link"
@@ -505,7 +505,7 @@
                                 </div>
                             </div>
                             <div class="sentiment-gauge-card">
-                                <div class="fear-greed-gauge" style="--gauge-rotation: {{ market_sentiment.gauge_rotation_deg }}deg;">
+                                <div class="fear-greed-gauge" data-score="{{ market_sentiment.score if market_sentiment.score is not none else '' }}">
                                     <svg viewBox="0 0 320 178" role="img" aria-label="Fear and Greed gauge">
                                         <path class="fear-greed-segment is-extreme-fear{% if market_sentiment.gauge_level == 'extreme-fear' %} is-active{% endif %}" d="M34 156 A126 126 0 0 1 70.9 66.9"></path>
                                         <path class="fear-greed-segment is-fear{% if market_sentiment.gauge_level == 'fear' %} is-active{% endif %}" d="M70.9 66.9 A126 126 0 0 1 140.3 31.6"></path>
@@ -559,7 +559,7 @@
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
                             <div>
-                                <h3>大盤趨勢 / Market Trend</h3>
+                                <h3>S&amp;P 500 Technical Trend · 大盤趨勢</h3>
                             </div>
                             <a
                                 class="panel-source-link"
@@ -577,36 +577,57 @@
                                 </svg>
                             </a>
                         </div>
+                        <div class="market-trend-hero">
+                            <div>
+                                <span class="market-trend-kicker">S&amp;P 500 Current Price</span>
+                                <div class="market-trend-price-row">
+                                    <strong class="market-trend-price">{{ market_trend.price_str }}</strong>
+                                    <span class="pill is-{{ market_trend.status.tone }}">{{ market_trend.status.label_zh }}</span>
+                                </div>
+                                <p class="market-trend-status-copy">{{ market_trend.status.summary_zh }}</p>
+                            </div>
+                            <div class="market-trend-status-en">{{ market_trend.status.label_en }}</div>
+                        </div>
                         <div class="market-valuation-strip">
                             <div class="market-valuation-card">
                                 <span>S&amp;P 500 Trailing P/E ・ 實際本益比</span>
-                                <strong>{{ market_trend.trailing_pe.value_str }}</strong>
-                                <small>{{ market_trend.trailing_pe.valuation }}</small>
+                                <div class="market-valuation-value-row">
+                                    <strong>{{ market_trend.trailing_pe.value_str }}</strong>
+                                    <small>{{ market_trend.trailing_pe.valuation }}</small>
+                                </div>
                             </div>
                             <div class="market-valuation-stat">
                                 <span>Previous / 前值</span>
-                                <strong>{{ market_trend.trailing_pe.prev_value_str }}</strong>
-                                <small>{{ market_trend.trailing_pe.date }}</small>
+                                <div class="market-valuation-value-row">
+                                    <strong>{{ market_trend.trailing_pe.prev_value_str }}</strong>
+                                    <small>{{ market_trend.trailing_pe.date }}</small>
+                                </div>
                             </div>
                             <div class="market-valuation-stat">
                                 <span>Delta / 變動</span>
-                                <strong>{{ market_trend.trailing_pe.delta_str }}</strong>
-                                <small>{{ market_trend.trailing_pe.date }}</small>
+                                <div class="market-valuation-value-row">
+                                    <strong>{{ market_trend.trailing_pe.delta_str }}</strong>
+                                    <small>{{ market_trend.trailing_pe.date }}</small>
+                                </div>
                             </div>
                         </div>
                         <div class="market-trend-layout">
                             <div class="market-trend-stats">
-                                <div class="market-trend-price">{{ market_trend.price_str }}</div>
-                                <p class="market-trend-price-label">S&amp;P 500 Current Price</p>
                                 <div class="market-trend-signal-list">
                                     {% for signal in market_trend.signals %}
-                                    <div class="market-trend-signal-row">
-                                        <div class="market-trend-signal-copy">
-                                            <span>{{ signal.label_zh }} ({{ signal.label_en }})</span>
-                                            <span class="pill is-{{ signal.tone }}">{{ signal.status }}</span>
+                                    <article class="market-trend-signal-card is-{{ signal.tone }}">
+                                        <div class="market-trend-signal-heading">
+                                            <div class="market-trend-signal-label-row">
+                                                <span>{{ signal.label_zh }}</span>
+                                                <span class="pill is-{{ signal.tone }}">{{ signal.status }}</span>
+                                            </div>
+                                            <small>{{ signal.label_en }}</small>
                                         </div>
-                                        <strong>{{ signal.value }}</strong>
-                                    </div>
+                                        <div class="market-trend-signal-values">
+                                            <strong>{{ signal.value }}</strong>
+                                            <small>{{ signal.distance }}</small>
+                                        </div>
+                                    </article>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -619,16 +640,16 @@
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
                             <div>
-                                <h3>抄底訊號 / Dip Signals</h3>
+                                <h3>Dip-Buying Strategy Indicators · 抄底訊號</h3>
                             </div>
                             <a
                                 class="panel-source-link"
                                 href="https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="Open signal data sources"
-                                data-tooltip-zh="CNN / FINRA / Multpl signal inputs"
-                                data-tooltip-en="Open FINRA margin statistics"
+                                aria-label="Open FINRA Margin Statistics"
+                                data-tooltip-zh="Open FINRA Margin Statistics"
+                                data-tooltip-en="Open FINRA Margin Statistics"
                             >
                                 <svg viewBox="0 0 24 24" role="presentation" focusable="false">
                                     <path d="M14 5h5v5"></path>
@@ -639,12 +660,34 @@
                         </div>
                         <div class="dip-signal-grid">
                             {% for card in dip_signals %}
-                            <article class="dip-signal-card">
+                            <article class="dip-signal-card is-{{ card.status_tone }}">
                                 <div class="dip-signal-title-row">
-                                    <p class="dip-signal-title">{{ card.title_zh }} / {{ card.title_en }}</p>
+                                    <div>
+                                        <p class="dip-signal-title">{{ card.title_zh }} / {{ card.title_en }}</p>
+                                    </div>
                                     <span class="info-chip" tabindex="0" aria-label="{{ card.title_en }} help" data-tooltip-zh="{{ card.tooltip_zh }}" data-tooltip-en="{{ card.tooltip_en }}">?</span>
                                 </div>
-                                <strong class="dip-signal-value">{{ card.value }}</strong>
+                                <div class="dip-signal-value-row">
+                                    <strong class="dip-signal-value">{{ card.value }}</strong>
+                                    {%- if card.side_stats %}
+                                    <div class="dip-signal-side-stats">
+                                        {%- for side_item in card.side_stats %}
+                                        <div class="dip-signal-side-stat">
+                                            <span>{{ side_item.label }}</span>
+                                            <strong class="is-{{ side_item.tone }}">{{ side_item.value }}</strong>
+                                        </div>
+                                        {%- endfor %}
+                                    </div>
+                                    {%- endif %}
+                                </div>
+                                <div class="dip-signal-meta-grid">
+                                    {%- for item in card.meta %}
+                                    <div class="dip-signal-meta-item"{% if item.tooltip_zh %} tabindex="0" data-tooltip-zh="{{ item.tooltip_zh }}" data-tooltip-en=""{% endif %}>
+                                        <span>{{ item.label }}</span>
+                                        <strong class="is-{{ item.tone }}">{{ item.value }}</strong>
+                                    </div>
+                                    {%- endfor %}
+                                </div>
                             </article>
                             {% endfor %}
                         </div>

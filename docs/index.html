@@ -16,7 +16,7 @@
             }
         }());
     </script>
-    <link rel="stylesheet" href="static/styles.css?v=10351d91c9">
+    <link rel="stylesheet" href="static/styles.css?v=4983b0e57b">
 
     <link rel="icon" href="static/favicon.ico?v=e3c187e350" sizes="any">
 
@@ -37,7 +37,7 @@
 
     <meta name="theme-color" content="#f7fbff">
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script defer src="static/app.js?v=34de7ad8d7"></script>
+    <script defer src="static/app.js?v=92a375c2e7"></script>
 </head>
 <body>
     <div class="site-shell">
@@ -60,7 +60,7 @@
                     <span class="updated-at-label">Last updated</span>
                     <time class="updated-at-value">
                         <span class="updated-at-date">2026-05-01</span>
-                        <span class="updated-at-time">16:11 (Taipei)</span>
+                        <span class="updated-at-time">21:19 (Taipei)</span>
                     </time>
                 </p>
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
@@ -846,7 +846,7 @@
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
                             <div>
-                                <h3>市場情緒 / Market Sentiment</h3>
+                                <h3>CNN Fear &amp; Greed Index · 市場情緒</h3>
                             </div>
                             <a
                                 class="panel-source-link"
@@ -854,7 +854,7 @@
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 aria-label="Open CNN Fear &amp; Greed Index"
-                                data-tooltip-zh="CNN Fear &amp; Greed Index"
+                                data-tooltip-zh="Open CNN Fear &amp; Greed Index"
                                 data-tooltip-en="Open CNN Fear &amp; Greed Index"
                             >
                                 <svg viewBox="0 0 24 24" role="presentation" focusable="false">
@@ -876,7 +876,7 @@
                                 </div>
                             </div>
                             <div class="sentiment-gauge-card">
-                                <div class="fear-greed-gauge" style="--gauge-rotation: -90deg;">
+                                <div class="fear-greed-gauge" data-score="">
                                     <svg viewBox="0 0 320 178" role="img" aria-label="Fear and Greed gauge">
                                         <path class="fear-greed-segment is-extreme-fear" d="M34 156 A126 126 0 0 1 70.9 66.9"></path>
                                         <path class="fear-greed-segment is-fear" d="M70.9 66.9 A126 126 0 0 1 140.3 31.6"></path>
@@ -954,16 +954,16 @@
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
                             <div>
-                                <h3>大盤趨勢 / Market Trend</h3>
+                                <h3>S&amp;P 500 Technical Trend · 大盤趨勢</h3>
                             </div>
                             <a
                                 class="panel-source-link"
                                 href="https://finance.yahoo.com/quote/%5EGSPC/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="Open Yahoo Finance S&amp;P 500 quote"
-                                data-tooltip-zh="Yahoo Finance S&amp;P 500 + Multpl Trailing P/E"
-                                data-tooltip-en="Open Yahoo Finance S&amp;P 500 quote"
+                                aria-label="Open Yahoo Finance S&amp;P 500 Quote"
+                                data-tooltip-zh="Open Yahoo Finance S&amp;P 500 Quote"
+                                data-tooltip-en="Open Yahoo Finance S&amp;P 500 Quote"
                             >
                                 <svg viewBox="0 0 24 24" role="presentation" focusable="false">
                                     <path d="M14 5h5v5"></path>
@@ -972,60 +972,99 @@
                                 </svg>
                             </a>
                         </div>
+                        <div class="market-trend-hero">
+                            <div>
+                                <span class="market-trend-kicker">S&amp;P 500 Current Price</span>
+                                <div class="market-trend-price-row">
+                                    <strong class="market-trend-price">N/A</strong>
+                                    <span class="pill is-gain">多頭延伸</span>
+                                </div>
+                                <p class="market-trend-status-copy">價格站上主要均線，趨勢仍偏強。</p>
+                            </div>
+                            <div class="market-trend-status-en">Bullish</div>
+                        </div>
                         <div class="market-valuation-strip">
                             <div class="market-valuation-card">
                                 <span>S&amp;P 500 Trailing P/E ・ 實際本益比</span>
-                                <strong>N/A</strong>
-                                <small>N/A</small>
+                                <div class="market-valuation-value-row">
+                                    <strong>N/A</strong>
+                                    <small>N/A</small>
+                                </div>
                             </div>
                             <div class="market-valuation-stat">
                                 <span>Previous / 前值</span>
-                                <strong>N/A</strong>
-                                <small>N/A</small>
+                                <div class="market-valuation-value-row">
+                                    <strong>N/A</strong>
+                                    <small>N/A</small>
+                                </div>
                             </div>
                             <div class="market-valuation-stat">
                                 <span>Delta / 變動</span>
-                                <strong>N/A</strong>
-                                <small>N/A</small>
+                                <div class="market-valuation-value-row">
+                                    <strong>N/A</strong>
+                                    <small>N/A</small>
+                                </div>
                             </div>
                         </div>
                         <div class="market-trend-layout">
                             <div class="market-trend-stats">
-                                <div class="market-trend-price">N/A</div>
-                                <p class="market-trend-price-label">S&amp;P 500 Current Price</p>
                                 <div class="market-trend-signal-list">
                                     
-                                    <div class="market-trend-signal-row">
-                                        <div class="market-trend-signal-copy">
-                                            <span>月線 (20MA)</span>
-                                            <span class="pill is-gain">有守</span>
+                                    <article class="market-trend-signal-card is-gain">
+                                        <div class="market-trend-signal-heading">
+                                            <div class="market-trend-signal-label-row">
+                                                <span>月線</span>
+                                                <span class="pill is-gain">有守</span>
+                                            </div>
+                                            <small>20MA</small>
                                         </div>
-                                        <strong>N/A</strong>
-                                    </div>
+                                        <div class="market-trend-signal-values">
+                                            <strong>N/A</strong>
+                                            <small>N/A</small>
+                                        </div>
+                                    </article>
                                     
-                                    <div class="market-trend-signal-row">
-                                        <div class="market-trend-signal-copy">
-                                            <span>季線 (60MA)</span>
-                                            <span class="pill is-gain">有守</span>
+                                    <article class="market-trend-signal-card is-gain">
+                                        <div class="market-trend-signal-heading">
+                                            <div class="market-trend-signal-label-row">
+                                                <span>季線</span>
+                                                <span class="pill is-gain">有守</span>
+                                            </div>
+                                            <small>60MA</small>
                                         </div>
-                                        <strong>N/A</strong>
-                                    </div>
+                                        <div class="market-trend-signal-values">
+                                            <strong>N/A</strong>
+                                            <small>N/A</small>
+                                        </div>
+                                    </article>
                                     
-                                    <div class="market-trend-signal-row">
-                                        <div class="market-trend-signal-copy">
-                                            <span>年線 (250MA)</span>
-                                            <span class="pill is-gain">有守</span>
+                                    <article class="market-trend-signal-card is-gain">
+                                        <div class="market-trend-signal-heading">
+                                            <div class="market-trend-signal-label-row">
+                                                <span>年線</span>
+                                                <span class="pill is-gain">有守</span>
+                                            </div>
+                                            <small>250MA</small>
                                         </div>
-                                        <strong>N/A</strong>
-                                    </div>
+                                        <div class="market-trend-signal-values">
+                                            <strong>N/A</strong>
+                                            <small>N/A</small>
+                                        </div>
+                                    </article>
                                     
-                                    <div class="market-trend-signal-row">
-                                        <div class="market-trend-signal-copy">
-                                            <span>五年線 (1250MA)</span>
-                                            <span class="pill is-gain">有守</span>
+                                    <article class="market-trend-signal-card is-gain">
+                                        <div class="market-trend-signal-heading">
+                                            <div class="market-trend-signal-label-row">
+                                                <span>五年線</span>
+                                                <span class="pill is-gain">有守</span>
+                                            </div>
+                                            <small>1250MA</small>
                                         </div>
-                                        <strong>N/A</strong>
-                                    </div>
+                                        <div class="market-trend-signal-values">
+                                            <strong>N/A</strong>
+                                            <small>N/A</small>
+                                        </div>
+                                    </article>
                                     
                                 </div>
                             </div>
@@ -1038,16 +1077,16 @@
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
                             <div>
-                                <h3>抄底訊號 / Dip Signals</h3>
+                                <h3>Dip-Buying Strategy Indicators · 抄底訊號</h3>
                             </div>
                             <a
                                 class="panel-source-link"
                                 href="https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="Open signal data sources"
-                                data-tooltip-zh="CNN / FINRA / Multpl signal inputs"
-                                data-tooltip-en="Open FINRA margin statistics"
+                                aria-label="Open FINRA Margin Statistics"
+                                data-tooltip-zh="Open FINRA Margin Statistics"
+                                data-tooltip-en="Open FINRA Margin Statistics"
                             >
                                 <svg viewBox="0 0 24 24" role="presentation" focusable="false">
                                     <path d="M14 5h5v5"></path>
@@ -1058,36 +1097,114 @@
                         </div>
                         <div class="dip-signal-grid">
                             
-                            <article class="dip-signal-card">
+                            <article class="dip-signal-card is-muted">
                                 <div class="dip-signal-title-row">
-                                    <p class="dip-signal-title">波動率指數 / VIX</p>
-                                    <span class="info-chip" tabindex="0" aria-label="VIX help" data-tooltip-zh="CNN Fear &amp; Greed 的市場波動子指標。數字越高，市場越偏向避險。" data-tooltip-en="CNN volatility component. Higher readings usually mean risk-off sentiment.">?</span>
+                                    <div>
+                                        <p class="dip-signal-title">波動率指數 / VIX</p>
+                                    </div>
+                                    <span class="info-chip" tabindex="0" aria-label="VIX help" data-tooltip-zh="衡量市場對未來波動的定價；越高代表避險和恐慌需求越強。" data-tooltip-en="">?</span>
                                 </div>
-                                <strong class="dip-signal-value">N/A</strong>
+                                <div class="dip-signal-value-row">
+                                    <strong class="dip-signal-value">N/A</strong>
+                                </div>
+                                <div class="dip-signal-meta-grid">
+                                    <div class="dip-signal-meta-item" tabindex="0" data-tooltip-zh="• 低於 15：平靜
+• 15-20：正常
+• 20-30：緊張
+• 30 以上：恐慌" data-tooltip-en="">
+                                        <span>目前區域</span>
+                                        <strong class="is-muted">資料不足</strong>
+                                    </div>
+                                    <div class="dip-signal-meta-item">
+                                        <span>抄底意義</span>
+                                        <strong class="is-muted">高波動才有恐慌折價</strong>
+                                    </div>
+                                </div>
                             </article>
                             
-                            <article class="dip-signal-card">
+                            <article class="dip-signal-card is-muted">
                                 <div class="dip-signal-title-row">
-                                    <p class="dip-signal-title">賣權買權比 / Put / Call</p>
-                                    <span class="info-chip" tabindex="0" aria-label="Put / Call help" data-tooltip-zh="CNN Fear &amp; Greed 的選擇權情緒子指標。數字偏高通常代表避險需求上升。" data-tooltip-en="CNN options positioning component. Higher readings often imply more hedging demand.">?</span>
+                                    <div>
+                                        <p class="dip-signal-title">賣權買權比 / Put / Call</p>
+                                    </div>
+                                    <span class="info-chip" tabindex="0" aria-label="Put / Call help" data-tooltip-zh="觀察選擇權市場避險需求；數字升高通常代表投資人更想買保護。" data-tooltip-en="">?</span>
                                 </div>
-                                <strong class="dip-signal-value">N/A</strong>
+                                <div class="dip-signal-value-row">
+                                    <strong class="dip-signal-value">N/A</strong>
+                                </div>
+                                <div class="dip-signal-meta-grid">
+                                    <div class="dip-signal-meta-item" tabindex="0" data-tooltip-zh="• 低於 0.75：偏貪婪
+• 0.75-1.0：中性
+• 1.0-1.2：避險升溫
+• 1.2 以上：恐懼" data-tooltip-en="">
+                                        <span>目前區域</span>
+                                        <strong class="is-muted">資料不足</strong>
+                                    </div>
+                                    <div class="dip-signal-meta-item">
+                                        <span>抄底意義</span>
+                                        <strong class="is-muted">避險升溫時較有反向訊號</strong>
+                                    </div>
+                                </div>
                             </article>
                             
-                            <article class="dip-signal-card">
+                            <article class="dip-signal-card is-gain">
                                 <div class="dip-signal-title-row">
-                                    <p class="dip-signal-title">融資餘額 / Margin Debt</p>
-                                    <span class="info-chip" tabindex="0" aria-label="Margin Debt help" data-tooltip-zh="FINRA 最新月份 Mar-26，月變動 -2.58%。" data-tooltip-en="FINRA latest month Mar-26, month-over-month -2.58%.">?</span>
+                                    <div>
+                                        <p class="dip-signal-title">融資餘額 / Margin Debt</p>
+                                    </div>
+                                    <span class="info-chip" tabindex="0" aria-label="Margin Debt help" data-tooltip-zh="追蹤市場槓桿資金規模；快速增加偏熱，急速下降常見於去槓桿壓力。" data-tooltip-en="">?</span>
                                 </div>
-                                <strong class="dip-signal-value">1,220,922</strong>
+                                <div class="dip-signal-value-row">
+                                    <strong class="dip-signal-value">1,220,922</strong>
+                                    <div class="dip-signal-side-stats">
+                                        <div class="dip-signal-side-stat">
+                                            <span>最新月份</span>
+                                            <strong class="is-muted">Mar-26</strong>
+                                        </div>
+                                        <div class="dip-signal-side-stat">
+                                            <span>月變動</span>
+                                            <strong class="is-gain">-2.58%</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dip-signal-meta-grid">
+                                    <div class="dip-signal-meta-item" tabindex="0" data-tooltip-zh="• 高於 +3%：槓桿升溫
+• -3% 到 +3%：溫和
+• 低於 -3%：去槓桿" data-tooltip-en="">
+                                        <span>目前區域</span>
+                                        <strong class="is-gain">溫和</strong>
+                                    </div>
+                                    <div class="dip-signal-meta-item">
+                                        <span>抄底意義</span>
+                                        <strong class="is-muted">去槓桿後更接近清洗</strong>
+                                    </div>
+                                </div>
                             </article>
                             
-                            <article class="dip-signal-card">
+                            <article class="dip-signal-card is-muted">
                                 <div class="dip-signal-title-row">
-                                    <p class="dip-signal-title">席勒本益比 / Shiller P/E</p>
-                                    <span class="info-chip" tabindex="0" aria-label="Shiller P/E help" data-tooltip-zh="Multpl 十年平滑本益比，目前估值區間為 N/A。" data-tooltip-en="Multpl cyclically adjusted valuation. Current zone: N/A.">?</span>
+                                    <div>
+                                        <p class="dip-signal-title">席勒本益比 / Shiller P/E</p>
+                                    </div>
+                                    <span class="info-chip" tabindex="0" aria-label="Shiller P/E help" data-tooltip-zh="用十年平均盈餘平滑景氣循環，判斷大盤長期估值是否昂貴。" data-tooltip-en="">?</span>
                                 </div>
-                                <strong class="dip-signal-value">N/A</strong>
+                                <div class="dip-signal-value-row">
+                                    <strong class="dip-signal-value">N/A</strong>
+                                </div>
+                                <div class="dip-signal-meta-grid">
+                                    <div class="dip-signal-meta-item" tabindex="0" data-tooltip-zh="• 30 以上：泡沫高估區
+• 25-30：偏貴
+• 20-25：中性偏高
+• 15-20：合理偏便宜
+• 15 以下：十年一遇歷史大底" data-tooltip-en="">
+                                        <span>目前區域</span>
+                                        <strong class="is-muted">N/A</strong>
+                                    </div>
+                                    <div class="dip-signal-meta-item">
+                                        <span>抄底意義</span>
+                                        <strong class="is-muted">估值越低，長期安全邊際越高</strong>
+                                    </div>
+                                </div>
                             </article>
                             
                         </div>
@@ -1141,6 +1258,6 @@
         </footer>
     </div>
 
-    <script id="app-payload" type="application/json">{"fearGreedChart": {"data": [], "labels": []}, "holdingsChart": {"colors": ["#de8b5f", "#97b79d", "#81a3ca", "#dfbe76", "#ad98c8"], "companyNames": ["NVDA", "GOOG", "CRCL", "MU", "INTC"], "data": [75.0, 75.0, 59.0, 58.92, 39.98], "labels": ["NVDA", "GOOG", "CRCL", "MU", "INTC"]}, "sp500TrendChart": {"data": [], "labels": []}, "tabs": ["overview", "details", "pulse"]}</script>
+    <script id="app-payload" type="application/json">{"fearGreedChart": {"data": [], "labels": []}, "holdingsChart": {"colors": ["#de8b5f", "#97b79d", "#81a3ca", "#dfbe76", "#ad98c8"], "companyNames": ["NVDA", "GOOG", "CRCL", "MU", "INTC"], "data": [75.0, 75.0, 59.0, 58.92, 39.98], "labels": ["NVDA", "GOOG", "CRCL", "MU", "INTC"]}, "sp500TrendChart": {"data": [], "labels": [], "ma20": [], "ma250": [], "ma60": [], "tone": "gain"}, "tabs": ["overview", "details", "pulse"]}</script>
 </body>
 </html>

@@ -92,15 +92,23 @@ def _stub_snapshot_dependencies(monkeypatch):
         lambda: {
             "price_str": "7165.08",
             "ma20_str": "6834.03",
+            "ma20": 6834.03,
             "ma60_str": "6812.12",
+            "ma60": 6812.12,
             "ma250_str": "6551.31",
+            "ma250": 6551.31,
             "ma1250_str": "5044.10",
+            "ma1250": 5044.10,
             "broken_20": False,
             "broken_60": False,
             "broken_250": False,
             "broken_1250": False,
             "chart_labels": ["25/04/28", "25/04/29"],
             "chart_points": [7010.12, 7165.08],
+            "chart_ma20_points": [6810.11, 6834.03],
+            "chart_ma60_points": [6790.10, 6812.12],
+            "chart_ma250_points": [6548.32, 6551.31],
+            "price": 7165.08,
         },
     )
 
@@ -152,9 +160,24 @@ def test_build_portfolio_snapshot_uses_generated_realized_metrics(tmp_path, monk
     assert result["market_sentiment"]["gauge_level"] == "greed"
     assert result["market_sentiment"]["history_cards"][0]["label_zh"] == "前收盤"
     assert result["market_trend"]["price_str"] == "7165.08"
+    assert result["market_trend"]["status"]["label_zh"] == "多頭延伸"
+    assert result["market_trend"]["signals"][0]["distance"] == "+4.84%"
     assert result["dip_signals"][2]["value"] == "1,225,597"
     assert result["frontend_payload"]["sp500TrendChart"]["data"] == [7010.12, 7165.08]
+    assert result["frontend_payload"]["sp500TrendChart"]["ma20"] == [6810.11, 6834.03]
+    assert result["frontend_payload"]["sp500TrendChart"]["tone"] == "gain"
     assert result["frontend_payload"]["holdingsChart"]["colors"] == ["#de8b5f"]
+    assert result["dip_signals"][0]["status_label"] == "正常"
+    assert "定義" not in result["dip_signals"][0]["tooltip_zh"]
+    assert result["dip_signals"][0]["meta"][0]["tooltip_zh"].startswith("• 低於 15")
+    assert result["dip_signals"][2]["side_stats"][0]["value"] == "Dec-25"
+    assert result["dip_signals"][2]["side_stats"][1] == {
+        "label": "月變動",
+        "value": "+0.93%",
+        "tone": "gain",
+    }
+    assert result["dip_signals"][2]["meta"][0]["label"] == "目前區域"
+    assert result["dip_signals"][3]["status_label"] == "泡沫高估區"
 
 
 def test_build_portfolio_snapshot_treats_matching_truncated_fear_greed_score_as_flat(monkeypatch):

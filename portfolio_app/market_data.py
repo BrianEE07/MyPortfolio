@@ -432,17 +432,33 @@ def fetch_sp500_historical():
                 ma1250 = sum(close_values[-1250:]) / 1250 if len(close_values) >= 1250 else None
 
                 chart_data = valid[-250:]
+                chart_start_index = len(close_values) - len(chart_data)
                 labels = [
                     datetime.fromtimestamp(ts, tz=_timezone()).strftime("%y/%m/%d")
                     for ts, _ in chart_data
                 ]
                 points = [round(value, 2) for _, value in chart_data]
 
+                def rolling_points(window):
+                    values = []
+                    for index in range(chart_start_index, len(close_values)):
+                        if index + 1 < window:
+                            values.append(None)
+                            continue
+                        window_values = close_values[index + 1 - window:index + 1]
+                        values.append(round(sum(window_values) / window, 2))
+                    return values
+
                 return {
+                    "price": current_price,
                     "price_str": f"{current_price:.2f}",
+                    "ma20": ma20,
                     "ma20_str": f"{ma20:.2f}" if ma20 else "N/A",
+                    "ma60": ma60,
                     "ma60_str": f"{ma60:.2f}" if ma60 else "N/A",
+                    "ma250": ma250,
                     "ma250_str": f"{ma250:.2f}" if ma250 else "N/A",
+                    "ma1250": ma1250,
                     "ma1250_str": f"{ma1250:.2f}" if ma1250 else "N/A",
                     "broken_20": current_price < ma20 if ma20 else False,
                     "broken_60": current_price < ma60 if ma60 else False,
@@ -450,6 +466,9 @@ def fetch_sp500_historical():
                     "broken_1250": current_price < ma1250 if ma1250 else False,
                     "chart_labels": labels,
                     "chart_points": points,
+                    "chart_ma20_points": rolling_points(20),
+                    "chart_ma60_points": rolling_points(60),
+                    "chart_ma250_points": rolling_points(250),
                 }
     except Exception as exc:
         print(f"Error fetching S&P 500 historical data: {exc}")
@@ -797,7 +816,7 @@ def cached_finra_margin(ttl=_TTL_NORMAL):
     return data
 
 
-def fetch_cnn_fear_greed(days=370):
+def fetch_cnn_fear_greed(days=365):
     now_local = datetime.now(_timezone())
     start_date = (now_local - timedelta(days=days)).strftime("%Y-%m-%d")
     url = f"{CNN_FNG_BASE_URL}{start_date}"
@@ -816,7 +835,7 @@ def fetch_cnn_fear_greed(days=370):
             if timestamp is None or value is None:
                 continue
             dt = datetime.fromtimestamp(int(timestamp) / 1000, tz=_timezone())
-            chart_points.append({"dt": dt, "date": dt.strftime("%m/%d"), "value": float(value)})
+            chart_points.append({"dt": dt, "date": dt.strftime("%y/%m/%d"), "value": float(value)})
 
         current_value = current_block.get("score")
         if current_value is None and chart_points:
@@ -859,7 +878,8 @@ def fetch_cnn_fear_greed(days=370):
                 "rating": fear_greed_label(year_score) if year_score is not None else "N/A",
             }
 
-        recent_chart_points = chart_points[-90:]
+        chart_start_dt = now_local - timedelta(days=365)
+        recent_chart_points = [point for point in chart_points if point["dt"] >= chart_start_dt]
         vix_data = data.get("market_volatility_vix", {}).get("data", [])
         latest_vix = vix_data[-1].get("y") if vix_data else None
         put_call_data = data.get("put_call_options", {}).get("data", [])
@@ -909,6 +929,6 @@ def cached_fear_greed(ttl=_TTL_NORMAL):
     now = _now()
     if entry and (now - entry["ts"] < ttl):
         return entry["data"]
-    data = fetch_cnn_fear_greed(days=90)
+    data = fetch_cnn_fear_greed(days=365)
     _set_cache(key, {"ts": now, "data": data})
     return data
