@@ -17,12 +17,25 @@
         }());
     </script>
     <link rel="stylesheet" href="{{ styles_url }}">
-    {% if favicon_url %}
-    <link rel="icon" type="image/png" href="{{ favicon_url }}">
-    {% endif %}
-    {% if apple_touch_icon_url %}
-    <link rel="apple-touch-icon" href="{{ apple_touch_icon_url }}">
-    {% endif %}
+{% if favicon_ico_url %}
+    <link rel="icon" href="{{ favicon_ico_url }}" sizes="any">
+{% endif %}
+{% if favicon_32_url %}
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ favicon_32_url }}">
+{% endif %}
+{% if favicon_16_url %}
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ favicon_16_url }}">
+{% endif %}
+{% if favicon_url %}
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ favicon_url }}">
+{% endif %}
+{% if apple_touch_icon_url %}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ apple_touch_icon_url }}">
+{% endif %}
+{% if manifest_url %}
+    <link rel="manifest" href="{{ manifest_url }}">
+{% endif %}
+    <meta name="theme-color" content="#f7fbff">
     <script defer src="{{ chart_js_url }}"></script>
     <script defer src="{{ app_js_url }}"></script>
 </head>

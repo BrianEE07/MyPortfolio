@@ -5,6 +5,14 @@ This file is now the entry index for split version notes.
 Small releases are recorded under [docs/version-notes/](./version-notes/) so each version can be reviewed on its own without reopening one long running log.
 
 ## Timeline
+- [v1.3.3](./version-notes/v1.3.3.md)
+  Rebuilt favicon and Apple touch icon assets without dark rounded-corner canvases, and added standard favicon/manifest entries.
+- [v1.3.2](./version-notes/v1.3.2.md)
+  Category-chip interaction polish so narrow layouts reset cleanly and keep the selected filter visible.
+- [v1.3.1](./version-notes/v1.3.1.md)
+  Stock Details composition controls refinement, sector-based category labels, and multi-category preview workflow.
+- [v1.3.0](./version-notes/v1.3.0.md)
+  Market Pulse refresh, Stock Details composition filtering, and first standard favicon direction.
 - [v1.2.2](./version-notes/v1.2.2.md)
   Added signed overview P&L amounts, renamed overview P/L labels to P&L, and swapped the Alpha/Beta card order.
 - [v1.2.1](./version-notes/v1.2.1.md)

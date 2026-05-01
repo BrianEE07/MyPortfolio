@@ -39,8 +39,12 @@ def create_app():
             styles_url=_asset_url("styles.css"),
             app_js_url=_asset_url("app.js"),
             chart_js_url=CHART_JS_URL,
+            favicon_ico_url=_optional_asset_url("favicon.ico"),
+            favicon_32_url=_optional_asset_url("favicon-32.png"),
+            favicon_16_url=_optional_asset_url("favicon-16.png"),
             favicon_url=_optional_asset_url("favicon.png"),
             apple_touch_icon_url=_optional_asset_url("apple-touch-icon.png"),
+            manifest_url=_optional_asset_url("site.webmanifest"),
         )
 
     @app.get("/health")
@@ -61,8 +65,12 @@ def render_portfolio_html(static_mode=False):
             styles_url=_asset_url("styles.css", static_mode=static_mode),
             app_js_url=_asset_url("app.js", static_mode=static_mode),
             chart_js_url=CHART_JS_URL,
+            favicon_ico_url=_optional_asset_url("favicon.ico", static_mode=static_mode),
+            favicon_32_url=_optional_asset_url("favicon-32.png", static_mode=static_mode),
+            favicon_16_url=_optional_asset_url("favicon-16.png", static_mode=static_mode),
             favicon_url=_optional_asset_url("favicon.png", static_mode=static_mode),
             apple_touch_icon_url=_optional_asset_url("apple-touch-icon.png", static_mode=static_mode),
+            manifest_url=_optional_asset_url("site.webmanifest", static_mode=static_mode),
         )
 
 
@@ -70,7 +78,18 @@ def _copy_static_assets(destination_directory: Path):
     static_directory = Path(app.static_folder)
     output_static_directory = destination_directory / "static"
     output_static_directory.mkdir(parents=True, exist_ok=True)
-    asset_names = ["styles.css", "app.js", "favicon.png", "apple-touch-icon.png"]
+    asset_names = [
+        "styles.css",
+        "app.js",
+        "favicon.ico",
+        "favicon.png",
+        "favicon-192.png",
+        "favicon-64.png",
+        "favicon-32.png",
+        "favicon-16.png",
+        "apple-touch-icon.png",
+        "site.webmanifest",
+    ]
     for asset_name in asset_names:
         asset_path = static_directory / asset_name
         if asset_path.exists():
