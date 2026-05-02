@@ -288,6 +288,11 @@ textarea {
   display: none;
 }
 
+.tabs-floating-shell.is-auto-hidden {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
 .tab-button {
   padding: 10px 14px;
   border-radius: 18px;
@@ -868,6 +873,16 @@ textarea {
 
 .market-block .panel-header {
   margin-bottom: 12px;
+}
+
+.panel-heading-stack h3 {
+  margin-bottom: 2px;
+}
+
+.panel-heading-stack p {
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--surface) 18%);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .panel-source-link {
@@ -1598,7 +1613,7 @@ tbody tr:last-child td {
 
 .market-valuation-strip {
   display: grid;
-  grid-template-columns: minmax(220px, 1.2fr) repeat(2, minmax(0, 0.8fr));
+  grid-template-columns: 1fr;
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -1606,17 +1621,9 @@ tbody tr:last-child td {
 .market-trend-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
+  align-items: start;
   gap: 14px;
   margin: -2px 0 12px;
-}
-
-.market-trend-kicker {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  font-weight: 700;
 }
 
 .market-trend-price-row {
@@ -1641,6 +1648,10 @@ tbody tr:last-child td {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+  justify-self: end;
+  text-align: right;
+  align-self: end;
+  margin-bottom: 2px;
 }
 
 .market-valuation-card,
@@ -1682,6 +1693,89 @@ tbody tr:last-child td {
   gap: 10px;
 }
 
+.market-valuation-value-row-main {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.market-valuation-card-combined {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px 18px;
+}
+
+.market-valuation-main {
+  min-width: 0;
+}
+
+.market-valuation-side {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.market-valuation-value-row-main .market-valuation-delta {
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.market-valuation-value-row-main .market-valuation-delta.is-gain {
+  color: var(--gain);
+}
+
+.market-valuation-value-row-main .market-valuation-delta.is-warning {
+  color: #9a6b00;
+}
+
+.market-valuation-value-row-main .market-valuation-delta.is-loss {
+  color: var(--loss);
+}
+
+.market-valuation-value-row-main .market-valuation-delta.is-muted {
+  color: var(--text-muted);
+}
+
+.market-valuation-date {
+  display: inline-block;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.market-valuation-emphasis {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.market-valuation-emphasis.is-gain {
+  color: var(--gain);
+  background: var(--gain-bg);
+}
+
+.market-valuation-emphasis.is-warning {
+  color: #9a6b00;
+  background: color-mix(in srgb, #f3cf64 34%, var(--surface) 66%);
+}
+
+.market-valuation-emphasis.is-loss {
+  color: var(--loss);
+  background: var(--loss-bg);
+}
+
+.market-valuation-emphasis.is-muted {
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface) 70%, var(--border) 30%);
+}
+
 .market-trend-layout {
   display: grid;
   grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
@@ -1693,6 +1787,7 @@ tbody tr:last-child td {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  justify-content: center;
   height: 100%;
 }
 
@@ -1707,7 +1802,7 @@ tbody tr:last-child td {
   display: grid;
   grid-template-columns: 1fr;
   align-content: center;
-  gap: 12px;
+  gap: 10px;
   height: 100%;
 }
 
@@ -1715,10 +1810,10 @@ tbody tr:last-child td {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 7px;
-  align-items: start;
+  align-items: center;
   min-width: 0;
-  min-height: 66px;
-  padding: 8px 12px;
+  min-height: 58px;
+  padding: 6px 12px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface) 28%);
@@ -1888,8 +1983,8 @@ tbody tr:last-child td {
   grid-template-rows: auto 1fr;
   align-content: start;
   min-width: 0;
-  min-height: 64px;
-  padding: 7px 10px;
+  min-height: 58px;
+  padding: 6px 10px;
   border-radius: 11px;
   background: color-mix(in srgb, var(--surface) 68%, var(--surface-muted) 32%);
 }
@@ -2046,12 +2141,8 @@ tbody tr:last-child td {
   }
 
   .market-trend-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-  }
-
-  .market-trend-status-en {
-    justify-self: start;
   }
 
   .market-sentiment-layout {
@@ -2096,6 +2187,16 @@ tbody tr:last-child td {
   .market-chart-panel-trend {
     min-height: 280px;
   }
+
+  .market-valuation-card-combined {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
+  }
+
+  .market-valuation-side {
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -2115,6 +2216,9 @@ tbody tr:last-child td {
     bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     z-index: 90;
     pointer-events: none;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 220ms ease, transform 220ms ease;
   }
 
   .tabs-floating {

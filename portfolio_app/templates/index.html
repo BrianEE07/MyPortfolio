@@ -339,7 +339,7 @@
                                                 <span class="sort-button-content">
                                                     <span class="sort-button-topline">
                                                         <span class="sort-button-label-text">本益比</span>
-                                                        <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比。" data-tooltip-en="Price divided by trailing twelve-month earnings per share.">?</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比。" data-tooltip-en="">?</span>
                                                     </span>
                                                     <small>Trailing P/E</small>
                                                 </span>
@@ -353,7 +353,7 @@
                                                 <span class="sort-button-content">
                                                     <span class="sort-button-topline">
                                                         <span class="sort-button-label-text">預估本益比</span>
-                                                        <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比。" data-tooltip-en="Price divided by expected next-year earnings per share.">?</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比。" data-tooltip-en="">?</span>
                                                     </span>
                                                     <small>Forward P/E</small>
                                                 </span>
@@ -367,7 +367,7 @@
                                                 <span class="sort-button-content">
                                                     <span class="sort-button-topline">
                                                         <span class="sort-button-label-text">一年回檔</span>
-                                                        <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="一年內距離高點的跌幅。" data-tooltip-en="Percentage drop from the stock's highest price over the past year.">?</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="一年內距離高點的跌幅。" data-tooltip-en="">?</span>
                                                     </span>
                                                     <small>1Y Drawdown</small>
                                                 </span>
@@ -380,7 +380,7 @@
                                             <div class="header-label header-label-with-info">
                                                 <span class="header-label-topline">
                                                     <span>趨勢</span>
-                                                    <span class="info-chip" tabindex="0" aria-label="Trend help" data-tooltip-zh="比較現價和 250 日均線的位置。" data-tooltip-en="Compares the current price with the 250-day moving average.">?</span>
+                                                    <span class="info-chip" tabindex="0" aria-label="Trend help" data-tooltip-zh="比較現價和 250 日均線的位置。" data-tooltip-en="">?</span>
                                                 </span>
                                                 <small>Trend</small>
                                             </div>
@@ -392,7 +392,7 @@
                                                 <span class="sort-button-content">
                                                     <span class="sort-button-topline">
                                                         <span class="sort-button-label-text">損益</span>
-                                                        <span class="info-chip" tabindex="0" aria-label="P and L help" data-tooltip-zh="未實現報酬率與損益金額。" data-tooltip-en="Unrealized return percentage and profit or loss amount.">?</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="P and L help" data-tooltip-zh="未實現報酬率與損益金額。" data-tooltip-en="">?</span>
                                                     </span>
                                                     <small>P&amp;L</small>
                                                 </span>
@@ -474,15 +474,16 @@
                 <div class="macro-layout">
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
-                            <div>
-                                <h3>CNN Fear &amp; Greed Index · 市場情緒</h3>
+                            <div class="panel-heading-stack">
+                                <h3>市場情緒</h3>
+                                <p>CNN Fear &amp; Greed Index</p>
                             </div>
                             <a
                                 class="panel-source-link"
                                 href="{{ market_sentiment.source_url }}"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="{{ market_sentiment.source_tooltip_en }}"
+                                aria-label="{{ market_sentiment.source_tooltip_zh }}"
                                 data-tooltip-zh="{{ market_sentiment.source_tooltip_zh }}"
                                 data-tooltip-en="{{ market_sentiment.source_tooltip_en }}"
                             >
@@ -507,33 +508,33 @@
                             <div class="sentiment-gauge-card">
                                 <div class="fear-greed-gauge" data-score="{{ market_sentiment.score if market_sentiment.score is not none else '' }}">
                                     <svg viewBox="0 0 320 178" role="img" aria-label="Fear and Greed gauge">
-                                        <path class="fear-greed-segment is-extreme-fear{% if market_sentiment.gauge_level == 'extreme-fear' %} is-active{% endif %}" d="M34 156 A126 126 0 0 1 70.9 66.9"></path>
-                                        <path class="fear-greed-segment is-fear{% if market_sentiment.gauge_level == 'fear' %} is-active{% endif %}" d="M70.9 66.9 A126 126 0 0 1 140.3 31.6"></path>
-                                        <path class="fear-greed-segment is-neutral{% if market_sentiment.gauge_level == 'neutral' %} is-active{% endif %}" d="M140.3 31.6 A126 126 0 0 1 179.7 31.6"></path>
-                                        <path class="fear-greed-segment is-greed{% if market_sentiment.gauge_level == 'greed' %} is-active{% endif %}" d="M179.7 31.6 A126 126 0 0 1 249.1 66.9"></path>
-                                        <path class="fear-greed-segment is-extreme-greed{% if market_sentiment.gauge_level == 'extreme-greed' %} is-active{% endif %}" d="M249.1 66.9 A126 126 0 0 1 286 156"></path>
-                                        <line class="fear-greed-gauge-pointer" x1="160" y1="150" x2="160" y2="44"></line>
+                                        <path class="fear-greed-segment is-extreme-fear" d="M34 156 A126 126 0 0 1 70.9 66.9"></path>
+                                        <path class="fear-greed-segment is-fear" d="M70.9 66.9 A126 126 0 0 1 140.3 31.6"></path>
+                                        <path class="fear-greed-segment is-neutral" d="M140.3 31.6 A126 126 0 0 1 179.7 31.6"></path>
+                                        <path class="fear-greed-segment is-greed" d="M179.7 31.6 A126 126 0 0 1 249.1 66.9"></path>
+                                        <path class="fear-greed-segment is-extreme-greed" d="M249.1 66.9 A126 126 0 0 1 286 156"></path>
+                                        <line class="fear-greed-gauge-pointer" x1="160" y1="150" x2="54" y2="150"></line>
                                         <circle class="fear-greed-gauge-hub" cx="160" cy="150" r="10"></circle>
                                     </svg>
                                 </div>
                                 <div class="fear-greed-ranges" aria-hidden="true">
-                                    <div class="{% if market_sentiment.gauge_level == 'extreme-fear' %}is-active{% endif %}">
+                                    <div>
                                         <span>0-24</span>
                                         <strong>極度恐懼</strong>
                                     </div>
-                                    <div class="{% if market_sentiment.gauge_level == 'fear' %}is-active{% endif %}">
+                                    <div>
                                         <span>25-44</span>
                                         <strong>恐懼</strong>
                                     </div>
-                                    <div class="{% if market_sentiment.gauge_level == 'neutral' %}is-active{% endif %}">
+                                    <div>
                                         <span>45-55</span>
                                         <strong>中性</strong>
                                     </div>
-                                    <div class="{% if market_sentiment.gauge_level == 'greed' %}is-active{% endif %}">
+                                    <div>
                                         <span>56-75</span>
                                         <strong>貪婪</strong>
                                     </div>
-                                    <div class="{% if market_sentiment.gauge_level == 'extreme-greed' %}is-active{% endif %}">
+                                    <div>
                                         <span>76-100</span>
                                         <strong>極度貪婪</strong>
                                     </div>
@@ -558,15 +559,16 @@
 
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
-                            <div>
-                                <h3>S&amp;P 500 Technical Trend · 大盤趨勢</h3>
+                            <div class="panel-heading-stack">
+                                <h3>大盤趨勢</h3>
+                                <p>S&amp;P 500 Technical Trend</p>
                             </div>
                             <a
                                 class="panel-source-link"
                                 href="{{ market_trend.source_url }}"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="{{ market_trend.source_tooltip_en }}"
+                                aria-label="{{ market_trend.source_tooltip_zh }}"
                                 data-tooltip-zh="{{ market_trend.source_tooltip_zh }}"
                                 data-tooltip-en="{{ market_trend.source_tooltip_en }}"
                             >
@@ -579,7 +581,6 @@
                         </div>
                         <div class="market-trend-hero">
                             <div>
-                                <span class="market-trend-kicker">S&amp;P 500 Current Price</span>
                                 <div class="market-trend-price-row">
                                     <strong class="market-trend-price">{{ market_trend.price_str }}</strong>
                                     <span class="pill is-{{ market_trend.status.tone }}">{{ market_trend.status.label_zh }}</span>
@@ -588,28 +589,20 @@
                             </div>
                             <div class="market-trend-status-en">{{ market_trend.status.label_en }}</div>
                         </div>
-                        <div class="market-valuation-strip">
-                            <div class="market-valuation-card">
-                                <span>S&amp;P 500 Trailing P/E ・ 實際本益比</span>
-                                <div class="market-valuation-value-row">
-                                    <strong>{{ market_trend.trailing_pe.value_str }}</strong>
-                                    <small>{{ market_trend.trailing_pe.valuation }}</small>
+                        <div class="market-valuation-strip market-valuation-strip-combined">
+                            <article class="market-valuation-card market-valuation-card-combined">
+                                <div class="market-valuation-main">
+                                    <span>實際本益比 / Trailing P/E</span>
+                                    <div class="market-valuation-value-row market-valuation-value-row-main">
+                                        <strong>{{ market_trend.trailing_pe.value_str }}</strong>
+                                        <strong class="market-valuation-delta is-{{ market_trend.trailing_pe.delta_tone }}">{{ market_trend.trailing_pe.delta_str }}</strong>
+                                        <small class="market-valuation-emphasis is-{{ market_trend.trailing_pe.valuation_tone }}">{{ market_trend.trailing_pe.valuation_zh }}</small>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="market-valuation-stat">
-                                <span>Previous / 前值</span>
-                                <div class="market-valuation-value-row">
-                                    <strong>{{ market_trend.trailing_pe.prev_value_str }}</strong>
-                                    <small>{{ market_trend.trailing_pe.date }}</small>
+                                <div class="market-valuation-side">
+                                    <small class="market-valuation-date">{{ market_trend.trailing_pe.date }}</small>
                                 </div>
-                            </div>
-                            <div class="market-valuation-stat">
-                                <span>Delta / 變動</span>
-                                <div class="market-valuation-value-row">
-                                    <strong>{{ market_trend.trailing_pe.delta_str }}</strong>
-                                    <small>{{ market_trend.trailing_pe.date }}</small>
-                                </div>
-                            </div>
+                            </article>
                         </div>
                         <div class="market-trend-layout">
                             <div class="market-trend-stats">
@@ -639,8 +632,9 @@
 
                     <section class="panel market-block">
                         <div class="panel-header panel-header-source">
-                            <div>
-                                <h3>Dip-Buying Strategy Indicators · 抄底訊號</h3>
+                            <div class="panel-heading-stack">
+                                <h3>抄底訊號</h3>
+                                <p>Dip-Buying Strategy Indicators</p>
                             </div>
                             <a
                                 class="panel-source-link"
@@ -649,7 +643,7 @@
                                 rel="noopener noreferrer"
                                 aria-label="Open FINRA Margin Statistics"
                                 data-tooltip-zh="Open FINRA Margin Statistics"
-                                data-tooltip-en="Open FINRA Margin Statistics"
+                                data-tooltip-en=""
                             >
                                 <svg viewBox="0 0 24 24" role="presentation" focusable="false">
                                     <path d="M14 5h5v5"></path>

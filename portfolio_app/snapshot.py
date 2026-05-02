@@ -113,6 +113,16 @@ def _fear_greed_display_delta(current_score, previous_score):
     return _fear_greed_display_integer(current_score) - _fear_greed_display_integer(previous_score)
 
 
+def _valuation_delta_tone(delta_value):
+    if delta_value is None:
+        return "muted"
+    if delta_value > 0:
+        return "loss"
+    if delta_value < 0:
+        return "gain"
+    return "muted"
+
+
 def _split_fear_greed_rating(rating):
     if not rating or rating == "N/A":
         return {"rating_en": "N/A", "rating_zh": "N/A"}
@@ -705,7 +715,7 @@ def build_portfolio_snapshot():
         "history_cards": fear_greed_history_cards,
         "source_url": "https://edition.cnn.com/markets/fear-and-greed",
         "source_tooltip_zh": "Open CNN Fear & Greed Index",
-        "source_tooltip_en": "Open CNN Fear & Greed Index",
+        "source_tooltip_en": "",
     }
 
     market_trend_signals = [
@@ -764,12 +774,14 @@ def build_portfolio_snapshot():
             "value_str": sp500_trailing_pe.get("value_str", "N/A"),
             "prev_value_str": sp500_trailing_pe.get("prev_value_str", "N/A"),
             "delta_str": sp500_trailing_pe.get("delta_str", "N/A"),
+            "delta_tone": _valuation_delta_tone(sp500_trailing_pe.get("delta")),
             "date": sp500_trailing_pe.get("date", "N/A"),
-            "valuation": sp500_trailing_pe.get("valuation", "N/A"),
+            "valuation_zh": _zh_from_bilingual(sp500_trailing_pe.get("valuation", "N/A")),
+            "valuation_tone": _valuation_tone(sp500_trailing_pe.get("valuation", "N/A")),
         },
         "source_url": "https://finance.yahoo.com/quote/%5EGSPC/",
         "source_tooltip_zh": "Open Yahoo Finance S&P 500 Quote",
-        "source_tooltip_en": "Open Yahoo Finance S&P 500 Quote",
+        "source_tooltip_en": "",
     }
 
     vix_zone = _vix_zone(fear_greed.get("vix") if fear_greed.get("vix") is not None else fear_greed.get("vix_str"))
@@ -872,13 +884,13 @@ def build_portfolio_snapshot():
 
     summary_primary_cards = [
         _build_summary_primary_card(
-            "總市值",
-            "Total Value",
+            "持倉市值",
+            "Holdings Value",
             _format_currency(total_market_value_value),
         ),
         _build_summary_primary_card(
-            "總成本",
-            "Total Cost",
+            "持倉成本",
+            "Holdings Cost",
             _format_currency(total_cost),
         ),
         _build_summary_primary_card(
@@ -910,7 +922,7 @@ def build_portfolio_snapshot():
             "Portfolio YTD",
             portfolio_metrics["portfolio_ytd_ret_str"],
             tooltip_zh=f"投資組合今年以來的報酬率，對照 S&P 500 為 {portfolio_metrics['sp500_ytd_ret_str']}。",
-            tooltip_en=f"Portfolio return year to date. S&P 500 YTD is {portfolio_metrics['sp500_ytd_ret_str']}.",
+            tooltip_en="",
             label_en_compact="Port. YTD",
         ),
         _build_summary_secondary_card(
@@ -918,7 +930,7 @@ def build_portfolio_snapshot():
             "Sharpe Ratio",
             portfolio_metrics["sharpe_str"],
             tooltip_zh="每承擔一單位波動風險，投資組合換回多少超額報酬。通常越高越好。",
-            tooltip_en="Shows how much excess return the portfolio earns per unit of volatility. Higher is generally better.",
+            tooltip_en="",
             label_en_compact="Sharpe",
         ),
         _build_summary_secondary_card(
@@ -926,14 +938,14 @@ def build_portfolio_snapshot():
             "Alpha",
             portfolio_metrics["alpha_pct_str"],
             tooltip_zh="扣除市場波動影響後，相對 S&P 500 的超額報酬。正值通常代表跑贏基準。",
-            tooltip_en="Measures excess return beyond what market exposure would imply versus the S&P 500. Positive values generally indicate outperformance.",
+            tooltip_en="",
         ),
         _build_summary_secondary_card(
             "貝塔值",
             "Beta",
             portfolio_metrics["beta_str"],
             tooltip_zh="衡量投資組合相對 S&P 500 的波動敏感度。1.0 約等於跟大盤同步。",
-            tooltip_en="Measures how sensitive the portfolio is to S&P 500 moves. Around 1.0 means market-like swings.",
+            tooltip_en="",
         ),
     ]
 

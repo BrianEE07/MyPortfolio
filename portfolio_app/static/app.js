@@ -6,6 +6,7 @@
   const fearGreedCanvas = document.getElementById("fearGreedChart");
   const sp500TrendCanvas = document.getElementById("sp500TrendChart");
   const fearGreedGauge = document.querySelector(".fear-greed-gauge");
+  const floatingTabsShell = document.querySelector(".tabs-floating-shell");
 
   function updateThemeToggleState(theme) {
     const toggleButton = document.getElementById("themeToggle");
@@ -43,7 +44,7 @@
     document.querySelectorAll(".summary-card-label-en[data-label-full]")
   );
   const tooltipTriggers = Array.from(
-    document.querySelectorAll("[data-tooltip-zh][data-tooltip-en]")
+    document.querySelectorAll("[data-tooltip-zh]")
   );
   const categoryFiltersContainer = document.querySelector(".holdings-category-filters");
   const categoryFilterButtons = Array.from(
@@ -58,6 +59,7 @@
   let chartRelayoutRequestId = 0;
   let activeCategoryFilter = "all";
   let activeTabId = "overview";
+  let floatingTabsHideTimeoutId = null;
 
   function shouldUseCompactSummaryLabels() {
     return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches
@@ -220,6 +222,69 @@
     }
 
     gaugeNeedleAnimationFrame = window.requestAnimationFrame(step);
+  }
+
+  function resetFearGreedNeedleToStart() {
+    if (!fearGreedGauge) return;
+
+    const pointer = fearGreedGauge.querySelector(".fear-greed-gauge-pointer");
+    const hub = fearGreedGauge.querySelector(".fear-greed-gauge-hub");
+    if (!pointer || !hub) return;
+
+    const centerX = Number(hub.getAttribute("cx") || pointer.getAttribute("x1") || 160);
+    const centerY = Number(hub.getAttribute("cy") || pointer.getAttribute("y1") || 150);
+    const currentX2 = Number(pointer.getAttribute("x2") || centerX);
+    const currentY2 = Number(pointer.getAttribute("y2") || centerY - 106);
+    const needleLength = Math.hypot(currentX2 - centerX, currentY2 - centerY) || 106;
+    const startAngle = 180;
+    const radian = startAngle * Math.PI / 180;
+    const startX2 = centerX + Math.cos(radian) * needleLength;
+    const startY2 = centerY - Math.sin(radian) * needleLength;
+
+    if (gaugeNeedleAnimationFrame) {
+      window.cancelAnimationFrame(gaugeNeedleAnimationFrame);
+      gaugeNeedleAnimationFrame = null;
+    }
+
+    pointer.setAttribute("x1", centerX.toFixed(2));
+    pointer.setAttribute("y1", centerY.toFixed(2));
+    pointer.setAttribute("x2", startX2.toFixed(2));
+    pointer.setAttribute("y2", startY2.toFixed(2));
+    updateFearGreedGaugeActiveState(0);
+  }
+
+  function shouldAutoHideFloatingTabs() {
+    return window.matchMedia("(max-width: 1024px)").matches;
+  }
+
+  function isNearPageBottom() {
+    const scrollElement = document.scrollingElement || document.documentElement;
+    if (!scrollElement) return false;
+    return scrollElement.scrollTop + window.innerHeight >= scrollElement.scrollHeight - 56;
+  }
+
+  function setFloatingTabsHidden(shouldHide) {
+    if (!floatingTabsShell) return;
+    floatingTabsShell.classList.toggle("is-auto-hidden", shouldHide);
+  }
+
+  function scheduleFloatingTabsAutoHide() {
+    if (!floatingTabsShell) return;
+    if (floatingTabsHideTimeoutId) {
+      window.clearTimeout(floatingTabsHideTimeoutId);
+      floatingTabsHideTimeoutId = null;
+    }
+
+    setFloatingTabsHidden(false);
+
+    if (!shouldAutoHideFloatingTabs() || isNearPageBottom()) {
+      return;
+    }
+
+    floatingTabsHideTimeoutId = window.setTimeout(function () {
+      setFloatingTabsHidden(!isNearPageBottom());
+      floatingTabsHideTimeoutId = null;
+    }, 2000);
   }
 
   function clearHoldingsLegend() {
@@ -656,6 +721,10 @@
       applyCategoryFilter("all", true, true, "auto");
     }
 
+    if (tabId === "pulse") {
+      resetFearGreedNeedleToStart();
+    }
+
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
     tabButtons.forEach(function (button) {
@@ -667,6 +736,7 @@
       panel.classList.toggle("is-active", panel.getAttribute("data-tab-panel") === tabId);
     });
     activeTabId = tabId;
+    scheduleFloatingTabsAutoHide();
     scheduleChartRelayout(true);
   }
 
@@ -1095,32 +1165,43 @@
     updateSummaryCardLabels();
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
+    scheduleFloatingTabsAutoHide();
     scheduleChartRelayout(true);
   });
   window.addEventListener("scroll", function () {
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
+    scheduleFloatingTabsAutoHide();
   }, true);
   window.addEventListener("orientationchange", function () {
     updateSummaryCardLabels();
+    scheduleFloatingTabsAutoHide();
     scheduleChartRelayout(true);
   });
   window.addEventListener("pageshow", function () {
     updateSummaryCardLabels();
+    scheduleFloatingTabsAutoHide();
     scheduleChartRelayout(true);
   });
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) {
       updateSummaryCardLabels();
+      scheduleFloatingTabsAutoHide();
       scheduleChartRelayout(true);
     }
   });
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", function () {
       updateSummaryCardLabels();
+      scheduleFloatingTabsAutoHide();
       scheduleChartRelayout(true);
     });
   }
 
+  ["touchstart", "touchmove", "pointerdown"].forEach(function (eventName) {
+    window.addEventListener(eventName, scheduleFloatingTabsAutoHide, { passive: true });
+  });
+
+  scheduleFloatingTabsAutoHide();
   scheduleChartRelayout(true);
 }());
