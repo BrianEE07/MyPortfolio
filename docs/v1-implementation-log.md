@@ -5,6 +5,8 @@ This file is now the entry index for split version notes.
 Small releases are recorded under [docs/version-notes/](./version-notes/) so each version can be reviewed on its own without reopening one long running log.
 
 ## Timeline
+- [v1.3.5](./version-notes/v1.3.5.md)
+  Added an in-product Project Roadmap overlay with completed milestones and the next planned implementation sequence.
 - [v1.3.4](./version-notes/v1.3.4.md)
   Market Sentiment gauge, day-over-day badge, chart tick density, and compact history comparison UI.
 - [v1.3.3](./version-notes/v1.3.3.md)

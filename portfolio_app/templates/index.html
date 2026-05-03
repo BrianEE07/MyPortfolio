@@ -48,7 +48,24 @@
                     <span class="eyebrow-en eyebrow-en-short">Dashboard /</span>
                     <span class="eyebrow-zh">投資儀表板</span>
                 </p>
-                <h1>{{ site_title }}</h1>
+                <div class="site-title-row">
+                    <h1>{{ site_title }}</h1>
+                    <button
+                        type="button"
+                        class="roadmap-trigger"
+                        id="roadmapTrigger"
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                        aria-controls="projectRoadmap"
+                        aria-label="Open project roadmap"
+                        title="Open project roadmap"
+                    >
+                        <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                            <path d="M12 6.6v7.4"></path>
+                            <circle cx="12" cy="17.3" r="1.15" fill="currentColor" stroke="none"></circle>
+                        </svg>
+                    </button>
+                </div>
                 <p class="site-subtitle" aria-label="{{ site_subtitle }}">
                     <span class="site-subtitle-lead">{{ site_subtitle_parts.lead_text }}</span>
                     <span class="site-subtitle-separator" aria-hidden="true">｜</span>
@@ -711,6 +728,86 @@
             <span class="site-footer-line site-footer-line-zh">僅供個人追蹤參考，不構成任何投資建議</span>
             <span class="site-footer-line site-footer-line-en">Data sources: Yahoo Finance, CNN, FINRA, Multpl</span>
         </footer>
+    </div>
+
+    <div class="roadmap-overlay" id="projectRoadmapOverlay" hidden>
+        <button
+            type="button"
+            class="roadmap-backdrop"
+            data-roadmap-close
+            tabindex="-1"
+            aria-label="Close project roadmap"
+        ></button>
+        <section
+            class="roadmap-dialog"
+            id="projectRoadmap"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="projectRoadmapTitle"
+            tabindex="-1"
+        >
+            <div class="roadmap-dialog-header">
+                <div class="roadmap-heading-stack">
+                    <p class="roadmap-dialog-kicker">Project Roadmap</p>
+                    <h2 id="projectRoadmapTitle">專案路線圖</h2>
+                    <p class="roadmap-dialog-copy">從目前已完成的版本節點，接到接下來要做的主線更新。</p>
+                </div>
+                <button
+                    type="button"
+                    class="roadmap-close"
+                    data-roadmap-close
+                    aria-label="Close project roadmap"
+                >
+                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                        <path d="M6 6 18 18"></path>
+                        <path d="M18 6 6 18"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="roadmap-sections">
+                <section class="roadmap-section">
+                    <p class="roadmap-section-label">Completed</p>
+                    <ol class="roadmap-list" aria-label="Completed roadmap milestones">
+                        {% for item in project_roadmap_completed %}
+                        <li class="roadmap-item is-completed">
+                            <span class="roadmap-marker" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                    <path d="M5 13.5 9.2 17.5 19 7.5"></path>
+                                </svg>
+                            </span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <span class="roadmap-item-version">{{ item.version }}</span>
+                                    <strong>{{ item.title_zh }}</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">{{ item.title_en }}</p>
+                                <p class="roadmap-item-detail">{{ item.detail_zh }}</p>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </section>
+
+                <section class="roadmap-section">
+                    <p class="roadmap-section-label">Up next</p>
+                    <ol class="roadmap-list" aria-label="Upcoming roadmap milestones">
+                        {% for item in project_roadmap_next %}
+                        <li class="roadmap-item{% if loop.first %} is-current{% endif %}">
+                            <span class="roadmap-marker" aria-hidden="true">{{ item.order }}</span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <strong>{{ item.title_zh }}</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">{{ item.title_en }}</p>
+                                <p class="roadmap-item-detail">{{ item.detail_zh }}</p>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </section>
+            </div>
+        </section>
     </div>
 
     <script id="app-payload" type="application/json">{{ frontend_payload | tojson }}</script>

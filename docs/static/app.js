@@ -7,6 +7,9 @@
   const sp500TrendCanvas = document.getElementById("sp500TrendChart");
   const fearGreedGauge = document.querySelector(".fear-greed-gauge");
   const floatingTabsShell = document.querySelector(".tabs-floating-shell");
+  const roadmapTrigger = document.getElementById("roadmapTrigger");
+  const roadmapOverlay = document.getElementById("projectRoadmapOverlay");
+  const roadmapDialog = document.getElementById("projectRoadmap");
 
   function updateThemeToggleState(theme) {
     const toggleButton = document.getElementById("themeToggle");
@@ -60,6 +63,7 @@
   let activeCategoryFilter = "all";
   let activeTabId = "overview";
   let floatingTabsHideTimeoutId = null;
+  let roadmapRestoreFocusTarget = null;
 
   function shouldUseCompactSummaryLabels() {
     return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches
@@ -764,6 +768,49 @@
   let activeInfoChip = null;
   let activeSymbolLinkGroup = null;
 
+  function isRoadmapOpen() {
+    return Boolean(roadmapOverlay && !roadmapOverlay.hidden);
+  }
+
+  function openRoadmap() {
+    if (!roadmapOverlay || !roadmapDialog || isRoadmapOpen()) return;
+
+    roadmapRestoreFocusTarget = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : roadmapTrigger;
+    clearActiveInfoChip();
+    clearActiveSymbolLinkGroup();
+    roadmapOverlay.hidden = false;
+    document.body.classList.add("is-roadmap-open");
+    if (roadmapTrigger) {
+      roadmapTrigger.setAttribute("aria-expanded", "true");
+    }
+
+    window.requestAnimationFrame(function () {
+      roadmapOverlay.classList.add("is-visible");
+      roadmapDialog.focus();
+    });
+  }
+
+  function closeRoadmap(shouldRestoreFocus) {
+    if (!roadmapOverlay || !roadmapDialog || !isRoadmapOpen()) return;
+
+    roadmapOverlay.classList.remove("is-visible");
+    document.body.classList.remove("is-roadmap-open");
+    if (roadmapTrigger) {
+      roadmapTrigger.setAttribute("aria-expanded", "false");
+    }
+
+    window.setTimeout(function () {
+      if (roadmapOverlay.classList.contains("is-visible")) return;
+      roadmapOverlay.hidden = true;
+      if (shouldRestoreFocus && roadmapRestoreFocusTarget && roadmapRestoreFocusTarget.focus) {
+        roadmapRestoreFocusTarget.focus();
+      }
+      roadmapRestoreFocusTarget = null;
+    }, 180);
+  }
+
   function setTooltipTriggerExpanded(trigger, isExpanded) {
     if (!trigger || !trigger.classList.contains("info-chip")) return;
     trigger.setAttribute("aria-expanded", isExpanded ? "true" : "false");
@@ -858,6 +905,24 @@
 
   activateTab("overview");
   updateSummaryCardLabels();
+
+  if (roadmapTrigger) {
+    roadmapTrigger.addEventListener("click", function () {
+      if (isRoadmapOpen()) {
+        closeRoadmap(true);
+        return;
+      }
+      openRoadmap();
+    });
+  }
+
+  if (roadmapOverlay) {
+    roadmapOverlay.addEventListener("click", function (event) {
+      if (event.target === roadmapOverlay || event.target.closest("[data-roadmap-close]")) {
+        closeRoadmap(true);
+      }
+    });
+  }
 
   function updateRankBadges(shouldHighlightTopHoldings) {
     if (!detailTableBody) return;
@@ -1143,6 +1208,16 @@
   });
 
   document.addEventListener("click", function (event) {
+    if (
+      isRoadmapOpen()
+      && roadmapDialog
+      && !roadmapDialog.contains(event.target)
+      && event.target !== roadmapTrigger
+    ) {
+      closeRoadmap(false);
+      return;
+    }
+
     if (!activeInfoChip) return;
     if (event.target.closest(".info-chip") === activeInfoChip) return;
     clearActiveInfoChip();
@@ -1156,6 +1231,10 @@
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
+      if (isRoadmapOpen()) {
+        closeRoadmap(true);
+        return;
+      }
       clearActiveInfoChip();
       clearActiveSymbolLinkGroup();
     }

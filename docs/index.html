@@ -16,7 +16,7 @@
             }
         }());
     </script>
-    <link rel="stylesheet" href="static/styles.css?v=e2e8ce98ff">
+    <link rel="stylesheet" href="static/styles.css?v=14ba64ce06">
 
     <link rel="icon" href="static/favicon.ico?v=e3c187e350" sizes="any">
 
@@ -37,7 +37,7 @@
 
     <meta name="theme-color" content="#f7fbff">
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script defer src="static/app.js?v=38909bcfc1"></script>
+    <script defer src="static/app.js?v=09d287e0e0"></script>
 </head>
 <body>
     <div class="site-shell">
@@ -48,9 +48,26 @@
                     <span class="eyebrow-en eyebrow-en-short">Dashboard /</span>
                     <span class="eyebrow-zh">投資儀表板</span>
                 </p>
-                <h1>Wei&#39;s Portfolio</h1>
-                <p class="site-subtitle" aria-label="邁向財富自由之路的第 31 天｜進度暫不可用">
-                    <span class="site-subtitle-lead">邁向財富自由之路的第 31 天</span>
+                <div class="site-title-row">
+                    <h1>Wei&#39;s Portfolio</h1>
+                    <button
+                        type="button"
+                        class="roadmap-trigger"
+                        id="roadmapTrigger"
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                        aria-controls="projectRoadmap"
+                        aria-label="Open project roadmap"
+                        title="Open project roadmap"
+                    >
+                        <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                            <path d="M12 6.6v7.4"></path>
+                            <circle cx="12" cy="17.3" r="1.15" fill="currentColor" stroke="none"></circle>
+                        </svg>
+                    </button>
+                </div>
+                <p class="site-subtitle" aria-label="邁向財富自由之路的第 32 天｜進度暫不可用">
+                    <span class="site-subtitle-lead">邁向財富自由之路的第 32 天</span>
                     <span class="site-subtitle-separator" aria-hidden="true">｜</span>
                     <span class="site-subtitle-progress">進度暫不可用</span>
                 </p>
@@ -59,8 +76,8 @@
                 <p class="updated-at-inline">
                     <span class="updated-at-label">Last updated</span>
                     <time class="updated-at-value">
-                        <span class="updated-at-date">2026-05-02</span>
-                        <span class="updated-at-time">12:19 (Taipei)</span>
+                        <span class="updated-at-date">2026-05-03</span>
+                        <span class="updated-at-time">23:46 (Taipei)</span>
                     </time>
                 </p>
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle color theme">
@@ -86,7 +103,7 @@
         </header>
 
         <nav class="tabs tabs-desktop" aria-label="Primary sections">
-            
+
             <button
                 type="button"
                 class="tab-button is-active"
@@ -96,7 +113,7 @@
                 <span>持倉總覽</span>
                 <span>Holdings Overview</span>
             </button>
-            
+
             <button
                 type="button"
                 class="tab-button"
@@ -106,7 +123,7 @@
                 <span>個股明細</span>
                 <span>Stock Details</span>
             </button>
-            
+
             <button
                 type="button"
                 class="tab-button"
@@ -116,7 +133,7 @@
                 <span>市場觀察</span>
                 <span>Market Pulse</span>
             </button>
-            
+
         </nav>
 
         <main class="tab-panels">
@@ -125,10 +142,10 @@
                     <h2>持倉總覽 / Holdings Overview</h2>
                 </div>
 
-                
+
                 <div class="summary-layout">
                     <div class="summary-grid summary-grid-primary">
-                    
+
                     <article class="summary-card summary-card-primary">
                         <p class="summary-card-label">
                             <span class="summary-card-label-copy">
@@ -145,10 +162,10 @@
                         </p>
                         <div class="summary-card-value-row">
                             <p class="summary-card-value">N/A</p>
-                            
+
                         </div>
                     </article>
-                    
+
                     <article class="summary-card summary-card-primary">
                         <p class="summary-card-label">
                             <span class="summary-card-label-copy">
@@ -165,10 +182,10 @@
                         </p>
                         <div class="summary-card-value-row">
                             <p class="summary-card-value">$307.90</p>
-                            
+
                         </div>
                     </article>
-                    
+
                     <article class="summary-card summary-card-primary">
                         <p class="summary-card-label">
                             <span class="summary-card-label-copy">
@@ -185,12 +202,12 @@
                         </p>
                         <div class="summary-card-value-row">
                             <p class="summary-card-value is-muted">N/A</p>
-                            
+
                             <p class="summary-card-accent is-muted">N/A</p>
-                            
+
                         </div>
                     </article>
-                    
+
                     <article class="summary-card summary-card-primary">
                         <p class="summary-card-label">
                             <span class="summary-card-label-copy">
@@ -207,16 +224,16 @@
                         </p>
                         <div class="summary-card-value-row">
                             <p class="summary-card-value is-gain">+$7.90</p>
-                            
+
                             <p class="summary-card-accent is-gain">+24.62%</p>
-                            
+
                         </div>
                     </article>
-                    
+
                     </div>
 
                     <div class="summary-grid summary-grid-secondary summary-secondary-rail">
-                    
+
                     <article class="summary-card summary-card-secondary summary-stat">
                         <p class="summary-card-label">
                             <span class="summary-card-label-copy">
@@ -230,13 +247,13 @@
                                     >Portfolio YTD</span>
                                 </span>
                             </span>
-                            
+
                             <span class="info-chip" tabindex="0" aria-label="Portfolio YTD help" data-tooltip-zh="投資組合今年以來的報酬率，對照 S&amp;P 500 為 N/A。" data-tooltip-en="">?</span>
-                            
+
                         </p>
                         <p class="summary-card-value">N/A</p>
                     </article>
-                    
+
                     <article class="summary-card summary-card-secondary summary-stat">
                         <p class="summary-card-label">
                             <span class="summary-card-label-copy">
@@ -250,13 +267,13 @@
                                     >Sharpe Ratio</span>
                                 </span>
                             </span>
-                            
+
                             <span class="info-chip" tabindex="0" aria-label="Sharpe Ratio help" data-tooltip-zh="每承擔一單位波動風險，投資組合換回多少超額報酬。通常越高越好。" data-tooltip-en="">?</span>
-                            
+
                         </p>
                         <p class="summary-card-value">N/A</p>
                     </article>
-                    
+
                     <article class="summary-card summary-card-secondary summary-stat">
                         <p class="summary-card-label">
                             <span class="summary-card-label-copy">
@@ -270,13 +287,13 @@
                                     >Alpha</span>
                                 </span>
                             </span>
-                            
+
                             <span class="info-chip" tabindex="0" aria-label="Alpha help" data-tooltip-zh="扣除市場波動影響後，相對 S&amp;P 500 的超額報酬。正值通常代表跑贏基準。" data-tooltip-en="">?</span>
-                            
+
                         </p>
                         <p class="summary-card-value">N/A</p>
                     </article>
-                    
+
                     <article class="summary-card summary-card-secondary summary-stat">
                         <p class="summary-card-label">
                             <span class="summary-card-label-copy">
@@ -290,13 +307,13 @@
                                     >Beta</span>
                                 </span>
                             </span>
-                            
+
                             <span class="info-chip" tabindex="0" aria-label="Beta help" data-tooltip-zh="衡量投資組合相對 S&amp;P 500 的波動敏感度。1.0 約等於跟大盤同步。" data-tooltip-en="">?</span>
-                            
+
                         </p>
                         <p class="summary-card-value">N/A</p>
                     </article>
-                    
+
                     </div>
                 </div>
 
@@ -310,22 +327,22 @@
                         <article class="concentration-card concentration-card-share" aria-label="Share concentration">
                             <p class="concentration-card-title">占比 / Share</p>
                             <div class="concentration-strip" aria-label="Top holdings concentration">
-                            
+
                             <div class="concentration-item">
                                 <span>Top 3</span>
                                 <strong>67.88%</strong>
                             </div>
-                            
+
                             <div class="concentration-item">
                                 <span>Top 5</span>
                                 <strong>100.00%</strong>
                             </div>
-                            
+
                             <div class="concentration-item">
                                 <span>Top 10</span>
                                 <strong>100.00%</strong>
                             </div>
-                            
+
                             </div>
                         </article>
                         <div class="holdings-chart-stack">
@@ -340,7 +357,7 @@
                         </div>
                     </div>
                 </section>
-                
+
             </section>
 
             <section class="tab-panel" id="tab-details" data-tab-panel="details">
@@ -348,10 +365,10 @@
                     <h2>個股明細 / Stock Details</h2>
                 </div>
 
-                
+
                 <section class="holdings-category-panel">
                     <div class="holdings-category-track" aria-label="Holdings composition">
-                        
+
                         <button
                             type="button"
                             class="holdings-category-track-segment"
@@ -361,7 +378,7 @@
                             aria-label="Composition segment 其他 100.00%"
                             title="其他 / Other · 100.00%"
                         ></button>
-                        
+
                     </div>
                     <div class="holdings-category-filters" role="group" aria-label="Holding category filters">
                         <button
@@ -377,7 +394,7 @@
                                 </span>
                             </span>
                         </button>
-                        
+
                         <button
                             type="button"
                             class="holdings-category-filter"
@@ -393,10 +410,10 @@
                                 <strong>100.00%</strong>
                             </span>
                         </button>
-                        
+
                     </div>
                 </section>
-                
+
 
                 <section class="panel panel-compact holdings-detail-panel">
                     <div class="table-wrapper table-wrapper-compact holdings-detail-wrapper">
@@ -550,7 +567,7 @@
                                 </tr>
                             </thead>
                             <tbody data-sort-default-key="market-value" data-sort-default-direction="desc">
-                                
+
                                 <tr
                                     data-sort-symbol="NVDA"
                                     data-sort-price=""
@@ -606,7 +623,7 @@
                                         <span class="table-subtext">N/A</span>
                                     </td>
                                 </tr>
-                                
+
                                 <tr
                                     data-sort-symbol="GOOG"
                                     data-sort-price=""
@@ -662,7 +679,7 @@
                                         <span class="table-subtext">N/A</span>
                                     </td>
                                 </tr>
-                                
+
                                 <tr
                                     data-sort-symbol="CRCL"
                                     data-sort-price=""
@@ -718,7 +735,7 @@
                                         <span class="table-subtext">N/A</span>
                                     </td>
                                 </tr>
-                                
+
                                 <tr
                                     data-sort-symbol="MU"
                                     data-sort-price=""
@@ -774,7 +791,7 @@
                                         <span class="table-subtext">N/A</span>
                                     </td>
                                 </tr>
-                                
+
                                 <tr
                                     data-sort-symbol="INTC"
                                     data-sort-price=""
@@ -830,7 +847,7 @@
                                         <span class="table-subtext">N/A</span>
                                     </td>
                                 </tr>
-                                
+
                             </tbody>
                         </table>
                     </div>
@@ -865,7 +882,7 @@
                                 </svg>
                             </a>
                         </div>
-                        
+
                         <div class="market-sentiment-layout">
                             <div class="sentiment-score-card">
                                 <div class="sentiment-score-copy">
@@ -915,7 +932,7 @@
                                 <canvas id="fearGreedChart" aria-label="Fear and Greed chart"></canvas>
                             </div>
                             <div class="sentiment-history-grid">
-                                
+
                                 <article class="sentiment-history-card is-neutral">
                                     <p class="sentiment-history-label">前收盤</p>
                                     <div class="sentiment-history-value-row">
@@ -923,7 +940,7 @@
                                         <p class="sentiment-history-rating">N/A</p>
                                     </div>
                                 </article>
-                                
+
                                 <article class="sentiment-history-card is-neutral">
                                     <p class="sentiment-history-label">一週前</p>
                                     <div class="sentiment-history-value-row">
@@ -931,7 +948,7 @@
                                         <p class="sentiment-history-rating">N/A</p>
                                     </div>
                                 </article>
-                                
+
                                 <article class="sentiment-history-card is-neutral">
                                     <p class="sentiment-history-label">一月前</p>
                                     <div class="sentiment-history-value-row">
@@ -939,7 +956,7 @@
                                         <p class="sentiment-history-rating">N/A</p>
                                     </div>
                                 </article>
-                                
+
                                 <article class="sentiment-history-card is-neutral">
                                     <p class="sentiment-history-label">一年前</p>
                                     <div class="sentiment-history-value-row">
@@ -947,7 +964,7 @@
                                         <p class="sentiment-history-rating">N/A</p>
                                     </div>
                                 </article>
-                                
+
                             </div>
                         </div>
                     </section>
@@ -1002,7 +1019,7 @@
                         <div class="market-trend-layout">
                             <div class="market-trend-stats">
                                 <div class="market-trend-signal-list">
-                                    
+
                                     <article class="market-trend-signal-card is-gain">
                                         <div class="market-trend-signal-heading">
                                             <div class="market-trend-signal-label-row">
@@ -1016,7 +1033,7 @@
                                             <small>N/A</small>
                                         </div>
                                     </article>
-                                    
+
                                     <article class="market-trend-signal-card is-gain">
                                         <div class="market-trend-signal-heading">
                                             <div class="market-trend-signal-label-row">
@@ -1030,7 +1047,7 @@
                                             <small>N/A</small>
                                         </div>
                                     </article>
-                                    
+
                                     <article class="market-trend-signal-card is-gain">
                                         <div class="market-trend-signal-heading">
                                             <div class="market-trend-signal-label-row">
@@ -1044,7 +1061,7 @@
                                             <small>N/A</small>
                                         </div>
                                     </article>
-                                    
+
                                     <article class="market-trend-signal-card is-gain">
                                         <div class="market-trend-signal-heading">
                                             <div class="market-trend-signal-label-row">
@@ -1058,7 +1075,7 @@
                                             <small>N/A</small>
                                         </div>
                                     </article>
-                                    
+
                                 </div>
                             </div>
                             <div class="chart-panel market-chart-panel market-chart-panel-trend">
@@ -1090,7 +1107,7 @@
                             </a>
                         </div>
                         <div class="dip-signal-grid">
-                            
+
                             <article class="dip-signal-card is-muted">
                                 <div class="dip-signal-title-row">
                                     <div>
@@ -1115,7 +1132,7 @@
                                     </div>
                                 </div>
                             </article>
-                            
+
                             <article class="dip-signal-card is-muted">
                                 <div class="dip-signal-title-row">
                                     <div>
@@ -1140,7 +1157,7 @@
                                     </div>
                                 </div>
                             </article>
-                            
+
                             <article class="dip-signal-card is-gain">
                                 <div class="dip-signal-title-row">
                                     <div>
@@ -1174,7 +1191,7 @@
                                     </div>
                                 </div>
                             </article>
-                            
+
                             <article class="dip-signal-card is-muted">
                                 <div class="dip-signal-title-row">
                                     <div>
@@ -1200,7 +1217,7 @@
                                     </div>
                                 </div>
                             </article>
-                            
+
                         </div>
                     </section>
                 </div>
@@ -1209,7 +1226,7 @@
 
         <nav class="tabs-floating-shell" aria-label="Primary sections mobile">
             <div class="tabs tabs-floating">
-                
+
                 <button
                     type="button"
                     class="tab-button tab-button-floating is-active"
@@ -1220,7 +1237,7 @@
                     <span>持倉總覽</span>
                     <span>Holdings Overview</span>
                 </button>
-                
+
                 <button
                     type="button"
                     class="tab-button tab-button-floating"
@@ -1231,7 +1248,7 @@
                     <span>個股明細</span>
                     <span>Stock Details</span>
                 </button>
-                
+
                 <button
                     type="button"
                     class="tab-button tab-button-floating"
@@ -1242,7 +1259,7 @@
                     <span>市場觀察</span>
                     <span>Market Pulse</span>
                 </button>
-                
+
             </div>
         </nav>
 
@@ -1250,6 +1267,200 @@
             <span class="site-footer-line site-footer-line-zh">僅供個人追蹤參考，不構成任何投資建議</span>
             <span class="site-footer-line site-footer-line-en">Data sources: Yahoo Finance, CNN, FINRA, Multpl</span>
         </footer>
+    </div>
+
+    <div class="roadmap-overlay" id="projectRoadmapOverlay" hidden>
+        <button
+            type="button"
+            class="roadmap-backdrop"
+            data-roadmap-close
+            tabindex="-1"
+            aria-label="Close project roadmap"
+        ></button>
+        <section
+            class="roadmap-dialog"
+            id="projectRoadmap"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="projectRoadmapTitle"
+            tabindex="-1"
+        >
+            <div class="roadmap-dialog-header">
+                <div class="roadmap-heading-stack">
+                    <p class="roadmap-dialog-kicker">Project Roadmap</p>
+                    <h2 id="projectRoadmapTitle">專案路線圖</h2>
+                    <p class="roadmap-dialog-copy">從目前已完成的版本節點，接到接下來要做的主線更新。</p>
+                </div>
+                <button
+                    type="button"
+                    class="roadmap-close"
+                    data-roadmap-close
+                    aria-label="Close project roadmap"
+                >
+                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                        <path d="M6 6 18 18"></path>
+                        <path d="M18 6 6 18"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="roadmap-sections">
+                <section class="roadmap-section">
+                    <p class="roadmap-section-label">Completed</p>
+                    <ol class="roadmap-list" aria-label="Completed roadmap milestones">
+
+                        <li class="roadmap-item is-completed">
+                            <span class="roadmap-marker" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                    <path d="M5 13.5 9.2 17.5 19 7.5"></path>
+                                </svg>
+                            </span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <span class="roadmap-item-version">v1.0.1</span>
+                                    <strong>模組化整理與分頁骨架</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Modular cleanup and tab foundation</p>
+                                <p class="roadmap-item-detail">把原本單檔原型拆進 portfolio_app，建立持倉總覽、個股明細和市場觀察三個主分頁。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item is-completed">
+                            <span class="roadmap-marker" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                    <path d="M5 13.5 9.2 17.5 19 7.5"></path>
+                                </svg>
+                            </span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <span class="roadmap-item-version">v1.1.0</span>
+                                    <strong>持倉匯入與 canonical schema</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Canonical holdings import flow</p>
+                                <p class="roadmap-item-detail">建立 holdings.json 為單一持倉來源，接上本地匯入流程與基本驗證。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item is-completed">
+                            <span class="roadmap-marker" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                    <path d="M5 13.5 9.2 17.5 19 7.5"></path>
+                                </svg>
+                            </span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <span class="roadmap-item-version">v1.2.0</span>
+                                    <strong>持倉總覽第一輪重整</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Holdings Overview refresh</p>
+                                <p class="roadmap-item-detail">把總覽頁整理成較清楚的 hero cards、核心績效數字與前十大持股視覺化。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item is-completed">
+                            <span class="roadmap-marker" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                    <path d="M5 13.5 9.2 17.5 19 7.5"></path>
+                                </svg>
+                            </span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <span class="roadmap-item-version">v1.3.4</span>
+                                    <strong>市場觀察第一輪完成</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">First Market Pulse pass</p>
+                                <p class="roadmap-item-detail">完成市場情緒、大盤趨勢與抄底訊號三塊內容，並補上多輪互動與版面微調。</p>
+                            </div>
+                        </li>
+
+                    </ol>
+                </section>
+
+                <section class="roadmap-section">
+                    <p class="roadmap-section-label">Up next</p>
+                    <ol class="roadmap-list" aria-label="Upcoming roadmap milestones">
+
+                        <li class="roadmap-item is-current">
+                            <span class="roadmap-marker" aria-hidden="true">1</span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <strong>資料管線與快照基礎</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Data Pipeline &amp; Snapshot Foundation</p>
+                                <p class="roadmap-item-detail">先補齊歷史交易、snapshot、TWR / MWR / IRR / CAGR 與 drawdown 的底層，後面的分析頁才會穩。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item">
+                            <span class="roadmap-marker" aria-hidden="true">2</span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <strong>投資總覽 2.0</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Investment Overview 2.0</p>
+                                <p class="roadmap-item-detail">把現在的持倉總覽升級成真正的投組總覽頁，納入現金、風險和投組層級績效。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item">
+                            <span class="roadmap-marker" aria-hidden="true">3</span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <strong>配置目標與再平衡</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Allocation &amp; Rebalancing</p>
+                                <p class="roadmap-item-detail">加入目標配置、drift、rebalance status 和下一步該補哪類資產的提示。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item">
+                            <span class="roadmap-marker" aria-hidden="true">4</span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <strong>持倉明細 2.0</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Positions 2.0</p>
+                                <p class="roadmap-item-detail">把個股明細擴展成支援 ETF、台股、美股和 Crypto 的多資產持倉頁。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item">
+                            <span class="roadmap-marker" aria-hidden="true">5</span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <strong>設定面板與動態視圖</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Settings &amp; Dynamic View</p>
+                                <p class="roadmap-item-detail">把主題切換升級成完整 settings，讓資產類別 filter 可以影響全站數值與圖表。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item">
+                            <span class="roadmap-marker" aria-hidden="true">6</span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <strong>市場觀察 2.0</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">Market Pulse 2.0</p>
+                                <p class="roadmap-item-detail">往估值、總經、利率、美元、新聞摘要和外部內容延伸，讓市場觀察更完整。</p>
+                            </div>
+                        </li>
+
+                        <li class="roadmap-item">
+                            <span class="roadmap-marker" aria-hidden="true">7</span>
+                            <div class="roadmap-item-copy">
+                                <div class="roadmap-item-topline">
+                                    <strong>介面打磨與專案文件</strong>
+                                </div>
+                                <p class="roadmap-item-subtitle">UI Polish &amp; Documentation</p>
+                                <p class="roadmap-item-detail">最後再收整視覺、fake data 情境、README、版本紀錄與整體說明文件。</p>
+                            </div>
+                        </li>
+
+                    </ol>
+                </section>
+            </div>
+        </section>
     </div>
 
     <script id="app-payload" type="application/json">{"fearGreedChart": {"data": [], "labels": []}, "holdingsChart": {"colors": ["#de8b5f", "#97b79d", "#81a3ca", "#dfbe76", "#ad98c8"], "companyNames": ["NVDA", "GOOG", "CRCL", "MU", "INTC"], "data": [75.0, 75.0, 59.0, 58.92, 39.98], "labels": ["NVDA", "GOOG", "CRCL", "MU", "INTC"]}, "sp500TrendChart": {"data": [], "labels": [], "ma20": [], "ma250": [], "ma60": [], "tone": "gain"}, "tabs": ["overview", "details", "pulse"]}</script>
