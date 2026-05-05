@@ -29,23 +29,6 @@ def _stub_snapshot_dependencies(monkeypatch):
     )
     monkeypatch.setattr(
         snapshot,
-        "cached_portfolio_metrics",
-        lambda holdings: {
-            "sharpe": 1.28,
-            "beta": 0.86,
-            "alpha": 0.0345,
-            "portfolio_ytd_ret": 0.1625,
-            "sp500_ytd_ret": 0.0975,
-            "sharpe_str": "1.28",
-            "beta_str": "0.86",
-            "alpha_str": "0.0345",
-            "alpha_pct_str": "+3.45%",
-            "portfolio_ytd_ret_str": "+16.25%",
-            "sp500_ytd_ret_str": "+9.75%",
-        },
-    )
-    monkeypatch.setattr(
-        snapshot,
         "cached_fear_greed",
         lambda: {
             "score": 66.0,
@@ -117,37 +100,66 @@ def test_build_portfolio_snapshot_uses_generated_realized_metrics(tmp_path, monk
     _stub_snapshot_dependencies(monkeypatch)
     metrics_path = tmp_path / "portfolio_metrics.json"
     metrics_path.write_text(
-        '{"realized_pl": 12345.67, "realized_return_pct": 18.4}',
+        (
+            '{"realized_pl": 12345.67, "realized_return_pct": 18.4, '
+            '"twr": 16.25, "sp500_ytd_ret": 9.75, '
+            '"irr": 22.1, "cagr": 14.2, '
+            '"current_drawdown": 0.0, "max_drawdown": -8.4, '
+            '"sharpe": 1.28, "alpha": 3.45, "beta": 0.86}'
+        ),
         encoding="utf-8",
     )
     monkeypatch.setattr(snapshot, "PORTFOLIO_METRICS_JSON_PATH", metrics_path)
+    snapshots_path = tmp_path / "portfolio_snapshots.json"
+    snapshots_path.write_text(
+        '[{"portfolio_cash": 50.0, "total_portfolio_value": 300.0}]',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(snapshot, "PORTFOLIO_SNAPSHOTS_JSON_PATH", snapshots_path)
 
     result = snapshot.build_portfolio_snapshot()
 
     assert [card["label_en"] for card in result["summary_primary_cards"]] == [
         "Total Value",
-        "Total Cost",
+        "Cash Balance",
+        "Holdings Value",
         "Unrealized P&L",
+        "Holdings Cost",
         "Realized P&L",
     ]
     assert [card["label_en"] for card in result["summary_secondary_cards"]] == [
         "Portfolio YTD",
-        "Sharpe Ratio",
+        "IRR",
+        "CAGR",
         "Alpha",
         "Beta",
+        "Sharpe Ratio",
+        "Current Drawdown",
+        "Max Drawdown",
     ]
-    assert result["summary_primary_cards"][2]["value"] == "+$50.00"
-    assert result["summary_primary_cards"][2]["accent_value"] == "+25.00%"
-    assert result["summary_primary_cards"][2]["accent_tone"] == "gain"
-    assert result["summary_primary_cards"][3]["value"] == "+$12,345.67"
-    assert result["summary_primary_cards"][3]["accent_value"] == "+18.40%"
+    assert result["summary_primary_cards"][0]["value"] == "$300.00"
+    assert result["summary_primary_cards"][1]["value"] == "$50.00"
+    assert result["summary_primary_cards"][2]["value"] == "$250.00"
+    assert result["summary_primary_cards"][3]["value"] == "+$50.00"
+    assert result["summary_primary_cards"][3]["accent_value"] == "+25.00%"
     assert result["summary_primary_cards"][3]["accent_tone"] == "gain"
+    assert result["summary_primary_cards"][4]["value"] == "$200.00"
+    assert result["summary_primary_cards"][5]["value"] == "+$12,345.67"
+    assert result["summary_primary_cards"][5]["accent_value"] == "+18.40%"
+    assert result["summary_primary_cards"][5]["accent_tone"] == "gain"
     assert result["summary_secondary_cards"][0]["value"] == "+16.25%"
     assert result["summary_secondary_cards"][0]["tooltip_zh"] == (
         "投資組合今年以來的報酬率，對照 S&P 500 為 +9.75%。"
     )
-    assert result["summary_secondary_cards"][2]["value"] == "+3.45%"
-    assert result["summary_secondary_cards"][2]["tone"] is None
+    assert result["summary_secondary_cards"][1]["value"] == "+22.10%"
+    assert result["summary_secondary_cards"][2]["value"] == "+14.20%"
+    assert result["summary_secondary_cards"][3]["value"] == "+3.45%"
+    assert result["summary_secondary_cards"][3]["tone"] is None
+    assert result["summary_secondary_cards"][6]["value"] == "0.00%"
+    assert result["summary_secondary_cards"][6]["label_en_compact"] == "Curr. DD"
+    assert result["summary_secondary_cards"][7]["value"] == "-8.40%"
+    assert result["summary_secondary_cards"][7]["label_en_compact"] == "Max DD"
+    assert result["summary_secondary_cards"][7]["tone"] == "loss"
     assert all("tooltip_zh" in card for card in result["summary_secondary_cards"])
     assert result["holdings_concentration_cards"] == [
         {"label": "Top 3", "value": "100.00%"},
@@ -288,7 +300,7 @@ def test_build_portfolio_snapshot_handles_missing_generated_realized_metrics(tmp
 
     result = snapshot.build_portfolio_snapshot()
 
-    realized_card = result["summary_primary_cards"][3]
+    realized_card = result["summary_primary_cards"][5]
 
     assert realized_card["value"] == "N/A"
     assert realized_card["tone"] == "muted"
@@ -307,7 +319,7 @@ def test_build_portfolio_snapshot_uses_metrics_env_override(tmp_path, monkeypatc
 
     result = snapshot.build_portfolio_snapshot()
 
-    realized_card = result["summary_primary_cards"][3]
+    realized_card = result["summary_primary_cards"][5]
 
     assert realized_card["value"] == "+$4,321.00"
     assert realized_card["accent_value"] == "+11.20%"

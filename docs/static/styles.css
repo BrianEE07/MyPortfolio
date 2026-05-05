@@ -529,6 +529,13 @@ body.is-roadmap-open {
   min-width: 0;
 }
 
+.roadmap-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 4px;
+}
+
 .roadmap-dialog-kicker,
 .roadmap-section-label {
   margin: 0;
@@ -540,9 +547,38 @@ body.is-roadmap-open {
 }
 
 .roadmap-heading-stack h2 {
-  margin: 6px 0 4px;
+  margin: 0;
   font-size: 1.28rem;
   line-height: 1.15;
+}
+
+.roadmap-github-link {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, var(--accent-soft) 28%);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--accent-soft) 12%);
+  color: var(--text-muted);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.roadmap-github-link svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  fill: currentColor;
+}
+
+.roadmap-github-link:hover,
+.roadmap-github-link:focus-visible {
+  border-color: color-mix(in srgb, var(--accent-strong) 48%, var(--border) 52%);
+  background: color-mix(in srgb, var(--surface) 76%, var(--accent-soft) 24%);
+  color: var(--accent-strong);
+  transform: translateY(-1px);
 }
 
 .roadmap-dialog-copy {
@@ -2902,6 +2938,40 @@ tbody tr:last-child td {
   .summary-layout {
     grid-template-columns: minmax(0, 1.18fr) minmax(220px, 0.88fr);
     align-items: start;
+  }
+
+  .summary-grid-secondary {
+    gap: 8px;
+  }
+
+  .summary-card-secondary {
+    padding: 8px 10px;
+  }
+
+  .summary-grid-secondary .summary-card-label {
+    margin-bottom: 6px;
+    gap: 5px;
+    font-size: 0.68rem;
+    line-height: 1.18;
+  }
+
+  .summary-grid-secondary .summary-card-label-copy {
+    min-height: calc(2 * 1.1em);
+  }
+
+  .summary-grid-secondary .summary-card-label-line {
+    display: grid;
+    align-items: start;
+    gap: 1px;
+    white-space: normal;
+  }
+
+  .summary-grid-secondary .summary-card-label-separator {
+    display: none;
+  }
+
+  .summary-card-secondary .summary-card-value {
+    font-size: 0.9rem;
   }
 
   .site-header {

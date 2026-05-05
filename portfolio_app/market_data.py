@@ -3,11 +3,10 @@ import re
 import threading
 import time
 import zipfile
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from io import BytesIO
 from xml.etree import ElementTree
 
-import numpy as np
 import pandas as pd
 import requests
 import yfinance as yf
@@ -46,6 +45,104 @@ FINRA_MARGIN_FALLBACK_ROWS = (
     ("Jan-26", 1279042),
     ("Dec-25", 1225597),
 )
+
+
+def _normalize_history_date(value):
+    if isinstance(value, date):
+        return value
+    return datetime.strptime(str(value), "%Y-%m-%d").date()
+
+
+def fetch_price_history_from_yahoo(symbols, start_date, end_date):
+    """Fetch daily close prices from Yahoo Finance for local snapshot generation."""
+    normalized_symbols = sorted({str(symbol).strip().upper() for symbol in symbols if symbol})
+    if not normalized_symbols:
+        return {}
+
+    start = _normalize_history_date(start_date)
+    end = _normalize_history_date(end_date)
+    if end < start:
+        return {}
+
+    # Yahoo's end date is exclusive, so include one extra day.
+    download_end = end + timedelta(days=1)
+    downloaded = yf.download(
+        tickers=normalized_symbols,
+        start=start.isoformat(),
+        end=download_end.isoformat(),
+        interval="1d",
+        progress=False,
+        auto_adjust=False,
+    )
+    if downloaded.empty:
+        return {}
+
+    if isinstance(downloaded.columns, pd.MultiIndex):
+        if "Close" in downloaded.columns.get_level_values(0):
+            close_data = downloaded["Close"]
+        elif "Adj Close" in downloaded.columns.get_level_values(0):
+            close_data = downloaded["Adj Close"]
+        else:
+            return {}
+    else:
+        column_name = None
+        if "Close" in downloaded.columns:
+            column_name = "Close"
+        elif "Adj Close" in downloaded.columns:
+            column_name = "Adj Close"
+        if column_name is None:
+            return {}
+        close_data = downloaded[[column_name]]
+        if len(normalized_symbols) == 1:
+            close_data.columns = normalized_symbols
+
+    price_history = {}
+    for symbol in normalized_symbols:
+        if symbol not in close_data.columns:
+            continue
+        symbol_prices = {}
+        series = close_data[symbol].dropna()
+        for price_date, price in series.items():
+            if hasattr(price_date, "date"):
+                date_key = price_date.date().isoformat()
+            else:
+                date_key = str(price_date)[:10]
+            symbol_prices[date_key] = float(price)
+        if symbol_prices:
+            price_history[symbol] = symbol_prices
+
+    return price_history
+
+
+def fetch_latest_prices_from_yahoo(symbols):
+    """Fetch the latest intraday Yahoo prices for current-day valuation."""
+    normalized_symbols = sorted({str(symbol).strip().upper() for symbol in symbols if symbol})
+    latest_prices = {}
+    for symbol in normalized_symbols:
+        url = (
+            f"https://query2.finance.yahoo.com/v8/finance/chart/{symbol}"
+            "?range=1d&interval=1m&includePrePost=true"
+        )
+        try:
+            response = requests.get(url, headers=HEADERS, timeout=10)
+            if response.status_code != 200:
+                continue
+            data = response.json()
+            result = data.get("chart", {}).get("result")
+            if not result:
+                continue
+            quote = result[0].get("indicators", {}).get("quote", [{}])[0]
+            closes = [value for value in quote.get("close", []) if value is not None]
+            if closes:
+                latest_prices[symbol] = float(closes[-1])
+                continue
+            meta = result[0].get("meta", {})
+            price = meta.get("regularMarketPrice") or meta.get("chartPreviousClose")
+            if price is not None:
+                latest_prices[symbol] = float(price)
+        except Exception as exc:
+            print(f"Error fetching latest price for {symbol}: {exc}")
+    return latest_prices
 
 
 def _now() -> float:
@@ -273,140 +370,6 @@ def cached_stock_profile(symbol, ttl=3600):
     data = fetch_stock_profile(symbol)
     _set_cache(key, {"ts": now, "data": data})
     return data
-
-
-def _portfolio_cache_key(holdings):
-    return tuple(
-        sorted(
-            (
-                holding["symbol"],
-                round(float(holding["shares"]), 8),
-                round(float(holding["cost_basis"]), 8),
-            )
-            for holding in holdings
-        )
-    )
-
-
-def fetch_portfolio_metrics(holdings):
-    try:
-        symbols = [holding["symbol"] for holding in holdings]
-        if not symbols:
-            return None
-
-        tickers = symbols + ["^GSPC"]
-        downloaded = yf.download(
-            tickers=tickers,
-            period="ytd",
-            interval="1d",
-            progress=False,
-            auto_adjust=False,
-        )
-        if downloaded.empty:
-            return None
-
-        if isinstance(downloaded.columns, pd.MultiIndex):
-            if "Close" in downloaded.columns.get_level_values(0):
-                close_data = downloaded["Close"]
-            elif "Adj Close" in downloaded.columns.get_level_values(0):
-                close_data = downloaded["Adj Close"]
-            else:
-                return None
-        else:
-            column_name = None
-            if "Close" in downloaded.columns:
-                column_name = "Close"
-            elif "Adj Close" in downloaded.columns:
-                column_name = "Adj Close"
-            if column_name is None:
-                return None
-            close_data = downloaded[[column_name]]
-
-        close_data = close_data.ffill().bfill()
-        if "^GSPC" not in close_data.columns:
-            return None
-
-        sp500_returns = close_data["^GSPC"].pct_change().dropna()
-        if sp500_returns.empty:
-            return None
-
-        portfolio_value = pd.Series(0.0, index=close_data.index)
-        for holding in holdings:
-            symbol = holding["symbol"]
-            if symbol in close_data.columns:
-                portfolio_value += close_data[symbol] * holding["shares"]
-
-        portfolio_returns = portfolio_value.pct_change().dropna()
-        aligned = pd.concat([portfolio_returns, sp500_returns], axis=1).dropna()
-        if aligned.empty:
-            return None
-
-        portfolio_series = aligned.iloc[:, 0]
-        benchmark_series = aligned.iloc[:, 1]
-
-        risk_free_rate = 0.04 / 252
-        excess_returns = portfolio_series - risk_free_rate
-        standard_deviation = excess_returns.std()
-        sharpe_ratio = (
-            0
-            if standard_deviation == 0
-            else np.sqrt(252) * excess_returns.mean() / standard_deviation
-        )
-
-        covariance_matrix = np.cov(portfolio_series, benchmark_series)
-        benchmark_variance = covariance_matrix[1, 1]
-        beta = covariance_matrix[0, 1] / benchmark_variance if benchmark_variance != 0 else 1
-
-        annual_portfolio_return = (portfolio_series + 1).prod() - 1
-        annual_sp500_return = (benchmark_series + 1).prod() - 1
-        ytd_risk_free = risk_free_rate * len(portfolio_series)
-        alpha = annual_portfolio_return - (
-            ytd_risk_free + beta * (annual_sp500_return - ytd_risk_free)
-        )
-
-        return {
-            "sharpe": float(sharpe_ratio),
-            "beta": float(beta),
-            "alpha": float(alpha),
-            "portfolio_ytd_ret": float(annual_portfolio_return),
-            "sp500_ytd_ret": float(annual_sp500_return),
-            "sharpe_str": f"{sharpe_ratio:.2f}",
-            "beta_str": f"{beta:.2f}",
-            "alpha_str": f"{alpha:.4f}",
-            "alpha_pct_str": f"{alpha * 100:+.2f}%",
-            "sp500_ytd_ret_str": f"{annual_sp500_return * 100:+.2f}%",
-            "portfolio_ytd_ret_str": f"{annual_portfolio_return * 100:+.2f}%",
-        }
-    except Exception as exc:
-        print(f"Error calculating portfolio metrics: {exc}")
-        return None
-
-
-def cached_portfolio_metrics(holdings, ttl=3600):
-    key = ("portfolio_metrics", _portfolio_cache_key(holdings))
-    entry = _get_cache(key)
-    now = _now()
-    if entry and (now - entry["ts"] < ttl) and entry["data"] is not None:
-        return entry["data"]
-    data = fetch_portfolio_metrics(holdings)
-    if data is not None:
-        _set_cache(key, {"ts": now, "data": data})
-        return data
-    if entry and entry["data"] is not None:
-        return entry["data"]
-    return {
-        "sharpe": None,
-        "beta": None,
-        "alpha": None,
-        "portfolio_ytd_ret": None,
-        "sp500_ytd_ret": None,
-        "sharpe_str": "N/A",
-        "beta_str": "N/A",
-        "alpha_str": "N/A",
-        "alpha_pct_str": "N/A",
-        "sp500_ytd_ret_str": "N/A",
-        "portfolio_ytd_ret_str": "N/A",
-    }
 
 
 def fetch_sp500_historical():

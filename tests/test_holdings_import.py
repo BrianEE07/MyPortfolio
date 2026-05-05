@@ -3,7 +3,7 @@ import json
 import pytest
 
 from portfolio_app.holdings import HoldingsValidationError
-from portfolio_app.holdings_import import import_holdings_source
+from portfolio_app.holdings_import import default_portfolio_metrics, import_holdings_source
 
 
 def test_imports_canonical_csv_into_json(tmp_path):
@@ -27,10 +27,7 @@ def test_imports_canonical_csv_into_json(tmp_path):
         {"symbol": "NVDA", "shares": 2.0, "cost_basis": 120.00},
     ]
     assert json.loads(output_path.read_text(encoding="utf-8")) == holdings
-    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
-        "realized_pl": None,
-        "realized_return_pct": None,
-    }
+    assert json.loads(metrics_path.read_text(encoding="utf-8")) == default_portfolio_metrics()
 
 
 def test_imports_canonical_json_into_json(tmp_path):
@@ -60,10 +57,7 @@ def test_imports_canonical_json_into_json(tmp_path):
         {"symbol": "CRM", "shares": 2.0, "cost_basis": 250.25},
     ]
     assert json.loads(output_path.read_text(encoding="utf-8")) == holdings
-    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
-        "realized_pl": None,
-        "realized_return_pct": None,
-    }
+    assert json.loads(metrics_path.read_text(encoding="utf-8")) == default_portfolio_metrics()
 
 
 def test_canonical_import_resets_existing_generated_metrics(tmp_path):
@@ -85,10 +79,7 @@ def test_canonical_import_resets_existing_generated_metrics(tmp_path):
         metrics_path=metrics_path,
     )
 
-    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
-        "realized_pl": None,
-        "realized_return_pct": None,
-    }
+    assert json.loads(metrics_path.read_text(encoding="utf-8")) == default_portfolio_metrics()
 
 
 def test_invalid_csv_does_not_overwrite_existing_json(tmp_path):
@@ -157,10 +148,12 @@ def test_imports_firstrade_csv_into_canonical_holdings(tmp_path):
     assert holdings[0]["cost_basis"] == pytest.approx(110.66666666666666)
     assert holdings[1] == {"symbol": "MSFT", "shares": 3.0, "cost_basis": 50.0}
     assert json.loads(output_path.read_text(encoding="utf-8")) == holdings
-    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
-        "realized_pl": pytest.approx(29.333333333333343),
-        "realized_return_pct": pytest.approx(26.506024096385553),
-    }
+    metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    assert metrics["realized_pl"] == pytest.approx(29.333333333333343)
+    assert metrics["realized_return_pct"] == pytest.approx(26.506024096385553)
+    assert metrics["twr"] is not None
+    assert metrics["irr"] is not None
+    assert metrics["sp500_ytd_ret"] is None
 
 
 def test_firstrade_import_fails_on_unsupported_trade_action(tmp_path):
@@ -216,7 +209,8 @@ def test_imports_firstrade_csv_with_negative_sell_quantity(tmp_path):
             "cost_basis": pytest.approx(351.19),
         }
     ]
-    assert json.loads(metrics_path.read_text(encoding="utf-8")) == {
-        "realized_pl": pytest.approx(3.912946699999999),
-        "realized_return_pct": pytest.approx(24.343380015671674),
-    }
+    metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    assert metrics["realized_pl"] == pytest.approx(3.912946699999999)
+    assert metrics["realized_return_pct"] == pytest.approx(24.343380015671674)
+    assert metrics["current_drawdown"] == pytest.approx(0.0)
+    assert metrics["max_drawdown"] == pytest.approx(0.0)

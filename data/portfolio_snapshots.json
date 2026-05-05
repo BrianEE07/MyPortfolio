@@ -1,0 +1,352 @@
+[
+  {
+    "date": "2026-04-01",
+    "holdings_market_value": 0.0,
+    "portfolio_cash": 1500.0,
+    "total_portfolio_value": 1500.0,
+    "invested_cost_basis": 0.0,
+    "unrealized_pl": 0.0,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 1500.0
+  },
+  {
+    "date": "2026-04-02",
+    "holdings_market_value": 310.5417892240143,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1510.5476373240144,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 10.54763732401426,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-03",
+    "holdings_market_value": 310.5417892240143,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1510.5476373240144,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 10.54763732401426,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-04",
+    "holdings_market_value": 310.5417892240143,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1510.5476373240144,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 10.54763732401426,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-05",
+    "holdings_market_value": 310.5417892240143,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1510.5476373240144,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 10.54763732401426,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-06",
+    "holdings_market_value": 315.5994508089447,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1515.6052989089449,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 15.60529890894469,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-07",
+    "holdings_market_value": 319.1124829044342,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1519.1183310044344,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 19.118331004434197,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-08",
+    "holdings_market_value": 330.1347622673035,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1530.1406103673035,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 30.140610367303452,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-09",
+    "holdings_market_value": 326.2861280696869,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1526.2919761696871,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 26.291976169686905,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-10",
+    "holdings_market_value": 330.5549626552582,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1530.5608107552582,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 30.56081075525816,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-11",
+    "holdings_market_value": 330.5549626552582,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1530.5608107552582,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 30.56081075525816,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-12",
+    "holdings_market_value": 330.5549626552582,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1530.5608107552582,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 30.56081075525816,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-13",
+    "holdings_market_value": 342.3883991831207,
+    "portfolio_cash": 1200.0058481,
+    "total_portfolio_value": 1542.3942472831209,
+    "invested_cost_basis": 299.9941519,
+    "unrealized_pl": 42.394247283120706,
+    "realized_pl": 0.0,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-14",
+    "holdings_market_value": 362.18187736034395,
+    "portfolio_cash": 1200.00251705,
+    "total_portfolio_value": 1562.1843944103439,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 54.28570211034389,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-15",
+    "holdings_market_value": 363.3651303683472,
+    "portfolio_cash": 1200.00251705,
+    "total_portfolio_value": 1563.3676474183471,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 55.46895511834714,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-16",
+    "holdings_market_value": 366.47195971923827,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1566.5544767692381,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 58.575784469238215,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-17",
+    "holdings_market_value": 368.1915662133789,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1568.274083263379,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 60.29539096337885,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-18",
+    "holdings_market_value": 368.1915662133789,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1568.274083263379,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 60.29539096337885,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-19",
+    "holdings_market_value": 368.1915662133789,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1568.274083263379,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 60.29539096337885,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-20",
+    "holdings_market_value": 364.74161690383914,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1564.824133953839,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 56.84544165383909,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-21",
+    "holdings_market_value": 355.8833190836334,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1555.9658361336333,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 47.987143833633354,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-22",
+    "holdings_market_value": 370.4298730702972,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1570.5123901202971,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 62.533697820297164,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-23",
+    "holdings_market_value": 366.17660104385374,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1566.2591180938537,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 58.28042579385368,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-24",
+    "holdings_market_value": 383.37839536369324,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1583.4609124136932,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 75.48222011369319,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-25",
+    "holdings_market_value": 383.37839536369324,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1583.4609124136932,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 75.48222011369319,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-26",
+    "holdings_market_value": 383.37839536369324,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1583.4609124136932,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 75.48222011369319,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-27",
+    "holdings_market_value": 391.8995321524811,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1591.982049202481,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 84.00335690248102,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-28",
+    "holdings_market_value": 385.69126755226137,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1585.7737846022615,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 77.79509230226131,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-29",
+    "holdings_market_value": 393.65356556640626,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1593.7360826164063,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 85.7573903164062,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-04-30",
+    "holdings_market_value": 394.76791582954405,
+    "portfolio_cash": 1200.08251705,
+    "total_portfolio_value": 1594.850432879544,
+    "invested_cost_basis": 307.89617525000006,
+    "unrealized_pl": 86.871740579544,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-05-01",
+    "holdings_market_value": 706.334581306839,
+    "portfolio_cash": 907.0725170499999,
+    "total_portfolio_value": 1613.407098356839,
+    "invested_cost_basis": 600.90617525,
+    "unrealized_pl": 105.42840605683898,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-05-02",
+    "holdings_market_value": 706.334581306839,
+    "portfolio_cash": 907.0725170499999,
+    "total_portfolio_value": 1613.407098356839,
+    "invested_cost_basis": 600.90617525,
+    "unrealized_pl": 105.42840605683898,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-05-03",
+    "holdings_market_value": 706.334581306839,
+    "portfolio_cash": 907.0725170499999,
+    "total_portfolio_value": 1613.407098356839,
+    "invested_cost_basis": 600.90617525,
+    "unrealized_pl": 105.42840605683898,
+    "realized_pl": 7.8986923,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-05-04",
+    "holdings_market_value": 750.9062327250672,
+    "portfolio_cash": 899.8141763999998,
+    "total_portfolio_value": 1650.720409125067,
+    "invested_cost_basis": 630.9238229000001,
+    "unrealized_pl": 119.98240982506707,
+    "realized_pl": 30.657999300000007,
+    "net_external_cash_flow": 0.0
+  },
+  {
+    "date": "2026-05-05",
+    "holdings_market_value": 764.5745027180001,
+    "portfolio_cash": 899.8141763999998,
+    "total_portfolio_value": 1664.3886791179998,
+    "invested_cost_basis": 630.9238229000001,
+    "unrealized_pl": 133.65067981799996,
+    "realized_pl": 30.657999300000007,
+    "net_external_cash_flow": 0.0
+  }
+]

@@ -13,6 +13,12 @@ from .holdings import (
     validate_holdings_data,
     write_holdings_data,
 )
+from .metrics import default_portfolio_metrics, write_portfolio_metrics
+from .transactions import (
+    TransactionValidationError,
+    build_portfolio_history,
+    convert_firstrade_csv_to_transactions,
+)
 
 AUTO_SOURCE_TYPE = "auto"
 CANONICAL_CSV_SOURCE = "canonical_csv"
@@ -47,41 +53,6 @@ class HoldingsImportError(ValueError):
     """Raised when a local holdings source cannot be imported."""
 
 
-def default_portfolio_metrics() -> dict:
-    """Return the canonical generated portfolio metrics payload."""
-    return {
-        "realized_pl": None,
-        "realized_return_pct": None,
-    }
-
-
-def write_portfolio_metrics(
-    metrics: dict,
-    metrics_path: Path = PORTFOLIO_METRICS_JSON_PATH,
-) -> dict:
-    """Write generated portfolio metrics JSON to disk."""
-    payload = default_portfolio_metrics()
-    payload.update(
-        {
-            "realized_pl": metrics.get("realized_pl"),
-            "realized_return_pct": metrics.get("realized_return_pct"),
-        }
-    )
-    metrics_path.parent.mkdir(parents=True, exist_ok=True)
-    metrics_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    return payload
-
-
-def _parse_number(raw_value: object, field_name: str) -> float:
-    value = str("" if raw_value is None else raw_value).strip().replace(",", "").replace("$", "")
-    if not value:
-        raise HoldingsValidationError(f"'{field_name}' cannot be empty.")
-    try:
-        return float(value)
-    except ValueError as exc:
-        raise HoldingsValidationError(f"'{field_name}' must be numeric.") from exc
-
-
 def _detect_csv_source_type(source_path: Path) -> str:
     with source_path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.reader(handle)
@@ -102,110 +73,6 @@ def _detect_csv_source_type(source_path: Path) -> str:
         "Unsupported CSV headers. Use canonical holdings CSV headers or a "
         "supported broker export format."
     )
-
-
-def _normalize_firstrade_holdings(source_path: Path) -> tuple[list[dict], dict]:
-    with source_path.open("r", encoding="utf-8-sig", newline="") as handle:
-        reader = csv.DictReader(handle)
-        if not reader.fieldnames:
-            raise HoldingsValidationError("Firstrade CSV is missing a header row.")
-
-        normalized_headers = tuple(header.strip() for header in reader.fieldnames)
-        if normalized_headers != FIRSTRADE_CSV_HEADERS:
-            raise HoldingsValidationError(
-                "Firstrade CSV headers do not match the supported export format."
-            )
-
-        positions = {}
-        realized_pl_total = 0.0
-        realized_cost_basis_total = 0.0
-        for row_number, row in enumerate(reader, start=2):
-            record_type = str(row.get("RecordType", "")).strip()
-            if record_type != "Trade":
-                continue
-
-            action = str(row.get("Action", "")).strip().upper()
-            if action not in {"BUY", "SELL"}:
-                raise HoldingsValidationError(
-                    f"Row {row_number}: unsupported Firstrade trade action '{action}'."
-                )
-
-            symbol = str(row.get("Symbol", "")).strip().upper()
-            if not symbol:
-                raise HoldingsValidationError(
-                    f"Row {row_number}: Firstrade trade row is missing a symbol."
-                )
-
-            raw_quantity = _parse_number(
-                row.get("Quantity"), f"Row {row_number} quantity"
-            )
-            price = _parse_number(row.get("Price"), f"Row {row_number} price")
-            commission = _parse_number(
-                row.get("Commission", 0) or 0, f"Row {row_number} commission"
-            )
-            fee = _parse_number(row.get("Fee", 0) or 0, f"Row {row_number} fee")
-
-            quantity = abs(raw_quantity)
-            if quantity <= 0:
-                raise HoldingsValidationError(
-                    f"Row {row_number}: trade quantity must be positive."
-                )
-
-            position = positions.setdefault(
-                symbol,
-                {"shares": 0.0, "total_cost": 0.0},
-            )
-
-            if action == "BUY":
-                position["shares"] += quantity
-                position["total_cost"] += (quantity * price) + commission + fee
-                continue
-
-            if position["shares"] + 1e-9 < quantity:
-                raise HoldingsValidationError(
-                    f"Row {row_number}: sell quantity exceeds current shares for {symbol}."
-                )
-
-            average_cost = (
-                position["total_cost"] / position["shares"]
-                if position["shares"]
-                else 0.0
-            )
-            realized_cost_basis = average_cost * quantity
-            net_proceeds = (quantity * price) - commission - fee
-            realized_pl_total += net_proceeds - realized_cost_basis
-            realized_cost_basis_total += realized_cost_basis
-            position["shares"] -= quantity
-            position["total_cost"] -= realized_cost_basis
-
-            if abs(position["shares"]) < 1e-9:
-                position["shares"] = 0.0
-                position["total_cost"] = 0.0
-
-    holdings = []
-    for symbol, position in sorted(positions.items()):
-        shares = position["shares"]
-        if shares <= 0:
-            continue
-        cost_basis = position["total_cost"] / shares
-        holdings.append(
-            {
-                "symbol": symbol,
-                "shares": shares,
-                "cost_basis": cost_basis,
-            }
-        )
-
-    normalized_holdings = validate_holdings_data(holdings)
-    realized_return_pct = (
-        (realized_pl_total / realized_cost_basis_total) * 100
-        if realized_cost_basis_total
-        else None
-    )
-    return normalized_holdings, {
-        "realized_pl": realized_pl_total,
-        "realized_return_pct": realized_return_pct,
-    }
 
 
 def detect_holdings_source_type(source_path: Path) -> str:
@@ -252,8 +119,12 @@ def normalize_holdings_source(
         return holdings, resolved_source_type, default_portfolio_metrics()
 
     if resolved_source_type == FIRSTRADE_CSV_SOURCE:
-        holdings, metrics = _normalize_firstrade_holdings(source_path)
-        return holdings, resolved_source_type, metrics
+        try:
+            transactions = convert_firstrade_csv_to_transactions(source_path)
+        except TransactionValidationError as exc:
+            raise HoldingsValidationError(str(exc)) from exc
+        output = build_portfolio_history(transactions=transactions)
+        return output["holdings"], resolved_source_type, output["metrics"]
 
     raise HoldingsImportError(
         f"Source type '{resolved_source_type}' is not implemented yet."

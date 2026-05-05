@@ -1,18 +1,18 @@
 [
   {
+    "symbol": "AMZN",
+    "shares": 0.25512,
+    "cost_basis": 274.37
+  },
+  {
     "symbol": "CRCL",
-    "shares": 0.6922,
-    "cost_basis": 85.23
+    "shares": 1.6922000000000001,
+    "cost_basis": 89.18934286727337
   },
   {
     "symbol": "GOOG",
     "shares": 0.25814,
     "cost_basis": 290.535
-  },
-  {
-    "symbol": "INTC",
-    "shares": 0.63495,
-    "cost_basis": 62.965
   },
   {
     "symbol": "MU",
@@ -21,7 +21,7 @@
   },
   {
     "symbol": "NVDA",
-    "shares": 0.43347,
-    "cost_basis": 173.02
+    "shares": 1.43347,
+    "cost_basis": 192.5948777442151
   }
 ]

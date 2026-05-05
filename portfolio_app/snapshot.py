@@ -10,6 +10,7 @@ from .config import (
     DEFAULT_TABS,
     FIRST_US_STOCK_PURCHASE_DATE,
     PORTFOLIO_METRICS_JSON_PATH,
+    PORTFOLIO_SNAPSHOTS_JSON_PATH,
     PROJECT_ROADMAP_COMPLETED,
     PROJECT_ROADMAP_NEXT,
     SITE_TITLE,
@@ -21,7 +22,6 @@ from .market_data import (
     cached_close,
     cached_fear_greed,
     cached_finra_margin,
-    cached_portfolio_metrics,
     cached_shiller_pe,
     cached_sp500_historical,
     cached_sp500_trailing_pe,
@@ -29,6 +29,7 @@ from .market_data import (
     cached_stock_profile,
     cached_stock_technicals,
 )
+from .metrics import load_portfolio_metrics
 
 
 def _format_currency(value):
@@ -304,22 +305,7 @@ def _coerce_number(value):
 
 def _load_portfolio_metrics(metrics_path=None):
     metrics_path = _resolve_portfolio_metrics_path(metrics_path)
-    empty_metrics = {"realized_pl": None, "realized_return_pct": None}
-
-    try:
-        if not metrics_path.exists():
-            return empty_metrics
-        payload = json.loads(metrics_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-        return empty_metrics
-
-    if not isinstance(payload, dict):
-        return empty_metrics
-
-    return {
-        "realized_pl": _coerce_number(payload.get("realized_pl")),
-        "realized_return_pct": _coerce_number(payload.get("realized_return_pct")),
-    }
+    return load_portfolio_metrics(metrics_path)
 
 
 def _resolve_portfolio_metrics_path(metrics_path=None):
@@ -331,6 +317,40 @@ def _resolve_portfolio_metrics_path(metrics_path=None):
         return PORTFOLIO_METRICS_JSON_PATH
 
     return Path(override_path).expanduser()
+
+
+def _load_latest_portfolio_snapshot(snapshots_path=None):
+    snapshots_path = _resolve_portfolio_snapshots_path(snapshots_path)
+    try:
+        snapshots = json.loads(snapshots_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    if not isinstance(snapshots, list) or not snapshots:
+        return {}
+
+    latest_snapshot = snapshots[-1]
+    return latest_snapshot if isinstance(latest_snapshot, dict) else {}
+
+
+def _resolve_portfolio_snapshots_path(snapshots_path=None):
+    if snapshots_path is not None:
+        return snapshots_path
+
+    override_path = os.environ.get("PORTFOLIO_SNAPSHOTS_PATH")
+    if not override_path:
+        return PORTFOLIO_SNAPSHOTS_JSON_PATH
+
+    return Path(override_path).expanduser()
+
+
+def _coerce_optional_number(value):
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _build_summary_primary_card(
@@ -553,6 +573,45 @@ def _build_site_subtitle(current_market_value, current_datetime):
     }
 
 
+def _build_generated_portfolio_metric_display(metrics):
+    return {
+        "sharpe": metrics["sharpe"],
+        "beta": metrics["beta"],
+        "alpha": metrics["alpha"],
+        "twr": metrics["twr"],
+        "irr": metrics["irr"],
+        "cagr": metrics["cagr"],
+        "current_drawdown": metrics["current_drawdown"],
+        "max_drawdown": metrics["max_drawdown"],
+        "sp500_ytd_ret": metrics["sp500_ytd_ret"],
+        "sharpe_str": (
+            f"{metrics['sharpe']:.2f}"
+            if metrics["sharpe"] is not None
+            else "N/A"
+        ),
+        "beta_str": (
+            f"{metrics['beta']:.2f}"
+            if metrics["beta"] is not None
+            else "N/A"
+        ),
+        "alpha_str": (
+            f"{metrics['alpha']:.4f}"
+            if metrics["alpha"] is not None
+            else "N/A"
+        ),
+        "alpha_pct_str": _format_percent(metrics["alpha"], signed=True),
+        "twr_str": _format_percent(metrics["twr"], signed=True),
+        "irr_str": _format_percent(metrics["irr"], signed=True),
+        "cagr_str": _format_percent(metrics["cagr"], signed=True),
+        "current_drawdown_str": _format_percent(metrics["current_drawdown"]),
+        "max_drawdown_str": _format_percent(metrics["max_drawdown"]),
+        "sp500_ytd_ret_str": _format_percent(
+            metrics["sp500_ytd_ret"],
+            signed=True,
+        ),
+    }
+
+
 def build_portfolio_snapshot():
     """Build the server-side snapshot used by Flask rendering and static export."""
     holdings = load_holdings()
@@ -674,10 +733,21 @@ def build_portfolio_snapshot():
         if total_profit_value is not None and total_cost
         else None
     )
-    site_subtitle = _build_site_subtitle(total_market_value_value, current_datetime)
+    latest_portfolio_snapshot = _load_latest_portfolio_snapshot()
+    portfolio_cash_value = _coerce_optional_number(
+        latest_portfolio_snapshot.get("portfolio_cash")
+    )
+    total_portfolio_value = (
+        total_market_value_value + portfolio_cash_value
+        if total_market_value_value is not None and portfolio_cash_value is not None
+        else _coerce_optional_number(latest_portfolio_snapshot.get("total_portfolio_value"))
+    )
+    site_subtitle = _build_site_subtitle(total_portfolio_value, current_datetime)
 
-    portfolio_metrics = cached_portfolio_metrics(holdings)
     stored_portfolio_metrics = _load_portfolio_metrics()
+    portfolio_metrics = _build_generated_portfolio_metric_display(
+        stored_portfolio_metrics
+    )
     top_holdings_chart = _build_top_holdings_chart(rows)
     holdings_concentration_cards = _build_concentration_cards(rows)
     holdings_category_segments = _build_holdings_category_breakdown(rows)
@@ -886,14 +956,20 @@ def build_portfolio_snapshot():
 
     summary_primary_cards = [
         _build_summary_primary_card(
+            "總市值",
+            "Total Value",
+            _format_currency(total_portfolio_value),
+        ),
+        _build_summary_primary_card(
+            "現金餘額",
+            "Cash Balance",
+            _format_currency(portfolio_cash_value),
+            label_en_compact="Cash",
+        ),
+        _build_summary_primary_card(
             "持倉市值",
             "Holdings Value",
             _format_currency(total_market_value_value),
-        ),
-        _build_summary_primary_card(
-            "持倉成本",
-            "Holdings Cost",
-            _format_currency(total_cost),
         ),
         _build_summary_primary_card(
             "未實現損益",
@@ -903,6 +979,11 @@ def build_portfolio_snapshot():
             accent_value=_format_percent(total_profit_pct_value, signed=True),
             accent_tone=_tone_for_number(total_profit_pct_value),
             label_en_compact="Unreal. P&L",
+        ),
+        _build_summary_primary_card(
+            "持倉成本",
+            "Holdings Cost",
+            _format_currency(total_cost),
         ),
         _build_summary_primary_card(
             "已實現損益",
@@ -922,18 +1003,24 @@ def build_portfolio_snapshot():
         _build_summary_secondary_card(
             "持倉 YTD",
             "Portfolio YTD",
-            portfolio_metrics["portfolio_ytd_ret_str"],
+            portfolio_metrics["twr_str"],
             tooltip_zh=f"投資組合今年以來的報酬率，對照 S&P 500 為 {portfolio_metrics['sp500_ytd_ret_str']}。",
             tooltip_en="",
             label_en_compact="Port. YTD",
         ),
         _build_summary_secondary_card(
-            "夏普值",
-            "Sharpe Ratio",
-            portfolio_metrics["sharpe_str"],
-            tooltip_zh="每承擔一單位波動風險，投資組合換回多少超額報酬。通常越高越好。",
+            "內部報酬",
+            "IRR",
+            portfolio_metrics["irr_str"],
+            tooltip_zh="把每次入金、出金的時間也算進去後，投資組合的年化報酬率。越高代表資金投入的時間效率越好。",
             tooltip_en="",
-            label_en_compact="Sharpe",
+        ),
+        _build_summary_secondary_card(
+            "年化成長",
+            "CAGR",
+            portfolio_metrics["cagr_str"],
+            tooltip_zh="把第一天到今天的總報酬平均攤成年報酬率，像是在問每年平均長大多少。",
+            tooltip_en="",
         ),
         _build_summary_secondary_card(
             "阿爾法值",
@@ -948,6 +1035,32 @@ def build_portfolio_snapshot():
             portfolio_metrics["beta_str"],
             tooltip_zh="衡量投資組合相對 S&P 500 的波動敏感度。1.0 約等於跟大盤同步。",
             tooltip_en="",
+        ),
+        _build_summary_secondary_card(
+            "夏普值",
+            "Sharpe Ratio",
+            portfolio_metrics["sharpe_str"],
+            tooltip_zh="每承擔一單位波動風險，投資組合換回多少超額報酬。通常越高越好。",
+            tooltip_en="",
+            label_en_compact="Sharpe",
+        ),
+        _build_summary_secondary_card(
+            "目前回檔",
+            "Current Drawdown",
+            portfolio_metrics["current_drawdown_str"],
+            tone=_tone_for_number(portfolio_metrics["current_drawdown"]),
+            tooltip_zh="目前總市值離歷史最高點跌了多少。0% 代表現在就在新高附近，負值越大代表離高點越遠。",
+            tooltip_en="",
+            label_en_compact="Curr. DD",
+        ),
+        _build_summary_secondary_card(
+            "最大回檔",
+            "Max Drawdown",
+            portfolio_metrics["max_drawdown_str"],
+            tone=_tone_for_number(portfolio_metrics["max_drawdown"]),
+            tooltip_zh="這段紀錄裡，投資組合從高點跌到低點的最大跌幅。用來看最痛的下跌曾經有多深。",
+            tooltip_en="",
+            label_en_compact="Max DD",
         ),
     ]
 
