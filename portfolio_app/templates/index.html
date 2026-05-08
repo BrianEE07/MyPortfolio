@@ -57,12 +57,14 @@
                         aria-haspopup="dialog"
                         aria-expanded="false"
                         aria-controls="projectRoadmap"
-                        aria-label="Open project roadmap"
-                        title="Open project roadmap"
+                        aria-label="View Roadmap"
+                        data-tooltip-zh="View Roadmap"
+                        data-tooltip-en=""
                     >
                         <svg viewBox="0 0 24 24" role="presentation" focusable="false">
-                            <path d="M12 6.6v7.4"></path>
-                            <circle cx="12" cy="17.3" r="1.15" fill="currentColor" stroke="none"></circle>
+                            <circle cx="6" cy="19" r="3"></circle>
+                            <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
+                            <circle cx="18" cy="5" r="3"></circle>
                         </svg>
                     </button>
                 </div>
@@ -612,7 +614,10 @@
                                     <span>實際本益比 / Trailing P/E</span>
                                     <div class="market-valuation-value-row market-valuation-value-row-main">
                                         <strong>{{ market_trend.trailing_pe.value_str }}</strong>
-                                        <strong class="market-valuation-delta is-{{ market_trend.trailing_pe.delta_tone }}">{{ market_trend.trailing_pe.delta_str }}</strong>
+                                        <span class="market-valuation-delta-group">
+                                            <small class="market-valuation-delta-note">較上月</small>
+                                            <strong class="market-valuation-delta is-{{ market_trend.trailing_pe.delta_tone }}">{{ market_trend.trailing_pe.delta_str }}</strong>
+                                        </span>
                                         <small class="market-valuation-emphasis is-{{ market_trend.trailing_pe.valuation_tone }}">{{ market_trend.trailing_pe.valuation_zh }}</small>
                                     </div>
                                 </div>
@@ -679,7 +684,9 @@
                                     <span class="info-chip" tabindex="0" aria-label="{{ card.title_en }} help" data-tooltip-zh="{{ card.tooltip_zh }}" data-tooltip-en="{{ card.tooltip_en }}">?</span>
                                 </div>
                                 <div class="dip-signal-value-row">
-                                    <strong class="dip-signal-value">{{ card.value }}</strong>
+                                    <strong class="dip-signal-value">
+                                        {% if card.value_prefix %}<span class="dip-signal-value-prefix">{{ card.value_prefix }}</span>{% endif %}{{ card.value }}{% if card.value_unit %}<span class="dip-signal-value-unit">{{ card.value_unit }}</span>{% endif %}
+                                    </strong>
                                     {%- if card.side_stats %}
                                     <div class="dip-signal-side-stats">
                                         {%- for side_item in card.side_stats %}

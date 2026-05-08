@@ -907,7 +907,10 @@
   updateSummaryCardLabels();
 
   if (roadmapTrigger) {
-    roadmapTrigger.addEventListener("click", function () {
+    roadmapTrigger.addEventListener("click", function (event) {
+      event.stopPropagation();
+      clearActiveInfoChip();
+      hideInfoTooltip();
       if (isRoadmapOpen()) {
         closeRoadmap(true);
         return;
@@ -1155,18 +1158,29 @@
     setTooltipTriggerExpanded(trigger, false);
     trigger.addEventListener("click", function (event) {
       if (trigger.classList.contains("panel-source-link")) return;
+      if (trigger === roadmapTrigger) {
+        clearActiveInfoChip();
+        hideInfoTooltip();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       toggleActiveInfoChip(trigger);
     });
     trigger.addEventListener("mousedown", function (event) {
       if (trigger.classList.contains("panel-source-link")) return;
+      if (trigger === roadmapTrigger) return;
       event.preventDefault();
       event.stopPropagation();
     });
     trigger.addEventListener("keydown", function (event) {
       if (event.key === "Enter" || event.key === " ") {
         if (trigger.classList.contains("panel-source-link")) return;
+        if (trigger === roadmapTrigger) {
+          clearActiveInfoChip();
+          hideInfoTooltip();
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         toggleActiveInfoChip(trigger);
@@ -1212,7 +1226,7 @@
       isRoadmapOpen()
       && roadmapDialog
       && !roadmapDialog.contains(event.target)
-      && event.target !== roadmapTrigger
+      && !(roadmapTrigger && roadmapTrigger.contains(event.target))
     ) {
       closeRoadmap(false);
       return;

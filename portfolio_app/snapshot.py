@@ -913,6 +913,8 @@ def build_portfolio_snapshot():
             "title_zh": "融資餘額",
             "title_en": "Margin Debt",
             "value": finra_margin.get("value_str", "N/A"),
+            "value_prefix": "$" if finra_margin.get("value_str") not in (None, "N/A") else "",
+            "value_unit": "百萬美元" if finra_margin.get("value_str") not in (None, "N/A") else "",
             "status_label": margin_debt_zone["label"],
             "status_tone": margin_debt_zone["tone"],
             "definition_zh": "追蹤市場槓桿資金規模；快速增加偏熱，急速下降常見於去槓桿壓力。",

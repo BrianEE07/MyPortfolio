@@ -100,7 +100,7 @@ textarea {
 
 .site-title-row {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   max-width: 100%;
 }
@@ -131,13 +131,13 @@ textarea {
 }
 
 .roadmap-trigger {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 4px;
+  margin-top: 2px;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--accent-strong) 30%, var(--border) 70%);
   border-radius: 999px;
@@ -149,12 +149,12 @@ textarea {
 }
 
 .roadmap-trigger svg {
-  width: 11.5px;
-  height: 11.5px;
+  width: 14px;
+  height: 14px;
   display: block;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.2;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -853,19 +853,20 @@ body.is-roadmap-open {
 }
 
 .summary-card-value-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: baseline;
-  justify-content: space-between;
   gap: 10px;
 }
 
 .summary-card-accent {
   margin: 0;
-  flex: 0 0 auto;
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.05;
   color: var(--text-muted);
+  justify-self: end;
+  white-space: nowrap;
 }
 
 .summary-card-value.is-gain,
@@ -1253,6 +1254,15 @@ body.is-roadmap-open {
 
 .table-wrapper {
   overflow-x: auto;
+}
+
+.holdings-detail-wrapper {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.holdings-detail-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .table-wrapper-compact {
@@ -2048,6 +2058,28 @@ tbody tr:last-child td {
   white-space: nowrap;
 }
 
+.market-valuation-delta-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.market-valuation-delta-group .market-valuation-delta-note {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.market-valuation-delta-group .market-valuation-delta {
+  display: inline-block;
+  line-height: 1;
+}
+
 .market-valuation-value-row-main .market-valuation-delta.is-gain {
   color: var(--gain);
 }
@@ -2249,6 +2281,19 @@ tbody tr:last-child td {
 
 .dip-signal-value {
   margin: 0;
+}
+
+.dip-signal-value-prefix {
+  margin-right: 1px;
+}
+
+.dip-signal-value-unit {
+  margin-left: 5px;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.15;
+  vertical-align: baseline;
 }
 
 .dip-signal-side-stats {
@@ -2940,6 +2985,50 @@ tbody tr:last-child td {
     align-items: start;
   }
 
+  .summary-grid-primary {
+    gap: 9px;
+  }
+
+  .summary-card-primary {
+    padding: 11px 12px 10px;
+  }
+
+  .summary-card-primary .summary-card-label {
+    margin-bottom: 8px;
+    font-size: 0.68rem;
+    line-height: 1.18;
+  }
+
+  .summary-card-primary .summary-card-label-copy {
+    min-height: calc(2 * 1.1em);
+  }
+
+  .summary-card-primary .summary-card-label-line {
+    display: grid;
+    align-items: start;
+    gap: 1px;
+    white-space: normal;
+  }
+
+  .summary-card-primary .summary-card-label-separator {
+    display: none;
+  }
+
+  .summary-card-primary .summary-card-value {
+    font-size: clamp(1.16rem, 3vw, 1.5rem);
+  }
+
+  .summary-card-primary .summary-card-value-row {
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .summary-card-primary .summary-card-accent {
+    min-width: 0;
+    font-size: 0.74rem;
+    justify-self: end;
+  }
+
   .summary-grid-secondary {
     gap: 8px;
   }
@@ -3038,6 +3127,38 @@ tbody tr:last-child td {
   .sentiment-history-grid {
     grid-column: 1 / -1;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: hidden;
+  }
+
+  .sentiment-history-card,
+  .sentiment-history-card:nth-child(2n),
+  .sentiment-history-card:nth-child(n + 3) {
+    grid-template-columns: minmax(2.7rem, 0.8fr) 30px minmax(2.3rem, 0.7fr);
+    gap: 6px;
+    padding: 6px 8px;
+    border-top: 0;
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+  }
+
+  .sentiment-history-card:last-child {
+    border-right: 0;
+  }
+
+  .sentiment-history-label {
+    font-size: 0.66rem;
+    white-space: nowrap;
+  }
+
+  .sentiment-history-score {
+    width: 28px;
+    height: 28px;
+    font-size: 0.82rem;
+  }
+
+  .sentiment-history-rating {
+    font-size: 0.7rem;
+    white-space: nowrap;
   }
 
   .market-chart-panel-sentiment {
