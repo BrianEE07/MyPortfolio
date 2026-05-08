@@ -1,4 +1,16 @@
+from datetime import date
+from pathlib import Path
+
+import pytest
+
 from portfolio_app import snapshot
+from portfolio_app.metrics import default_portfolio_metrics
+
+
+def _stored_metrics(**overrides):
+    metrics = default_portfolio_metrics()
+    metrics.update(overrides)
+    return metrics
 
 
 def _stub_snapshot_dependencies(monkeypatch):
@@ -190,6 +202,149 @@ def test_build_portfolio_snapshot_uses_generated_realized_metrics(tmp_path, monk
     }
     assert result["dip_signals"][2]["meta"][0]["label"] == "目前區域"
     assert result["dip_signals"][3]["status_label"] == "泡沫高估區"
+
+
+def test_live_portfolio_metrics_replace_today_snapshot():
+    metrics = snapshot._build_live_portfolio_metric_values(
+        stored_metrics=_stored_metrics(twr=10.0, current_drawdown=-2.0),
+        portfolio_snapshots=[
+            {
+                "date": "2026-05-07",
+                "total_portfolio_value": 1000.0,
+                "net_external_cash_flow": 1000.0,
+            },
+            {
+                "date": "2026-05-08",
+                "total_portfolio_value": 1100.0,
+                "net_external_cash_flow": 0.0,
+                "realized_pl": 0.0,
+            },
+        ],
+        current_date=date(2026, 5, 8),
+        holdings_market_value=1200.0,
+        portfolio_cash=0.0,
+        invested_cost_basis=1000.0,
+    )
+
+    assert metrics["twr"] == pytest.approx(20.0)
+    assert metrics["current_drawdown"] == pytest.approx(0.0)
+
+
+def test_live_portfolio_metrics_append_today_snapshot():
+    metrics = snapshot._build_live_portfolio_metric_values(
+        stored_metrics=_stored_metrics(twr=8.0, max_drawdown=-4.0),
+        portfolio_snapshots=[
+            {
+                "date": "2026-05-07",
+                "total_portfolio_value": 1000.0,
+                "net_external_cash_flow": 1000.0,
+            },
+            {
+                "date": "2026-05-08",
+                "total_portfolio_value": 1080.0,
+                "net_external_cash_flow": 0.0,
+                "realized_pl": 0.0,
+            },
+        ],
+        current_date=date(2026, 5, 9),
+        holdings_market_value=1210.0,
+        portfolio_cash=0.0,
+        invested_cost_basis=1000.0,
+    )
+
+    assert metrics["twr"] == pytest.approx(21.0)
+    assert metrics["max_drawdown"] == pytest.approx(0.0)
+
+
+def test_live_portfolio_metrics_update_benchmark_dependent_fields_when_available():
+    metrics = snapshot._build_live_portfolio_metric_values(
+        stored_metrics=_stored_metrics(
+            twr=8.0,
+            sharpe=1.0,
+            beta=0.5,
+            alpha=1.5,
+            sp500_ytd_ret=4.0,
+        ),
+        portfolio_snapshots=[
+            {
+                "date": "2026-05-07",
+                "total_portfolio_value": 1000.0,
+                "net_external_cash_flow": 1000.0,
+            },
+            {
+                "date": "2026-05-08",
+                "total_portfolio_value": 1080.0,
+                "net_external_cash_flow": 0.0,
+            },
+        ],
+        current_date=date(2026, 5, 9),
+        holdings_market_value=1210.0,
+        portfolio_cash=0.0,
+        invested_cost_basis=1000.0,
+        sp500_price_history={
+            "2026-05-07": 100.0,
+            "2026-05-08": 103.0,
+            "2026-05-09": 110.0,
+        },
+    )
+
+    assert metrics["sharpe"] != pytest.approx(1.0)
+    assert metrics["beta"] != pytest.approx(0.5)
+    assert metrics["alpha"] != pytest.approx(1.5)
+    assert metrics["sp500_ytd_ret"] == pytest.approx(10.0)
+
+
+def test_live_portfolio_metrics_fall_back_when_benchmark_is_missing():
+    metrics = snapshot._build_live_portfolio_metric_values(
+        stored_metrics=_stored_metrics(
+            twr=8.0,
+            beta=0.5,
+            alpha=1.5,
+            sp500_ytd_ret=4.0,
+        ),
+        portfolio_snapshots=[
+            {
+                "date": "2026-05-07",
+                "total_portfolio_value": 1000.0,
+                "net_external_cash_flow": 1000.0,
+            },
+            {
+                "date": "2026-05-08",
+                "total_portfolio_value": 1080.0,
+                "net_external_cash_flow": 0.0,
+            },
+        ],
+        current_date=date(2026, 5, 9),
+        holdings_market_value=1210.0,
+        portfolio_cash=0.0,
+        invested_cost_basis=1000.0,
+    )
+
+    assert metrics["twr"] == pytest.approx(21.0)
+    assert metrics["beta"] == pytest.approx(0.5)
+    assert metrics["alpha"] == pytest.approx(1.5)
+    assert metrics["sp500_ytd_ret"] == pytest.approx(4.0)
+
+
+def test_live_portfolio_metrics_fall_back_when_live_prices_are_missing():
+    stored_metrics = _stored_metrics(twr=8.0, current_drawdown=-4.0)
+
+    metrics = snapshot._build_live_portfolio_metric_values(
+        stored_metrics=stored_metrics,
+        portfolio_snapshots=[
+            {
+                "date": "2026-05-07",
+                "total_portfolio_value": 1000.0,
+                "net_external_cash_flow": 1000.0,
+            },
+        ],
+        current_date=date(2026, 5, 8),
+        holdings_market_value=None,
+        portfolio_cash=0.0,
+        invested_cost_basis=1000.0,
+    )
+
+    assert metrics == stored_metrics
 
 
 def test_build_portfolio_snapshot_treats_matching_truncated_fear_greed_score_as_flat(monkeypatch):
@@ -397,3 +552,12 @@ def test_build_portfolio_snapshot_groups_all_holdings_after_top_ten(monkeypatch,
     assert result["frontend_payload"]["holdingsChart"]["data"][-1] == 225.0
     assert result["frontend_payload"]["holdingsChart"]["colors"][-1] == "#b2a8a0"
     assert len(result["frontend_payload"]["holdingsChart"]["labels"]) == 11
+
+
+def test_roadmap_dialog_header_keeps_close_button_visible():
+    styles_path = Path(__file__).resolve().parents[1] / "portfolio_app" / "static" / "styles.css"
+    styles = styles_path.read_text(encoding="utf-8")
+    header_rule = styles.split(".roadmap-dialog-header {", 1)[1].split("}", 1)[0]
+
+    assert "position: sticky;" in header_rule
+    assert "top: 0;" in header_rule

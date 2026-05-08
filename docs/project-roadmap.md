@@ -1,6 +1,6 @@
 # Project Roadmap
 
-Last updated: 2026-05-05
+Last updated: 2026-05-08
 
 This document records the intended direction after v1.4.0. The goal is to keep the project architecture simple, explicit, and easy to extend while the product grows from a portfolio dashboard into a broader portfolio analysis system.
 
@@ -20,6 +20,8 @@ Completed baseline:
 
 - **Data Pipeline & Snapshot Foundation**
   v1.4.0 added local canonical transactions, Firstrade-to-transaction generation, public daily portfolio snapshots, total portfolio value, cash balance, TWR, IRR, CAGR, drawdown, Sharpe, Alpha, and Beta.
+- **Live Runtime Metrics Overlay**
+  v1.4.2 lets the local Flask app refresh portfolio-level performance cards from current prices and historical snapshots without rewriting generated public data files.
 
 Next major updates:
 
@@ -49,6 +51,7 @@ Planned direction:
 
 - Split the top area into **Portfolio Summary / 投組總覽** and **Risk Analysis / 風險分析**
 - Build on the v1.4.0 cash and total-value cards with a clearer portfolio value trend
+- Treat v1.4.2 live overlay metrics as display-time previews; official snapshots and persisted metrics still come from the build pipeline
 - Keep one return vocabulary: `Portfolio YTD` displays `TWR`; `IRR` is the money-weighted return; `CAGR` remains the period annualized growth rate
 - Extend portfolio-level drawdown metrics with `Drawdown Duration`
 - Continue refining `Sharpe`, `Alpha`, and `Beta` from historical portfolio snapshots instead of current-holdings estimates

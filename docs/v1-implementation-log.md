@@ -5,6 +5,8 @@ This file is now the entry index for split version notes.
 Small releases are recorded under [docs/version-notes/](./version-notes/) so each version can be reviewed on its own without reopening one long running log.
 
 ## Timeline
+- [v1.4.2](./version-notes/v1.4.2.md)
+  Live runtime metrics overlay for local refreshes, benchmark-aware secondary metric updates, and sticky roadmap close behavior.
 - [v1.4.1](./version-notes/v1.4.1.md)
   Overview and Market Pulse mobile polish, roadmap trigger tooltip behavior, P/E delta note, and FINRA margin-debt unit display.
 - [v1.4.0](./version-notes/v1.4.0.md)

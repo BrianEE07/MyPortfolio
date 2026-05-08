@@ -401,6 +401,10 @@ def fetch_sp500_historical():
                     for ts, _ in chart_data
                 ]
                 points = [round(value, 2) for _, value in chart_data]
+                price_history = {
+                    datetime.fromtimestamp(ts, tz=_timezone()).date().isoformat(): value
+                    for ts, value in valid
+                }
 
                 def rolling_points(window):
                     values = []
@@ -432,6 +436,7 @@ def fetch_sp500_historical():
                     "chart_ma20_points": rolling_points(20),
                     "chart_ma60_points": rolling_points(60),
                     "chart_ma250_points": rolling_points(250),
+                    "price_history": price_history,
                 }
     except Exception as exc:
         print(f"Error fetching S&P 500 historical data: {exc}")

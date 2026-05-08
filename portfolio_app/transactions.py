@@ -583,6 +583,22 @@ def _build_metrics(
     realized_cost_basis: float,
     price_history: Optional[dict] = None,
 ) -> dict:
+    return calculate_portfolio_metrics(
+        snapshots=snapshots,
+        realized_pl=realized_pl,
+        realized_cost_basis=realized_cost_basis,
+        price_history=price_history,
+    )
+
+
+def calculate_portfolio_metrics(
+    snapshots: list[dict],
+    realized_pl: float = 0.0,
+    realized_cost_basis: float = 0.0,
+    price_history: Optional[dict] = None,
+    require_asset_price_history: bool = True,
+) -> dict:
+    """Calculate portfolio-level performance metrics from daily snapshots."""
     realized_return_pct = (
         (realized_pl / realized_cost_basis) * 100
         if realized_cost_basis
@@ -593,11 +609,18 @@ def _build_metrics(
     daily_returns = _portfolio_daily_returns(snapshots)
     has_external_price_history = _has_external_price_history(price_history or {})
     benchmark_returns = _benchmark_daily_returns(snapshots, price_history or {})
-    sharpe = _calculate_sharpe(daily_returns) if has_external_price_history else None
+    can_calculate_market_metrics = (
+        has_external_price_history or not require_asset_price_history
+    )
+    sharpe = (
+        _calculate_sharpe(daily_returns)
+        if can_calculate_market_metrics
+        else None
+    )
     beta = _calculate_beta(daily_returns, benchmark_returns)
     sp500_ytd_ret = _compound_returns(benchmark_returns)
     alpha = _calculate_alpha(
-        twr=twr if has_external_price_history else None,
+        twr=twr if can_calculate_market_metrics else None,
         benchmark_return=sp500_ytd_ret,
         beta=beta,
         periods=len(daily_returns),

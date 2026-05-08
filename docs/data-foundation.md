@@ -95,6 +95,8 @@ The pipeline writes these repo-visible runtime files:
 
 Metric values in `data/portfolio_metrics.json` use percentage numbers for return-style fields such as `twr`, `irr`, `cagr`, and drawdown fields. `Portfolio YTD` displays `twr`; `irr` is the money-weighted return.
 
+When the local Flask app renders the page, v1.4.2 can create a temporary live overlay from the generated snapshots plus current market prices. This overlay refreshes display metrics without writing back to `data/portfolio_metrics.json` or `data/portfolio_snapshots.json`.
+
 ## Price History
 Optional local price history can be stored in `private/market_prices/prices.json`:
 
@@ -154,7 +156,7 @@ python3 scripts/build_portfolio_data.py \
 v1.4.0 intentionally does not model TWD, FX, dividends, taxes, transfers, stock splits, or full broker event coverage. Those should be added as adapter-style extensions after the USD transaction foundation is stable.
 
 ## Performance Metrics
-The site now reads generated portfolio metrics instead of estimating `Portfolio YTD`, `Sharpe`, `Alpha`, and `Beta` from the current holdings list. If daily market price history or benchmark data is missing, those fields should stay `null` and render as `N/A` rather than showing a misleading current-holdings backtest.
+The site uses generated portfolio metrics as the persisted source of truth, then applies a local runtime overlay when current prices and generated snapshots are available. If live prices are incomplete, the generated metric values are preserved. If benchmark history is missing, `Sharpe`, `Alpha`, `Beta`, and S&P 500 comparison values fall back to the generated values.
 
 Displayed overview metrics:
 
@@ -162,3 +164,9 @@ Displayed overview metrics:
 - `IRR` is the single money-weighted return field and reflects when cash entered or left the portfolio.
 - `CAGR` annualizes the full-period portfolio growth rate; it can look similar to `IRR` in a short, simple cash-flow history but is not the same formula.
 - `Current Drawdown` and `Max Drawdown` come from daily total portfolio value snapshots.
+
+Refresh behavior:
+
+- Local Flask refresh can update current holdings value, total value, unrealized P&L, concentration, position rows, market pulse data, and live overlay metrics.
+- Cash balance, realized P&L, official snapshots, transaction-derived holdings, and persisted metrics still require the build command.
+- Static GitHub Pages output updates when `docs/index.html` is rebuilt and deployed.

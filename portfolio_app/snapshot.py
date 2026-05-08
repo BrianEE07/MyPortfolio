@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 from pytz import timezone
@@ -30,6 +30,7 @@ from .market_data import (
     cached_stock_technicals,
 )
 from .metrics import load_portfolio_metrics
+from .transactions import calculate_portfolio_metrics
 
 
 def _format_currency(value):
@@ -320,17 +321,25 @@ def _resolve_portfolio_metrics_path(metrics_path=None):
 
 
 def _load_latest_portfolio_snapshot(snapshots_path=None):
-    snapshots_path = _resolve_portfolio_snapshots_path(snapshots_path)
-    try:
-        snapshots = json.loads(snapshots_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-
-    if not isinstance(snapshots, list) or not snapshots:
+    snapshots = _load_portfolio_snapshots(snapshots_path)
+    if not snapshots:
         return {}
 
     latest_snapshot = snapshots[-1]
     return latest_snapshot if isinstance(latest_snapshot, dict) else {}
+
+
+def _load_portfolio_snapshots(snapshots_path=None):
+    snapshots_path = _resolve_portfolio_snapshots_path(snapshots_path)
+    try:
+        snapshots = json.loads(snapshots_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    if not isinstance(snapshots, list) or not snapshots:
+        return []
+
+    return [snapshot for snapshot in snapshots if isinstance(snapshot, dict)]
 
 
 def _resolve_portfolio_snapshots_path(snapshots_path=None):
@@ -612,11 +621,126 @@ def _build_generated_portfolio_metric_display(metrics):
     }
 
 
+LIVE_PORTFOLIO_METRIC_FIELDS = (
+    "twr",
+    "irr",
+    "cagr",
+    "current_drawdown",
+    "max_drawdown",
+    "sharpe",
+    "beta",
+    "alpha",
+    "sp500_ytd_ret",
+)
+
+
+def _parse_optional_snapshot_date(value):
+    try:
+        return datetime.strptime(str(value), "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_snapshot_for_metrics(snapshot):
+    snapshot_date = _parse_optional_snapshot_date(snapshot.get("date"))
+    total_value = _coerce_optional_number(snapshot.get("total_portfolio_value"))
+    if snapshot_date is None or total_value is None:
+        return None
+
+    normalized = dict(snapshot)
+    normalized["date"] = snapshot_date.isoformat()
+    normalized["total_portfolio_value"] = total_value
+    normalized["net_external_cash_flow"] = (
+        _coerce_optional_number(snapshot.get("net_external_cash_flow")) or 0.0
+    )
+    return normalized
+
+
+def _normalize_benchmark_price_history(raw_price_history):
+    if not isinstance(raw_price_history, dict):
+        return {}
+
+    normalized_prices = {}
+    for raw_date, raw_price in raw_price_history.items():
+        price_date = _parse_optional_snapshot_date(raw_date)
+        price = _coerce_optional_number(raw_price)
+        if price_date is not None and price is not None and price > 0:
+            normalized_prices[price_date] = price
+
+    return {"^GSPC": dict(sorted(normalized_prices.items()))} if normalized_prices else {}
+
+
+def _build_live_portfolio_metric_values(
+    stored_metrics,
+    portfolio_snapshots,
+    current_date,
+    holdings_market_value,
+    portfolio_cash,
+    invested_cost_basis,
+    sp500_price_history=None,
+):
+    if holdings_market_value is None or portfolio_cash is None:
+        return stored_metrics
+
+    metric_snapshots = [
+        normalized
+        for normalized in (
+            _normalize_snapshot_for_metrics(snapshot)
+            for snapshot in portfolio_snapshots
+        )
+        if normalized is not None
+    ]
+    if not metric_snapshots:
+        return stored_metrics
+
+    metric_snapshots.sort(key=lambda snapshot: snapshot["date"])
+    latest_snapshot = metric_snapshots[-1]
+    latest_date = _parse_optional_snapshot_date(latest_snapshot["date"])
+    if latest_date is None or latest_date > current_date:
+        return stored_metrics
+
+    realized_pl = _coerce_optional_number(latest_snapshot.get("realized_pl"))
+    if realized_pl is None:
+        realized_pl = stored_metrics.get("realized_pl")
+
+    synthetic_snapshot = {
+        "date": current_date.isoformat(),
+        "holdings_market_value": holdings_market_value,
+        "portfolio_cash": portfolio_cash,
+        "total_portfolio_value": holdings_market_value + portfolio_cash,
+        "invested_cost_basis": invested_cost_basis,
+        "unrealized_pl": holdings_market_value - invested_cost_basis,
+        "realized_pl": realized_pl,
+        "net_external_cash_flow": (
+            latest_snapshot["net_external_cash_flow"]
+            if latest_date == current_date
+            else 0.0
+        ),
+    }
+
+    live_snapshots = metric_snapshots[:-1] if latest_date == current_date else metric_snapshots
+    live_snapshots = [*live_snapshots, synthetic_snapshot]
+    benchmark_price_history = _normalize_benchmark_price_history(sp500_price_history)
+    live_metrics = calculate_portfolio_metrics(
+        snapshots=live_snapshots,
+        realized_pl=stored_metrics.get("realized_pl") or 0.0,
+        price_history=benchmark_price_history,
+        require_asset_price_history=False,
+    )
+
+    merged_metrics = dict(stored_metrics)
+    for field_name in LIVE_PORTFOLIO_METRIC_FIELDS:
+        if live_metrics.get(field_name) is not None:
+            merged_metrics[field_name] = live_metrics[field_name]
+    return merged_metrics
+
+
 def build_portfolio_snapshot():
     """Build the server-side snapshot used by Flask rendering and static export."""
     holdings = load_holdings()
     current_timezone = timezone(TIMEZONE_NAME)
     current_datetime = datetime.now(current_timezone)
+    current_date = current_datetime.date()
     updated_at = current_datetime.strftime("%Y-%m-%d %H:%M")
 
     rows = []
@@ -733,7 +857,12 @@ def build_portfolio_snapshot():
         if total_profit_value is not None and total_cost
         else None
     )
-    latest_portfolio_snapshot = _load_latest_portfolio_snapshot()
+    portfolio_snapshots = _load_portfolio_snapshots()
+    latest_portfolio_snapshot = (
+        portfolio_snapshots[-1]
+        if portfolio_snapshots and isinstance(portfolio_snapshots[-1], dict)
+        else {}
+    )
     portfolio_cash_value = _coerce_optional_number(
         latest_portfolio_snapshot.get("portfolio_cash")
     )
@@ -745,9 +874,6 @@ def build_portfolio_snapshot():
     site_subtitle = _build_site_subtitle(total_portfolio_value, current_datetime)
 
     stored_portfolio_metrics = _load_portfolio_metrics()
-    portfolio_metrics = _build_generated_portfolio_metric_display(
-        stored_portfolio_metrics
-    )
     top_holdings_chart = _build_top_holdings_chart(rows)
     holdings_concentration_cards = _build_concentration_cards(rows)
     holdings_category_segments = _build_holdings_category_breakdown(rows)
@@ -766,6 +892,18 @@ def build_portfolio_snapshot():
     shiller_pe = cached_shiller_pe()
     finra_margin = cached_finra_margin() or {}
     sp500_historical = cached_sp500_historical() or {}
+    live_portfolio_metrics = _build_live_portfolio_metric_values(
+        stored_metrics=stored_portfolio_metrics,
+        portfolio_snapshots=portfolio_snapshots,
+        current_date=current_date,
+        holdings_market_value=total_market_value_value,
+        portfolio_cash=portfolio_cash_value,
+        invested_cost_basis=total_cost,
+        sp500_price_history=sp500_historical.get("price_history"),
+    )
+    portfolio_metrics = _build_generated_portfolio_metric_display(
+        live_portfolio_metrics
+    )
 
     fear_greed_history_cards = _build_fear_greed_history_cards(fear_greed)
     fear_greed_rating_parts = _split_fear_greed_rating(fear_greed.get("rating", "N/A"))
