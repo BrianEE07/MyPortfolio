@@ -63,6 +63,7 @@ The pipeline writes these repo-visible runtime files:
 - `data/holdings.json`
 - `data/portfolio_metrics.json`
 - `data/portfolio_snapshots.json`
+- `data/watchlist.json` is a separate public symbol-only watchlist and is not transaction-derived.
 
 `data/holdings.json` keeps the existing schema:
 

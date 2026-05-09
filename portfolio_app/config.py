@@ -10,6 +10,7 @@ LOCAL_MARKET_PRICES_DIR = PRIVATE_DIR / "market_prices"
 HOLDINGS_JSON_PATH = DATA_DIR / "holdings.json"
 PORTFOLIO_METRICS_JSON_PATH = DATA_DIR / "portfolio_metrics.json"
 PORTFOLIO_SNAPSHOTS_JSON_PATH = DATA_DIR / "portfolio_snapshots.json"
+WATCHLIST_JSON_PATH = DATA_DIR / "watchlist.json"
 
 SITE_TITLE = "Wei's Portfolio"
 TIMEZONE_NAME = "Asia/Taipei"
@@ -53,6 +54,12 @@ PROJECT_ROADMAP_COMPLETED = (
         "title_zh": "資料地基與投組指標",
         "title_en": "Data foundation and portfolio metrics",
         "detail_zh": "建立本機交易到公開持倉、績效與每日快照的資料管線，並讓總覽顯示現金、總市值、IRR、CAGR 與回檔。",
+    },
+    {
+        "version": "v1.4.3",
+        "title_zh": "觀察清單與本機更新流程",
+        "title_en": "Watchlist & Local Automation Flow",
+        "detail_zh": "新增公開輕量觀察清單，並把本機交易 CSV 產生公開資料再部署的流程整理成長期工作流。",
     },
 )
 

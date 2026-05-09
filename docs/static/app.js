@@ -767,6 +767,7 @@
   document.body.appendChild(tooltipElement);
   let activeInfoChip = null;
   let activeSymbolLinkGroup = null;
+  let suppressRoadmapTriggerTooltip = false;
 
   function isRoadmapOpen() {
     return Boolean(roadmapOverlay && !roadmapOverlay.hidden);
@@ -780,6 +781,7 @@
       : roadmapTrigger;
     clearActiveInfoChip();
     clearActiveSymbolLinkGroup();
+    suppressRoadmapTriggerTooltip = true;
     roadmapOverlay.hidden = false;
     document.body.classList.add("is-roadmap-open");
     if (roadmapTrigger) {
@@ -795,6 +797,9 @@
   function closeRoadmap(shouldRestoreFocus) {
     if (!roadmapOverlay || !roadmapDialog || !isRoadmapOpen()) return;
 
+    clearActiveInfoChip();
+    hideInfoTooltip();
+    suppressRoadmapTriggerTooltip = true;
     roadmapOverlay.classList.remove("is-visible");
     document.body.classList.remove("is-roadmap-open");
     if (roadmapTrigger) {
@@ -804,10 +809,18 @@
     window.setTimeout(function () {
       if (roadmapOverlay.classList.contains("is-visible")) return;
       roadmapOverlay.hidden = true;
-      if (shouldRestoreFocus && roadmapRestoreFocusTarget && roadmapRestoreFocusTarget.focus) {
+      if (
+        shouldRestoreFocus
+        && roadmapRestoreFocusTarget
+        && roadmapRestoreFocusTarget !== roadmapTrigger
+        && roadmapRestoreFocusTarget.focus
+      ) {
         roadmapRestoreFocusTarget.focus();
       }
       roadmapRestoreFocusTarget = null;
+      if (!roadmapTrigger || !roadmapTrigger.matches(":hover")) {
+        suppressRoadmapTriggerTooltip = false;
+      }
     }, 180);
   }
 
@@ -834,6 +847,8 @@
   }
 
   function showInfoTooltip(trigger) {
+    if (trigger === roadmapTrigger && suppressRoadmapTriggerTooltip) return;
+
     const tooltipText = [trigger.dataset.tooltipZh, trigger.dataset.tooltipEn]
       .filter(Boolean)
       .filter(function (text, index, list) {
@@ -916,6 +931,14 @@
         return;
       }
       openRoadmap();
+    });
+    roadmapTrigger.addEventListener("mouseleave", function () {
+      suppressRoadmapTriggerTooltip = false;
+      hideInfoTooltip();
+    });
+    roadmapTrigger.addEventListener("blur", function () {
+      suppressRoadmapTriggerTooltip = false;
+      hideInfoTooltip();
     });
   }
 
@@ -1153,6 +1176,123 @@
   }
 
   updateCategoryFilterState(activeCategoryFilter);
+
+  function initStandaloneSortableTable(table) {
+    const tableBody = table.querySelector("tbody");
+    if (!tableBody) return;
+
+    const tableSortButtons = Array.from(table.querySelectorAll(".sort-button[data-sort-key]"));
+    const tableDefaultSortKey = tableBody.dataset.sortDefaultKey || "symbol";
+    const tableDefaultSortType = tableBody.dataset.sortDefaultType || "string";
+    const tableDefaultSortDirection = tableBody.dataset.sortDefaultDirection || "asc";
+
+    function updateStandaloneSortState(activeButton, direction) {
+      tableSortButtons.forEach(function (button) {
+        const isActive = button === activeButton;
+        const headerCell = button.closest("th");
+        button.classList.toggle("is-active", isActive);
+        if (isActive) {
+          button.dataset.sortDirection = direction;
+        } else {
+          delete button.dataset.sortDirection;
+        }
+
+        if (headerCell) {
+          headerCell.setAttribute(
+            "aria-sort",
+            isActive
+              ? (direction === "asc" ? "ascending" : "descending")
+              : "none"
+          );
+        }
+      });
+    }
+
+    function sortStandaloneTable(sortKey, sortType, direction, activeButton) {
+      const rows = Array.from(tableBody.querySelectorAll("tr"));
+      rows.sort(function (leftRow, rightRow) {
+        const result = compareRows(leftRow, rightRow, sortKey, sortType, direction);
+        if (result !== 0) return result;
+        return compareRows(leftRow, rightRow, "symbol", "string", "asc");
+      });
+      rows.forEach(function (row) {
+        tableBody.appendChild(row);
+      });
+      updateStandaloneSortState(activeButton, direction);
+    }
+
+    tableSortButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        const isActive = button.classList.contains("is-active");
+        const initialDirection = button.dataset.defaultDirection
+          || (button.dataset.sortType === "string" ? "asc" : "desc");
+        const currentDirection = button.dataset.sortDirection || initialDirection;
+        const standaloneDefaultSortButton = table.querySelector(
+          '.sort-button[data-sort-key="' + tableDefaultSortKey + '"]'
+        );
+
+        if (!isActive) {
+          sortStandaloneTable(
+            button.dataset.sortKey,
+            button.dataset.sortType,
+            initialDirection,
+            button
+          );
+          return;
+        }
+
+        if (currentDirection === initialDirection) {
+          sortStandaloneTable(
+            button.dataset.sortKey,
+            button.dataset.sortType,
+            currentDirection === "desc" ? "asc" : "desc",
+            button
+          );
+          return;
+        }
+
+        if (button.dataset.sortKey === tableDefaultSortKey && standaloneDefaultSortButton) {
+          sortStandaloneTable(
+            button.dataset.sortKey,
+            button.dataset.sortType,
+            initialDirection,
+            button
+          );
+          return;
+        }
+
+        sortStandaloneTable(
+          tableDefaultSortKey,
+          standaloneDefaultSortButton
+            ? standaloneDefaultSortButton.dataset.sortType
+            : tableDefaultSortType,
+          tableDefaultSortDirection,
+          standaloneDefaultSortButton
+        );
+      });
+    });
+
+    const standaloneDefaultSortButton = table.querySelector(
+      '.sort-button[data-sort-key="' + tableDefaultSortKey + '"]'
+    );
+    if (standaloneDefaultSortButton) {
+      sortStandaloneTable(
+        standaloneDefaultSortButton.dataset.sortKey,
+        standaloneDefaultSortButton.dataset.sortType,
+        tableDefaultSortDirection,
+        standaloneDefaultSortButton
+      );
+    } else {
+      sortStandaloneTable(
+        tableDefaultSortKey,
+        tableDefaultSortType,
+        tableDefaultSortDirection,
+        null
+      );
+    }
+  }
+
+  Array.from(document.querySelectorAll("[data-sortable-table]")).forEach(initStandaloneSortableTable);
 
   tooltipTriggers.forEach(function (trigger) {
     setTooltipTriggerExpanded(trigger, false);

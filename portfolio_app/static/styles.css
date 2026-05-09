@@ -99,7 +99,7 @@ textarea {
 }
 
 .site-title-row {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 10px;
   max-width: 100%;
@@ -518,15 +518,11 @@ body.is-roadmap-open {
 }
 
 .roadmap-dialog-header {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
   margin-bottom: 18px;
-  background: linear-gradient(180deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 92%, transparent) 100%);
 }
 
 .roadmap-heading-stack {
@@ -593,12 +589,16 @@ body.is-roadmap-open {
 }
 
 .roadmap-close {
+  position: sticky;
+  top: 18px;
+  z-index: 3;
   width: 34px;
   height: 34px;
   flex: 0 0 auto;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 0 -34px auto;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--border) 72%, var(--accent-soft) 28%);
   border-radius: 999px;
@@ -1294,6 +1294,17 @@ table {
 .holdings-detail-table col.col-trend { width: 8.25%; }
 .holdings-detail-table col.col-pnl { width: 8.9%; }
 
+.watchlist-table {
+  min-width: 0;
+}
+
+.watchlist-table col.col-watch-symbol { width: 14%; }
+.watchlist-table col.col-watch-price { width: 12%; }
+.watchlist-table col.col-watch-trailing-pe { width: 12%; }
+.watchlist-table col.col-watch-forward-pe { width: 14%; }
+.watchlist-table col.col-watch-drawdown { width: 13%; }
+.watchlist-table col.col-watch-alerts { width: 35%; }
+
 th,
 td {
   padding: 14px 12px;
@@ -1312,6 +1323,23 @@ th {
 .holdings-detail-panel {
   margin-bottom: 0;
   border-top: 0;
+}
+
+.watchlist-panel {
+  margin-top: 44px;
+  margin-bottom: 0;
+  padding: 24px 20px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.watchlist-heading {
+  margin-bottom: 18px;
+}
+
+.watchlist-heading h3 {
+  margin: 0;
+  font-size: clamp(1.08rem, 1.55vw, 1.28rem);
+  line-height: 1.12;
 }
 
 .holdings-detail-table th,
@@ -1499,6 +1527,50 @@ th {
   font-size: 0.98rem;
   font-variant-numeric: tabular-nums;
   vertical-align: middle;
+}
+
+.watchlist-alert-cell {
+  min-width: 0;
+  white-space: normal;
+}
+
+.watchlist-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.watchlist-alert-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.watchlist-alert-tag.is-gain {
+  background: rgba(47, 125, 76, 0.14);
+  color: var(--gain);
+}
+
+.watchlist-alert-tag.is-warning {
+  background: rgba(177, 123, 47, 0.16);
+  color: #9a6b00;
+}
+
+.watchlist-alert-tag.is-loss {
+  background: rgba(189, 52, 57, 0.15);
+  color: var(--loss);
+}
+
+.watchlist-alert-tag.is-muted {
+  color: var(--text-muted);
 }
 
 .symbol-cell {
@@ -2579,6 +2651,10 @@ tbody tr:last-child td {
   .market-valuation-side {
     justify-content: flex-end;
     align-items: flex-end;
+  }
+
+  .watchlist-table {
+    min-width: 760px;
   }
 
   .roadmap-dialog {

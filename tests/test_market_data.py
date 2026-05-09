@@ -122,6 +122,35 @@ def test_build_finra_margin_payload_formats_month_over_month():
     assert payload["source_status"] == "live"
 
 
+def test_parse_multpl_pe_keeps_estimated_rows(monkeypatch):
+    class StubResponse:
+        text = """
+        <table>
+          <tr><th>Date</th><th>Value</th></tr>
+          <tr class="odd">
+            <td>May 8, 2026</td>
+            <td><abbr title="Estimate">†</abbr>31.83</td>
+          </tr>
+          <tr class="even">
+            <td>Apr 1, 2026</td>
+            <td><abbr title="Estimate">†</abbr>29.02</td>
+          </tr>
+          <tr class="odd"><td>Sep 1, 2025</td><td>28.13</td></tr>
+        </table>
+        """
+
+        def raise_for_status(self):
+            return None
+
+    monkeypatch.setattr(market_data.requests, "get", lambda *args, **kwargs: StubResponse())
+
+    assert market_data._parse_multpl_pe("https://example.com")[:3] == [
+        ("May 8, 2026", 31.83),
+        ("Apr 1, 2026", 29.02),
+        ("Sep 1, 2025", 28.13),
+    ]
+
+
 def test_format_fear_greed_block_uses_truncated_integer_display():
     payload = market_data._format_fg_block({"score": 66.9})
 

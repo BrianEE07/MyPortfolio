@@ -358,7 +358,7 @@
                                                 <span class="sort-button-content">
                                                     <span class="sort-button-topline">
                                                         <span class="sort-button-label-text">本益比</span>
-                                                        <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比。" data-tooltip-en="">?</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比，代表市場願意為目前已實現獲利支付多少價格。" data-tooltip-en="">?</span>
                                                     </span>
                                                     <small>Trailing P/E</small>
                                                 </span>
@@ -372,7 +372,7 @@
                                                 <span class="sort-button-content">
                                                     <span class="sort-button-topline">
                                                         <span class="sort-button-label-text">預估本益比</span>
-                                                        <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比。" data-tooltip-en="">?</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比，代表市場對未來獲利成長的期待。" data-tooltip-en="">?</span>
                                                     </span>
                                                     <small>Forward P/E</small>
                                                 </span>
@@ -386,7 +386,7 @@
                                                 <span class="sort-button-content">
                                                     <span class="sort-button-topline">
                                                         <span class="sort-button-label-text">一年回檔</span>
-                                                        <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="一年內距離高點的跌幅。" data-tooltip-en="">?</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="1Y Drawdown help" data-tooltip-zh="目前價格相對近一年高點的跌幅，用來看標的離高點回落多少。" data-tooltip-en="">?</span>
                                                     </span>
                                                     <small>1Y Drawdown</small>
                                                 </span>
@@ -483,6 +483,166 @@
                         </table>
                     </div>
                 </section>
+
+                {% if has_watchlist %}
+                <section class="panel watchlist-panel">
+                    <div class="section-heading section-heading-compact watchlist-heading">
+                        <h3>觀察清單 / Watchlist</h3>
+                    </div>
+                    <div class="table-wrapper table-wrapper-compact holdings-detail-wrapper watchlist-wrapper">
+                        <table class="holdings-detail-table watchlist-table" data-sortable-table>
+                            <colgroup>
+                                <col class="col-watch-symbol">
+                                <col class="col-watch-price">
+                                <col class="col-watch-trailing-pe">
+                                <col class="col-watch-forward-pe">
+                                <col class="col-watch-drawdown">
+                                <col class="col-watch-alerts">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th aria-sort="none">
+                                        <div class="header-cell">
+                                            <button type="button" class="sort-button" data-sort-key="symbol" data-sort-type="string">
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">代號</span>
+                                                    </span>
+                                                    <small>Symbol</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell">
+                                            <button type="button" class="sort-button" data-sort-key="price" data-sort-type="number">
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">現價</span>
+                                                    </span>
+                                                    <small>Price</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell has-info">
+                                            <button type="button" class="sort-button" data-sort-key="trailing-pe" data-sort-type="number">
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">本益比</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Watchlist Trailing P/E help" data-tooltip-zh="以過去十二個月每股盈餘計算的本益比，代表市場願意為目前已實現獲利支付多少價格。" data-tooltip-en="">?</span>
+                                                    </span>
+                                                    <small>Trailing P/E</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell has-info">
+                                            <button type="button" class="sort-button" data-sort-key="forward-pe" data-sort-type="number">
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">預估本益比</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Watchlist Forward P/E help" data-tooltip-zh="以市場預估未來一年每股盈餘計算的本益比，代表市場對未來獲利成長的期待。" data-tooltip-en="">?</span>
+                                                    </span>
+                                                    <small>Forward P/E</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell has-info">
+                                            <button type="button" class="sort-button" data-sort-key="drawdown" data-sort-type="number">
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">一年回檔</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Watchlist 1Y Drawdown help" data-tooltip-zh="目前價格相對近一年高點的跌幅，用來看標的離高點回落多少。" data-tooltip-en="">?</span>
+                                                    </span>
+                                                    <small>1Y Drawdown</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th aria-sort="none">
+                                        <div class="header-cell has-info">
+                                            <button type="button" class="sort-button" data-sort-key="alert-count" data-sort-type="number">
+                                                <span class="sort-button-content">
+                                                    <span class="sort-button-topline">
+                                                        <span class="sort-button-label-text">預警訊號</span>
+                                                        <span class="info-chip" tabindex="0" aria-label="Watchlist alert signal help" data-tooltip-zh="用回檔幅度、是否跌破年線、距季線距離和估值過熱等條件整理出的提醒標籤。" data-tooltip-en="">?</span>
+                                                    </span>
+                                                    <small>Alerts</small>
+                                                </span>
+                                                <span class="sort-button-indicator" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody data-sort-default-key="order" data-sort-default-type="number" data-sort-default-direction="asc">
+                                {% for row in watchlist_rows %}
+                                <tr
+                                    data-sort-order="{{ row.order }}"
+                                    data-sort-symbol="{{ row.symbol }}"
+                                    data-sort-price="{{ row.price if row.price is not none else '' }}"
+                                    data-sort-drawdown="{{ row.drawdown if row.drawdown is not none else '' }}"
+                                    data-sort-trailing-pe="{{ row.trailing_pe if row.trailing_pe is not none else '' }}"
+                                    data-sort-forward-pe="{{ row.forward_pe if row.forward_pe is not none else '' }}"
+                                    data-sort-alert-count="{{ row.alert_count }}"
+                                >
+                                    <td>
+                                        <div class="symbol-cell">
+                                            <div class="symbol-copy" data-symbol-link-group>
+                                                <button
+                                                    type="button"
+                                                    class="symbol-link-reveal"
+                                                    data-symbol-link-toggle
+                                                    aria-label="Show external link for {{ row.symbol }}"
+                                                    aria-expanded="false"
+                                                >
+                                                    <strong>{{ row.symbol }}</strong>
+                                                </button>
+                                                <a
+                                                    class="symbol-link-outbound"
+                                                    data-symbol-link
+                                                    href="https://finance.yahoo.com/quote/{{ row.symbol }}/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    aria-label="Open {{ row.symbol }} on Yahoo Finance"
+                                                    title="Open {{ row.symbol }} on Yahoo Finance"
+                                                >
+                                                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                                                        <path d="M7 17 17 7"></path>
+                                                        <path d="M9 7h8v8"></path>
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ row.price_detail_str }}</td>
+                                    <td>{{ row.trailing_pe_str }}</td>
+                                    <td>{{ row.forward_pe_str }}</td>
+                                    <td class="tone-{{ row.drawdown_tone }}">{{ row.drawdown_detail_str }}</td>
+                                    <td class="watchlist-alert-cell">
+                                        <div class="watchlist-alerts">
+                                            {% for alert in row.alert_signals %}
+                                            <span class="watchlist-alert-tag is-{{ alert.tone }}">{{ alert.label }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                {% endif %}
             </section>
 
             <section class="tab-panel" id="tab-pulse" data-tab-panel="pulse">
@@ -611,7 +771,7 @@
                         <div class="market-valuation-strip market-valuation-strip-combined">
                             <article class="market-valuation-card market-valuation-card-combined">
                                 <div class="market-valuation-main">
-                                    <span>實際本益比 / Trailing P/E</span>
+                                    <span>估算本益比 / Est. Trailing P/E</span>
                                     <div class="market-valuation-value-row market-valuation-value-row-main">
                                         <strong>{{ market_trend.trailing_pe.value_str }}</strong>
                                         <span class="market-valuation-delta-group">
@@ -753,6 +913,17 @@
             aria-labelledby="projectRoadmapTitle"
             tabindex="-1"
         >
+            <button
+                type="button"
+                class="roadmap-close"
+                data-roadmap-close
+                aria-label="Close project roadmap"
+            >
+                <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                    <path d="M6 6 18 18"></path>
+                    <path d="M18 6 6 18"></path>
+                </svg>
+            </button>
             <div class="roadmap-dialog-header">
                 <div class="roadmap-heading-stack">
                     <p class="roadmap-dialog-kicker">Project Roadmap</p>
@@ -773,17 +944,6 @@
                     </div>
                     <p class="roadmap-dialog-copy">從目前已完成的版本節點，接到接下來要做的主線更新。</p>
                 </div>
-                <button
-                    type="button"
-                    class="roadmap-close"
-                    data-roadmap-close
-                    aria-label="Close project roadmap"
-                >
-                    <svg viewBox="0 0 24 24" role="presentation" focusable="false">
-                        <path d="M6 6 18 18"></path>
-                        <path d="M18 6 6 18"></path>
-                    </svg>
-                </button>
             </div>
 
             <div class="roadmap-sections">

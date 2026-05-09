@@ -106,6 +106,7 @@ def _stub_snapshot_dependencies(monkeypatch):
             "price": 7165.08,
         },
     )
+    monkeypatch.setattr(snapshot, "load_watchlist", lambda: [])
 
 
 def test_build_portfolio_snapshot_uses_generated_realized_metrics(tmp_path, monkeypatch):
@@ -347,6 +348,100 @@ def test_live_portfolio_metrics_fall_back_when_live_prices_are_missing():
     assert metrics == stored_metrics
 
 
+def test_build_watchlist_rows_calculates_alert_signals(monkeypatch):
+    monkeypatch.setattr(
+        snapshot,
+        "load_watchlist",
+        lambda: [
+            {
+                "symbol": "AMD",
+                "order": 1,
+            },
+            {
+                "symbol": "MSFT",
+                "order": 0,
+            },
+        ],
+    )
+    monkeypatch.setattr(snapshot, "cached_close", lambda symbol: {"AMD": 118.0, "MSFT": 315.0}[symbol])
+    monkeypatch.setattr(
+        snapshot,
+        "cached_stock_pe",
+        lambda symbol: {"trailing_pe": 22.1, "forward_pe": 19.4},
+    )
+    monkeypatch.setattr(
+        snapshot,
+        "cached_stock_profile",
+        lambda symbol: {"company_name": f"{symbol} Inc."},
+    )
+    monkeypatch.setattr(
+        snapshot,
+        "cached_stock_technicals",
+        lambda symbol: {
+            "AMD": {"drawdown": -23.0, "price": 118.0, "ma60": 130.0, "ma250": 125.0},
+            "MSFT": {"drawdown": -5.0, "price": 315.0, "ma60": 320.0, "ma250": 290.0},
+        }[symbol],
+    )
+
+    rows = snapshot._build_watchlist_rows()
+
+    assert rows[0]["symbol"] == "MSFT"
+    assert rows[0]["trend_label"] == "站上年線"
+    assert rows[0]["alert_signals"] == [{"label": "正常", "tone": "gain"}]
+    assert rows[0]["alert_count"] == 0
+    assert rows[1]["symbol"] == "AMD"
+    assert rows[1]["trend_label"] == "跌破年線"
+    assert [alert["label"] for alert in rows[1]["alert_signals"]] == [
+        "回檔 > 20%",
+        "跌破年線",
+    ]
+    assert rows[1]["alert_count"] == 2
+
+
+def test_build_watchlist_rows_handles_missing_market_data(monkeypatch):
+    monkeypatch.setattr(
+        snapshot,
+        "load_watchlist",
+        lambda: [
+            {
+                "symbol": "AMD",
+                "order": 0,
+            }
+        ],
+    )
+    monkeypatch.setattr(snapshot, "cached_close", lambda symbol: None)
+    monkeypatch.setattr(snapshot, "cached_stock_pe", lambda symbol: None)
+    monkeypatch.setattr(snapshot, "cached_stock_profile", lambda symbol: {})
+    monkeypatch.setattr(snapshot, "cached_stock_technicals", lambda symbol: {})
+
+    rows = snapshot._build_watchlist_rows()
+
+    assert rows[0]["price_detail_str"] == "N/A"
+    assert rows[0]["trailing_pe_str"] == "N/A"
+    assert rows[0]["alert_signals"] == [{"label": "資料不足", "tone": "muted"}]
+    assert rows[0]["alert_count"] == 0
+
+
+def test_build_portfolio_snapshot_includes_watchlist_rows(monkeypatch):
+    _stub_snapshot_dependencies(monkeypatch)
+    monkeypatch.setattr(
+        snapshot,
+        "load_watchlist",
+        lambda: [
+            {
+                "symbol": "MSFT",
+                "order": 0,
+            }
+        ],
+    )
+
+    result = snapshot.build_portfolio_snapshot()
+
+    assert result["has_watchlist"] is True
+    assert result["watchlist_rows"][0]["symbol"] == "MSFT"
+    assert result["watchlist_rows"][0]["alert_signals"][0]["label"] == "正常"
+
+
 def test_build_portfolio_snapshot_treats_matching_truncated_fear_greed_score_as_flat(monkeypatch):
     _stub_snapshot_dependencies(monkeypatch)
 
@@ -554,10 +649,13 @@ def test_build_portfolio_snapshot_groups_all_holdings_after_top_ten(monkeypatch,
     assert len(result["frontend_payload"]["holdingsChart"]["labels"]) == 11
 
 
-def test_roadmap_dialog_header_keeps_close_button_visible():
+def test_roadmap_dialog_keeps_only_close_button_sticky():
     styles_path = Path(__file__).resolve().parents[1] / "portfolio_app" / "static" / "styles.css"
     styles = styles_path.read_text(encoding="utf-8")
     header_rule = styles.split(".roadmap-dialog-header {", 1)[1].split("}", 1)[0]
+    close_rule = styles.split(".roadmap-close {", 1)[1].split("}", 1)[0]
 
-    assert "position: sticky;" in header_rule
-    assert "top: 0;" in header_rule
+    assert "position: sticky;" not in header_rule
+    assert "top: 0;" not in header_rule
+    assert "position: sticky;" in close_rule
+    assert "top: 18px;" in close_rule

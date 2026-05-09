@@ -31,6 +31,7 @@ from .market_data import (
 )
 from .metrics import load_portfolio_metrics
 from .transactions import calculate_portfolio_metrics
+from .watchlist import load_watchlist
 
 
 def _format_currency(value):
@@ -186,8 +187,40 @@ def _format_detail_signed_currency(value):
 
 def _trend_label(is_below_ma250):
     if is_below_ma250:
-        return "Below 250D"
-    return "Above 250D"
+        return "跌破年線"
+    return "站上年線"
+
+
+def _build_watchlist_alerts(price, ma60, ma250, drawdown, trailing_pe, forward_pe):
+    has_market_reference = any(
+        value is not None for value in (price, ma60, ma250, drawdown, trailing_pe, forward_pe)
+    )
+    if not has_market_reference:
+        return [{"label": "資料不足", "tone": "muted"}]
+
+    alerts = []
+    if drawdown is not None and drawdown <= -20:
+        alerts.append({"label": "回檔 > 20%", "tone": "warning"})
+    if price is not None and ma250 is not None and price < ma250:
+        alerts.append({"label": "跌破年線", "tone": "loss"})
+
+    bias_60 = (
+        (price - ma60) / ma60 * 100
+        if price is not None and ma60 not in (None, 0)
+        else None
+    )
+    if not alerts and bias_60 is not None and bias_60 <= -10:
+        alerts.append({"label": "距季線 < -10%", "tone": "warning"})
+
+    if trailing_pe is not None and trailing_pe >= 40:
+        alerts.append({"label": "本益比偏高", "tone": "warning"})
+    elif forward_pe is not None and forward_pe >= 40:
+        alerts.append({"label": "預估本益比偏高", "tone": "warning"})
+
+    if not alerts:
+        alerts.append({"label": "正常", "tone": "gain"})
+
+    return alerts
 
 
 def _market_trend_status(sp500_historical):
@@ -513,6 +546,76 @@ def _build_holdings_category_breakdown(rows):
 
     segments.sort(key=lambda item: item["market_value"], reverse=True)
     return segments
+
+
+def _build_watchlist_rows():
+    rows = []
+    for item in load_watchlist():
+        symbol = item["symbol"]
+        live_price = cached_close(symbol)
+        pe_data = cached_stock_pe(symbol)
+        profile_data = cached_stock_profile(symbol) or {}
+        technicals = cached_stock_technicals(symbol) or {}
+        trailing_pe = (
+            pe_data.get("trailing_pe")
+            if pe_data and pe_data.get("trailing_pe") is not None
+            else None
+        )
+        forward_pe = (
+            pe_data.get("forward_pe")
+            if pe_data and pe_data.get("forward_pe") is not None
+            else None
+        )
+        technical_price = technicals.get("price")
+        ma60 = technicals.get("ma60")
+        ma250 = technicals.get("ma250")
+        drawdown = technicals.get("drawdown")
+        broken_250 = bool(
+            technical_price is not None
+            and ma250 is not None
+            and technical_price < ma250
+        )
+        alert_signals = _build_watchlist_alerts(
+            technical_price if technical_price is not None else live_price,
+            ma60,
+            ma250,
+            drawdown,
+            trailing_pe,
+            forward_pe,
+        )
+        alert_count = sum(1 for alert in alert_signals if alert["tone"] in {"loss", "warning"})
+
+        rows.append(
+            {
+                "symbol": symbol,
+                "company_name": profile_data.get("company_name") or symbol,
+                "order": item["order"],
+                "price": live_price,
+                "price_str": f"{live_price:.2f}" if live_price is not None else "N/A",
+                "price_detail_str": _format_detail_currency(live_price),
+                "drawdown": drawdown,
+                "drawdown_detail_str": _format_detail_percent(drawdown),
+                "drawdown_tone": _tone_for_number(drawdown),
+                "trailing_pe": trailing_pe,
+                "trailing_pe_str": (
+                    f"{trailing_pe:.1f}"
+                    if trailing_pe is not None
+                    else "N/A"
+                ),
+                "forward_pe": forward_pe,
+                "forward_pe_str": (
+                    f"{forward_pe:.1f}"
+                    if forward_pe is not None
+                    else "N/A"
+                ),
+                "trend_label": _trend_label(broken_250),
+                "trend_tone": "loss" if broken_250 else "gain",
+                "alert_signals": alert_signals,
+                "alert_count": alert_count,
+            }
+        )
+
+    return sorted(rows, key=lambda row: row["order"])
 
 
 def _build_fear_greed_history_cards(fear_greed):
@@ -877,6 +980,7 @@ def build_portfolio_snapshot():
     top_holdings_chart = _build_top_holdings_chart(rows)
     holdings_concentration_cards = _build_concentration_cards(rows)
     holdings_category_segments = _build_holdings_category_breakdown(rows)
+    watchlist_rows = _build_watchlist_rows()
 
     fear_greed = cached_fear_greed()
     fear_greed_score = fear_greed.get("score")
@@ -1238,6 +1342,8 @@ def build_portfolio_snapshot():
         "summary_secondary_cards": summary_secondary_cards,
         "holdings_rows": rows,
         "has_holdings": bool(rows),
+        "watchlist_rows": watchlist_rows,
+        "has_watchlist": bool(watchlist_rows),
         "holdings_concentration_cards": holdings_concentration_cards,
         "holdings_category_segments": holdings_category_segments,
         "top_holdings_chart": top_holdings_chart,

@@ -69,10 +69,13 @@ Firstrade imports now run through the canonical transaction engine and refresh:
 - `data/holdings.json`
 - `data/portfolio_metrics.json`
 - `data/portfolio_snapshots.json`
+- `data/watchlist.json` remains a separate public symbol-only watchlist file and is not generated from broker transactions.
 
 Canonical CSV and JSON imports refresh holdings and reset generated metrics. They do not rebuild daily portfolio snapshots.
 
 For the v1.4.0 private transaction pipeline that can regenerate public holdings, metrics, and portfolio snapshots from `private/transactions.json`, see [data-foundation.md](data-foundation.md).
+
+For the recommended local-first CSV update and GitHub Pages deployment workflow, see [local-automation.md](local-automation.md).
 
 Preview the app with local-only holdings or metrics files without replacing the canonical runtime data:
 

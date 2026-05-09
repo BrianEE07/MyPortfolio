@@ -22,6 +22,8 @@ Completed baseline:
   v1.4.0 added local canonical transactions, Firstrade-to-transaction generation, public daily portfolio snapshots, total portfolio value, cash balance, TWR, IRR, CAGR, drawdown, Sharpe, Alpha, and Beta.
 - **Live Runtime Metrics Overlay**
   v1.4.2 lets the local Flask app refresh portfolio-level performance cards from current prices and historical snapshots without rewriting generated public data files.
+- **Watchlist & Local Automation Flow**
+  v1.4.3 adds a public lightweight watchlist below Stock Details and documents the local-first broker CSV to public deployment workflow.
 
 Next major updates:
 
@@ -92,8 +94,9 @@ Planned direction:
   - `Crypto`
 - Use asset-class-specific fields instead of forcing crypto and other assets into stock-only columns
 - Make values, sorting, classification, and filtering respond to global asset-class filters
-- Optional: add a watchlist with decision criteria, such as technical-line breakdowns or buy-zone notes
+- Optional: expand watchlist decision criteria, such as technical-line breakdowns, valuation alerts, and richer research fields
 - Optional: add a recent buy / sell banner
+- Expand the v1.4.3 watchlist toward Taiwan stocks, ETF, crypto, and richer research fields once multi-asset data sources exist
 
 ## Major Update 4: Market Pulse 2.0
 

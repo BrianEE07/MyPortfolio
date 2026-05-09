@@ -463,18 +463,21 @@ def _parse_multpl_pe(url):
         response = requests.get(url, headers=HEADERS, timeout=15)
         response.raise_for_status()
         rows = re.findall(
-            r"<tr[^>]*>\s*<td[^>]*>([^<]+)</td>\s*<td[^>]*>([^<]+)</td>\s*</tr>",
+            r"<tr[^>]*>\s*<td[^>]*>(.*?)</td>\s*<td[^>]*>(.*?)</td>\s*</tr>",
             response.text,
+            flags=re.S,
         )
         results = []
         for date_text, value_text in rows:
-            normalized_value = value_text.strip().replace(",", "")
+            normalized_date = re.sub(r"<[^>]+>", "", date_text).strip()
+            normalized_value = re.sub(r"<[^>]+>", "", value_text)
+            normalized_value = normalized_value.strip().replace(",", "")
             normalized_value = re.sub(r"&#[^;]+;", "", normalized_value)
             number_match = re.search(r"(-?\d+(?:\.\d+)?)", normalized_value)
             if not number_match:
                 continue
             try:
-                results.append((date_text.strip(), float(number_match.group(1))))
+                results.append((normalized_date, float(number_match.group(1))))
             except ValueError:
                 continue
         return results

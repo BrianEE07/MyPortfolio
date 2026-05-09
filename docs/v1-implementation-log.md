@@ -5,6 +5,8 @@ This file is now the entry index for split version notes.
 Small releases are recorded under [docs/version-notes/](./version-notes/) so each version can be reviewed on its own without reopening one long running log.
 
 ## Timeline
+- [v1.4.3](./version-notes/v1.4.3.md)
+  Public lightweight Watchlist table, local-first portfolio update flow documentation, and roadmap completion entry.
 - [v1.4.2](./version-notes/v1.4.2.md)
   Live runtime metrics overlay for local refreshes, benchmark-aware secondary metric updates, and sticky roadmap close behavior.
 - [v1.4.1](./version-notes/v1.4.1.md)
